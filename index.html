@@ -388,8 +388,8 @@ pre:hover .copy-btn{opacity:1}
 <script>
 // ========== DEFAULT MODELS ==========
 const DEFAULT_MODELS = [
-  {id:'mimo-v2.5-pro',name:'MiMo V2.5 Pro',provider:'小米',format:'openai',baseUrl:'https://api-oc.xiaomimimo.com/v1',path:'/chat/completions',modelId:'mimo-v2.5-pro',apiKey:'',color:'#ff6900'},
-  {id:'mimo-v2.5',name:'MiMo V2.5',provider:'小米',format:'openai',baseUrl:'https://api-oc.xiaomimimo.com/v1',path:'/chat/completions',modelId:'mimo-v2.5',apiKey:'',color:'#ff6900'},
+  {id:'mimo-v2.5-pro',name:'MiMo V2.5 Pro',provider:'小米',format:'openai',baseUrl:'https://api.xiaomimimo.com/v1',path:'/chat/completions',modelId:'mimo-v2.5-pro',apiKey:'',color:'#ff6900'},
+  {id:'mimo-v2.5',name:'MiMo V2.5',provider:'小米',format:'openai',baseUrl:'https://api.xiaomimimo.com/v1',path:'/chat/completions',modelId:'mimo-v2.5',apiKey:'',color:'#ff6900'},
   {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',provider:'DeepSeek',format:'openai',baseUrl:'https://api.deepseek.com',path:'/chat/completions',modelId:'deepseek-v4-pro',apiKey:'',color:'#4f8cff'},
   {id:'deepseek-r1',name:'DeepSeek R1',provider:'DeepSeek',format:'openai',baseUrl:'https://api.deepseek.com',path:'/chat/completions',modelId:'deepseek-reasoner',apiKey:'',color:'#4f8cff'},
   {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',format:'openai',baseUrl:'https://api.openai.com/v1',path:'/chat/completions',modelId:'gpt-4o',apiKey:'',color:'#10a37f'},
@@ -435,6 +435,12 @@ function init(){
     state.models = JSON.parse(JSON.stringify(DEFAULT_MODELS));
     saveState();
   }
+  // Auto-set MiMo API key if empty
+  state.models.forEach(m=>{
+    if(m.provider==='小米'&&!m.apiKey){
+      m.apiKey='sk-ci84ch6z2x7l209v9uwkk28bhy74h5eo6yxdcliixi49vf74';
+    }
+  });
   // Check login
   const savedUser = localStorage.getItem('ai-chat-user');
   if(savedUser){
