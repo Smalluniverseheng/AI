@@ -521,15 +521,59 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
   <div class="login-card">
     <div class="login-logo">第三方科技</div>
     <div class="login-subtitle">AI 智能聊天平台</div>
-    <div class="login-field">
-      <label>账号</label>
-      <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off">
+    <div class="login-tabs" style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg-primary);border-radius:8px;padding:3px">
+      <button class="login-tab active" id="tabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border-radius:6px;border:none;background:var(--bg-secondary);color:var(--text-primary);font-size:14px;cursor:pointer;font-weight:600">登录</button>
+      <button class="login-tab" id="tabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text-secondary);font-size:14px;cursor:pointer">注册</button>
     </div>
-    <div class="login-field">
-      <label>密码</label>
-      <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="off">
+    <div id="loginFormSection">
+      <div class="login-field">
+        <label>账号</label>
+        <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>密码</label>
+        <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="off">
+      </div>
+      <button class="login-btn" id="loginBtn">登 录</button>
     </div>
-    <button class="login-btn" id="loginBtn">登 录</button>
+    <div id="registerFormSection" style="display:none">
+      <div class="login-field">
+        <label>选择身份</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
+          <div class="reg-tag" data-tag="同学" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">🎓</span>同学</div>
+          <div class="reg-tag" data-tag="亲人" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">👨‍👩‍👧</span>亲人</div>
+          <div class="reg-tag" data-tag="朋友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">👬</span>朋友</div>
+          <div class="reg-tag" data-tag="网友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">🌐</span>网友</div>
+          <div class="reg-tag" data-tag="摄友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">📷</span>摄友</div>
+          <div class="reg-tag" data-tag="码友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">💻</span>码友</div>
+        </div>
+      </div>
+      <div class="login-field">
+        <label>真实姓名</label>
+        <input type="text" id="regName" placeholder="你的真实姓名" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>邮箱</label>
+        <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>手机号</label>
+        <input type="tel" id="regPhone" placeholder="你的手机号" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>密码</label>
+        <input type="password" id="regPass" placeholder="8位以上，含大小写+数字" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>确认密码</label>
+        <input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label>备注（可选）</label>
+        <input type="text" id="regRemark" placeholder="例如：海口中学3班" autocomplete="off">
+      </div>
+      <button class="login-btn" id="registerBtn" style="background:#22C55E">提交注册</button>
+    </div>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
@@ -771,7 +815,7 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 'use strict';
 
 /* ==================== Constants ==================== */
-const APP_VERSION = '5.0';
+const APP_VERSION = '5.1';
 const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
 const MIMO_BASE = 'https://api.xiaomimimo.com';
@@ -1206,13 +1250,33 @@ function renderModelDropdown() {
     getProviderModels(prov).forEach(m => {
       const active = m.id === state.currentModelId ? ' active' : '';
       const typeLabel = m.type === 'chat' ? '' : m.type.toUpperCase();
-      html += `<div class="model-option${active}" data-id="${m.id}">
-        <span>${escapeHtml(m.name)}</span>
-        ${typeLabel ? `<span class="model-type-badge">${typeLabel}</span>` : ''}
+      const tags = (m.tags || []).map(t => `<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--bg-primary);border:1px solid var(--border-color);color:var(--text-tertiary)">${t}</span>`).join('');
+      const typeDesc = {chat:'文本对话',tts:'语音合成',voiceclone:'语音克隆',voicedesign:'音色设计',asr:'语音识别'}[m.type]||'';
+      html += `<div class="model-option${active}" data-id="${m.id}" style="flex-direction:column;align-items:stretch;padding:8px 12px">
+        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="event.stopPropagation();selectAndClose('${m.id}')">
+          <span style="flex:1;font-weight:500">${escapeHtml(m.name)}</span>
+          ${typeLabel ? `<span class="model-type-badge">${typeLabel}</span>` : ''}
+          <span id="arrow-${m.id}" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;transition:transform 0.2s;transform:rotate(0deg)" onclick="event.stopPropagation();toggleModelDetail('${m.id}')">▶</span>
+        </div>
+        <div id="detail-${m.id}" style="display:none;margin-top:6px;padding:8px;background:var(--bg-primary);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.6">
+          <div><b>类型：</b>${typeDesc}</div>
+          <div><b>模型ID：</b><code style="font-size:11px;background:var(--bg-secondary);padding:1px 4px;border-radius:3px">${m.modelId}</code></div>
+          <div><b>提供商：</b>${escapeHtml(m.provider)}</div>
+          ${tags ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${tags}</div>` : ''}
+        </div>
       </div>`;
     });
   });
   dd.innerHTML = html;
+}
+
+function selectAndClose(id) {
+  state.currentModelId = id;
+  saveState();
+  updateModelName();
+  switchInputPanel();
+  $('modelDropdown').classList.remove('show');
+  renderModelDropdown();
 }
 
 function updateModelName() {
@@ -1830,6 +1894,95 @@ if (document.readyState === 'loading') {
 }
 
 })();
+
+
+// ===== Register & Auth Tab =====
+let selectedRegTag = '';
+function switchAuthTab(tab) {
+  const loginSection = document.getElementById('loginFormSection');
+  const registerSection = document.getElementById('registerFormSection');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  if (tab === 'login') {
+    loginSection.style.display = '';
+    registerSection.style.display = 'none';
+    tabLogin.style.background = 'var(--bg-secondary)';
+    tabLogin.style.color = 'var(--text-primary)';
+    tabLogin.style.fontWeight = '600';
+    tabRegister.style.background = 'transparent';
+    tabRegister.style.color = 'var(--text-secondary)';
+    tabRegister.style.fontWeight = '400';
+  } else {
+    loginSection.style.display = 'none';
+    registerSection.style.display = '';
+    tabRegister.style.background = 'var(--bg-secondary)';
+    tabRegister.style.color = 'var(--text-primary)';
+    tabRegister.style.fontWeight = '600';
+    tabLogin.style.background = 'transparent';
+    tabLogin.style.color = 'var(--text-secondary)';
+    tabLogin.style.fontWeight = '400';
+  }
+  document.getElementById('loginError').textContent = '';
+}
+
+function selectRegTag(el) {
+  document.querySelectorAll('.reg-tag').forEach(t => {
+    t.style.borderColor = 'var(--border-color)';
+    t.style.background = 'var(--bg-primary)';
+  });
+  el.style.borderColor = 'var(--accent)';
+  el.style.background = 'rgba(59,130,246,0.1)';
+  selectedRegTag = el.dataset.tag;
+}
+
+// Register button handler
+document.getElementById('registerBtn')?.addEventListener('click', function() {
+  const err = document.getElementById('loginError');
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const pass2 = document.getElementById('regPass2').value;
+  const remark = document.getElementById('regRemark').value.trim();
+
+  if (!selectedRegTag) { err.textContent = '请选择你的身份'; return; }
+  if (!name) { err.textContent = '请输入真实姓名'; return; }
+  if (!email) { err.textContent = '请输入邮箱'; return; }
+  if (!phone) { err.textContent = '请输入手机号'; return; }
+  if (pass.length < 8) { err.textContent = '密码至少8位'; return; }
+  if (pass !== pass2) { err.textContent = '两次密码不一致'; return; }
+
+  // Check duplicate
+  const users = state.users || [];
+  if (users.find(u => u.username === email)) { err.textContent = '该邮箱已注册'; return; }
+
+  users.push({ username: email, password: pass, role: 'user', tag: selectedRegTag, name, email, phone, remark, createdAt: Date.now() });
+  state.users = users;
+  saveState();
+  err.style.color = '#22C55E';
+  err.textContent = '注册成功！请登录';
+  setTimeout(() => {
+    switchAuthTab('login');
+    document.getElementById('loginUser').value = email;
+    err.style.color = '';
+    err.textContent = '';
+  }, 1500);
+});
+
+// Model detail expand
+function toggleModelDetail(modelId) {
+  const detail = document.getElementById('detail-' + modelId);
+  const arrow = document.getElementById('arrow-' + modelId);
+  if (!detail) return;
+  if (detail.style.display === 'none') {
+    detail.style.display = 'block';
+    if (arrow) arrow.style.transform = 'rotate(90deg)';
+  } else {
+    detail.style.display = 'none';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
+  }
+}
+
 </script>
 </body>
 </html>
