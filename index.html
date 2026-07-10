@@ -611,6 +611,11 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
         </button>
         <div class="model-dropdown" id="modelDropdown"></div>
       </div>
+      <div style="display:flex;gap:4px;margin-left:8px">
+        <button class="mode-btn active" id="modeSingle" onclick="setChatMode('single')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-active);color:var(--text-primary);font-size:11px;cursor:pointer">💬 单模型</button>
+        <button class="mode-btn" id="modeMulti" onclick="setChatMode('multi')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:11px;cursor:pointer">📋 多模型</button>
+        <button class="mode-btn" id="modeDebate" onclick="setChatMode('debate')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:11px;cursor:pointer">⚔️ 辩论</button>
+      </div>
       <div class="top-bar-spacer"></div>
       <button class="theme-toggle-btn" id="themeToggleBtn">🌙</button>
     </div>
@@ -815,7 +820,7 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 'use strict';
 
 /* ==================== Constants ==================== */
-const APP_VERSION = '5.4';
+const APP_VERSION = '5.5';
 const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
 const MIMO_BASE = 'https://api.xiaomimimo.com';
@@ -1869,8 +1874,7 @@ function doLogin() {
 function showApp() {
   $('loginPage').style.display = 'none';
   $('appContainer').style.display = '';
-  init();
-  // Re-render after init
+  // Re-render after init (don't call init() again - it would create infinite loop)
   renderSidebar();
   updateModelName();
   switchInputPanel();
@@ -1997,6 +2001,168 @@ function toggleModelDetail(modelId) {
   }
 }
 
+
+
+// ===== Chat Mode (Single / Multi / Debate) =====
+let chatMode = 'single';
+let debateModels = []; // Models selected for debate
+let debateRounds = 3;
+
+function setChatMode(mode) {
+  chatMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = 'var(--text-secondary)';
+  });
+  const btn = {single:'modeSingle',multi:'modeMulti',debate:'modeDebate'}[mode];
+  if (btn) {
+    document.getElementById(btn).style.background = 'var(--bg-active)';
+    document.getElementById(btn).style.color = 'var(--text-primary)';
+  }
+  // Show/hide debate config
+  const debateConfig = document.getElementById('debateConfig');
+  if (debateConfig) debateConfig.style.display = mode === 'debate' ? '' : 'none';
+  // Update send button behavior
+  const sendBtn = document.getElementById('sendBtn');
+  if (sendBtn) {
+    if (mode === 'multi') sendBtn.setAttribute('data-mode', 'multi');
+    else if (mode === 'debate') sendBtn.setAttribute('data-mode', 'debate');
+    else sendBtn.removeAttribute('data-mode');
+  }
+}
+
+function addDebateModel(modelId) {
+  if (!debateModels.includes(modelId)) {
+    debateModels.push(modelId);
+    renderDebateModels();
+  }
+}
+
+function removeDebateModel(modelId) {
+  debateModels = debateModels.filter(m => m !== modelId);
+  renderDebateModels();
+}
+
+function renderDebateModels() {
+  const container = document.getElementById('debateModelList');
+  if (!container) return;
+  container.innerHTML = debateModels.map(id => {
+    const m = getModel(id);
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:var(--bg-active);font-size:11px;border:1px solid var(--border-color)">
+      ${m ? m.name : id}
+      <span style="cursor:pointer;color:var(--text-tertiary)" onclick="removeDebateModel('${id}')">✕</span>
+    </span>`;
+  }).join('');
+}
+
+// Multi-model: send to all selected models at once
+async function sendMultiModel(text) {
+  const chat = getCurrentChat();
+  if (!chat) return;
+  
+  chat.messages.push({ role: 'user', content: text, time: Date.now() });
+  renderMessages();
+  
+  const models = state.apiKeys.mimo ? 
+    DEFAULT_MODELS.filter(m => m.type === 'chat' && m.provider === '小米 MiMo').slice(0, 3) :
+    DEFAULT_MODELS.filter(m => m.type === 'chat').slice(0, 3);
+  
+  for (const m of models) {
+    const apiKey = getApiKeyForModel(m);
+    if (!apiKey) continue;
+    
+    chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelId: m.id, modelName: m.name, loading: true });
+    renderMessages();
+    
+    try {
+      let response = '';
+      if (m.format === 'anthropic') {
+        response = await callAnthropicAPI(chat.messages.filter(msg => msg.role === 'user' || (msg.role === 'assistant' && !msg.loading)).map(msg => ({role: msg.role, content: msg.content})), m.modelId, apiKey);
+      } else {
+        response = await callChatAPI(chat.messages.filter(msg => msg.role === 'user' || (msg.role === 'assistant' && !msg.loading)).map(msg => ({role: msg.role, content: msg.content})), m.modelId, apiKey);
+      }
+      const lastMsg = chat.messages[chat.messages.length - 1];
+      lastMsg.content = response;
+      lastMsg.loading = false;
+    } catch(e) {
+      const lastMsg = chat.messages[chat.messages.length - 1];
+      lastMsg.content = '❌ 错误: ' + e.message;
+      lastMsg.loading = false;
+    }
+    renderMessages();
+  }
+  saveState();
+}
+
+// Debate: models take turns debating
+async function sendDebate(text) {
+  const chat = getCurrentChat();
+  if (!chat) return;
+  
+  const models = debateModels.length >= 2 ? 
+    debateModels.map(id => getModel(id)).filter(Boolean) :
+    DEFAULT_MODELS.filter(m => m.type === 'chat').slice(0, 2);
+  
+  if (models.length < 2) {
+    alert('辩论模式至少需要选择2个模型');
+    return;
+  }
+  
+  chat.messages.push({ role: 'user', content: '辩论主题: ' + text, time: Date.now() });
+  renderMessages();
+  
+  let context = text;
+  
+  for (let round = 1; round <= debateRounds; round++) {
+    for (const m of models) {
+      const apiKey = getApiKeyForModel(m);
+      if (!apiKey) continue;
+      
+      const prompt = round === 1 ? 
+        '辩论主题: ' + text + '\n\n请发表你的观点。' :
+        '辩论主题: ' + text + '\n\n以下是其他参与者的观点:\n' + context + '\n\n请发表你的第' + round + '轮回应，可以反驳或补充。';
+      
+      chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelId: m.id, modelName: m.name, round: round, loading: true });
+      renderMessages();
+      
+      try {
+        let response = '';
+        if (m.format === 'anthropic') {
+          response = await callAnthropicAPI([{role: 'user', content: prompt}], m.modelId, apiKey);
+        } else {
+          response = await callChatAPI([{role: 'user', content: prompt}], m.modelId, apiKey);
+        }
+        const lastMsg = chat.messages[chat.messages.length - 1];
+        lastMsg.content = response;
+        lastMsg.loading = false;
+        context += '\n\n【' + m.name + '】: ' + response;
+      } catch(e) {
+        const lastMsg = chat.messages[chat.messages.length - 1];
+        lastMsg.content = '❌ 错误: ' + e.message;
+        lastMsg.loading = false;
+      }
+      renderMessages();
+    }
+  }
+  
+  // Summary
+  const summaryPrompt = '以下是辩论的完整内容:\n' + context + '\n\n请作为中立裁判，总结各方观点，指出共识和分歧。';
+  chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelName: '裁判总结', loading: true });
+  renderMessages();
+  
+  try {
+    const summary = await callChatAPI([{role: 'user', content: summaryPrompt}], models[0].modelId, getApiKeyForModel(models[0]));
+    const lastMsg = chat.messages[chat.messages.length - 1];
+    lastMsg.content = summary;
+    lastMsg.loading = false;
+  } catch(e) {
+    const lastMsg = chat.messages[chat.messages.length - 1];
+    lastMsg.content = '❌ 总结失败: ' + e.message;
+    lastMsg.loading = false;
+  }
+  renderMessages();
+  saveState();
+}
 </script>
 </body>
 </html>
