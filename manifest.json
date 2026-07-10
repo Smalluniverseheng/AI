@@ -1,0 +1,17 @@
+{
+  "name": "AI 多模型对话平台",
+  "short_name": "AI Platform",
+  "description": "集合15+家国内外AI模型的多模型对话平台",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#7c5cfc",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c5cfc'/><text x='50' y='68' text-anchor='middle' font-size='50' fill='white'>🤖</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
