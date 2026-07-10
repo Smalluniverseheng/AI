@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>MiMo API Test</title></head>
+<body style="font-family:monospace;padding:20px;background:#111;color:#0f0">
+<h2>MiMo API Debug</h2>
+<div id="log"></div>
+<script>
+const log=document.getElementById('log');
+function add(msg,color='#0f0'){log.innerHTML+='<div style="color:'+color+'">'+msg+'</div>';}
+
+const KEY='sk-c1m9z3z4w5hu6rqw31ngrmt5yssga636vkjjb8ktedxlepjl';
+const URL='https://api.xiaomimimo.com/v1/chat/completions';
+
+add('Testing fetch to: '+URL);
+add('Key: '+KEY.substring(0,10)+'...');
+
+fetch(URL,{
+  method:'POST',
+  headers:{
+    'Content-Type':'application/json',
+    'api-key':KEY
+  },
+  body:JSON.stringify({
+    model:'mimo-v2.5-pro',
+    messages:[{role:'user',content:'说一个字'}],
+    max_tokens:10,
+    stream:false
+  })
+}).then(r=>{
+  add('Status: '+r.status);
+  return r.json();
+}).then(d=>{
+  if(d.error) add('ERROR: '+JSON.stringify(d.error),'#f44');
+  else add('OK: '+d.choices[0].message.content,'#0f0');
+}).catch(e=>{
+  add('FETCH ERROR: '+e.message,'#f44');
+  add('Error name: '+e.name,'#f44');
+});
+</script>
+</body>
+</html>
