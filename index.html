@@ -815,7 +815,7 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 'use strict';
 
 /* ==================== Constants ==================== */
-const APP_VERSION = '5.3';
+const APP_VERSION = '5.4';
 const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
 const MIMO_BASE = 'https://api.xiaomimimo.com';
@@ -907,6 +907,10 @@ function loadState() {
   } catch(e) {}
   if (!state.chats) state.chats = [];
   if (!state.apiKeys) state.apiKeys = {};
+  // Auto-set MiMo Token Plan API key
+  if (!state.apiKeys.mimo) {
+    state.apiKeys.mimo = 'tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
+  }
 }
 function saveState() {
   try { localStorage.setItem('ai_chat_state', JSON.stringify(state)); } catch(e) {}
