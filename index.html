@@ -439,6 +439,8 @@ pre:hover .copy-btn{opacity:1}
 <div class="toast" id="toast"></div>
 
 <script>
+const APP_VERSION='3.2';
+
 // ========== DEFAULT MODELS ==========
 const DEFAULT_MODELS = [
   {id:'mimo-v2.5-pro',name:'MiMo V2.5 Pro',provider:'小米',format:'openai',baseUrl:'https://api.xiaomimimo.com/v1',path:'/chat/completions',modelId:'mimo-v2.5-pro',apiKey:'',color:'#ff6900'},
@@ -509,10 +511,25 @@ function init(){
 }
 
 function loadState(){
-  try{const s=localStorage.getItem('ai-chat-state');if(s)state={...state,...JSON.parse(s)};}catch(e){}
+  try{
+    const s=localStorage.getItem('ai-chat-state');
+    if(s){
+      const parsed=JSON.parse(s);
+      // Version check: force model refresh if version mismatch
+      if(parsed._v!==APP_VERSION){
+        // Keep users and conversations, but reset models
+        state.users=parsed.users||state.users;
+        state.conversations=parsed.conversations||[];
+        state.theme=parsed.theme||'light';
+        // Don't load models - will be re-initialized
+      }else{
+        state={...state,...parsed};
+      }
+    }
+  }catch(e){}
 }
 function saveState(){
-  try{localStorage.setItem('ai-chat-state',JSON.stringify({
+  try{localStorage.setItem('ai-chat-state',JSON.stringify({_v:APP_VERSION,
     users:state.users,models:state.models,conversations:state.conversations,
     selectedModel:state.selectedModel,theme:state.theme
   }));}catch(e){}
