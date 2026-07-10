@@ -393,72 +393,98 @@ const PROVIDERS = {
     name: 'OpenAI', color: '#10a37f',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     models: [
-      { id: 'gpt-4o', name: 'GPT-4o', tags: ['视觉','多模态'] },
+      { id: 'gpt-5', name: 'GPT-5', tags: ['旗舰','多模态'] },
+      { id: 'gpt-5-mini', name: 'GPT-5 Mini', tags: ['快速','便宜'] },
+      { id: 'gpt-5-nano', name: 'GPT-5 Nano', tags: ['极速','最便宜'] },
+      { id: 'gpt-5-pro', name: 'GPT-5 Pro', tags: ['最强推理'] },
+      { id: 'gpt-4o', name: 'GPT-4o', tags: ['多模态','稳定'] },
       { id: 'gpt-4o-mini', name: 'GPT-4o Mini', tags: ['快速','便宜'] },
-      { id: 'gpt-4.1', name: 'GPT-4.1', tags: ['最新'] },
-      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', tags: ['快速'] },
+      { id: 'o4-mini', name: 'o4 Mini', tags: ['思考','推理'] },
+      { id: 'o3', name: 'o3', tags: ['思考','最强推理'] },
+      { id: 'o3-mini', name: 'o3 Mini', tags: ['思考','快速'] },
       { id: 'o1', name: 'o1', tags: ['思考','推理'] },
       { id: 'o1-mini', name: 'o1 Mini', tags: ['思考','快速'] },
-      { id: 'o3-mini', name: 'o3 Mini', tags: ['思考','推理'] },
     ]
   },
   anthropic: {
     name: 'Anthropic', color: '#d97706',
     endpoint: 'https://api.anthropic.com/v1/messages',
     models: [
-      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', tags: ['最强'] },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', tags: ['快速','便宜'] },
+      { id: 'claude-opus-4-8', name: 'Claude Opus 4.8', tags: ['旗舰','最强推理'] },
+      { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', tags: ['稳定'] },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', tags: ['主力','均衡'] },
+      { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet 4.5', tags: ['稳定版'] },
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', tags: ['快速','便宜'] },
     ]
   },
   google: {
-    name: 'Google', color: '#4285f4',
+    name: 'Google Gemini', color: '#4285f4',
     endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     models: [
-      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tags: ['思考','多模态'] },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tags: ['旗舰','思考'] },
       { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', tags: ['快速','便宜'] },
-      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', tags: ['快速'] },
+      { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite', tags: ['极速','最便宜'] },
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', tags: ['稳定'] },
+      { id: 'gemini-3-flash', name: 'Gemini 3 Flash', tags: ['最新','快速'] },
     ]
   },
   deepseek: {
     name: 'DeepSeek', color: '#4f8cff',
     endpoint: 'https://api.deepseek.com/chat/completions',
     models: [
-      { id: 'deepseek-chat', name: 'DeepSeek V3', tags: ['便宜'] },
-      { id: 'deepseek-reasoner', name: 'DeepSeek R1', tags: ['思考','推理'] },
+      { id: 'deepseek-v4-pro', name: 'DeepSeek V4 Pro', tags: ['旗舰','Agent'] },
+      { id: 'deepseek-v4-flash', name: 'DeepSeek V4 Flash', tags: ['快速','便宜'] },
+      { id: 'deepseek-v3.2', name: 'DeepSeek V3.2', tags: ['思考','工具'] },
+      { id: 'deepseek-v3', name: 'DeepSeek V3', tags: ['稳定'] },
+      { id: 'deepseek-r1', name: 'DeepSeek R1', tags: ['深度推理'] },
+      { id: 'deepseek-r1-0528', name: 'DeepSeek R1 0528', tags: ['推理','稳定'] },
     ]
   },
   qwen: {
     name: '通义千问', color: '#6d28d9',
     endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
     models: [
-      { id: 'qwen-max', name: 'Qwen Max', tags: ['最强'] },
-      { id: 'qwen-plus', name: 'Qwen Plus', tags: ['均衡'] },
-      { id: 'qwen-turbo', name: 'Qwen Turbo', tags: ['快速','便宜'] },
+      { id: 'qwen-max', name: 'Qwen3 Max', tags: ['旗舰'] },
+      { id: 'qwen-plus', name: 'Qwen3 Plus', tags: ['均衡'] },
+      { id: 'qwen-turbo', name: 'Qwen3 Turbo', tags: ['快速','便宜'] },
+      { id: 'qwen-long', name: 'Qwen Long', tags: ['超长文','免费'] },
       { id: 'qwen-vl-max', name: 'Qwen VL Max', tags: ['视觉'] },
+      { id: 'qwen-vl-plus', name: 'Qwen VL Plus', tags: ['视觉','快速'] },
+      { id: 'qwen-coder-plus', name: 'Qwen Coder', tags: ['代码'] },
     ]
   },
   baidu: {
     name: '文心一言', color: '#2932e1',
-    endpoint: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat',
+    endpoint: 'https://qianfan.baidubce.com/v2/chat/completions',
     models: [
-      { id: 'ernie-4.0-turbo', name: 'ERNIE 4.0 Turbo', tags: ['最强'] },
-      { id: 'ernie-3.5', name: 'ERNIE 3.5', tags: ['均衡'] },
-      { id: 'ernie-speed', name: 'ERNIE Speed', tags: ['快速','免费'] },
+      { id: 'ernie-5.1', name: 'ERNIE 5.1', tags: ['最新旗舰'] },
+      { id: 'ernie-5.0', name: 'ERNIE 5.0', tags: ['旗舰','全模态'] },
+      { id: 'ernie-4.0-turbo', name: 'ERNIE 4.0 Turbo', tags: ['快速'] },
+      { id: 'ernie-4.5', name: 'ERNIE 4.5', tags: ['均衡'] },
+      { id: 'ernie-3.5-8k', name: 'ERNIE 3.5', tags: ['免费'] },
+      { id: 'ernie-speed-8k', name: 'ERNIE Speed', tags: ['极速','免费'] },
+      { id: 'ernie-x1', name: 'ERNIE X1', tags: ['思考','推理'] },
     ]
   },
   zhipu: {
     name: '智谱AI', color: '#34d399',
     endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
     models: [
-      { id: 'glm-4-plus', name: 'GLM-4 Plus', tags: ['最强'] },
+      { id: 'glm-5.2', name: 'GLM-5.2', tags: ['最新旗舰','代码'] },
+      { id: 'glm-5.1', name: 'GLM-5.1', tags: ['旗舰'] },
+      { id: 'glm-5', name: 'GLM-5', tags: ['稳定'] },
+      { id: 'glm-4.7-flash', name: 'GLM-4.7 Flash', tags: ['免费','代码'] },
+      { id: 'glm-4-plus', name: 'GLM-4 Plus', tags: ['均衡'] },
       { id: 'glm-4-flash', name: 'GLM-4 Flash', tags: ['快速','免费'] },
       { id: 'glm-4v-plus', name: 'GLM-4V Plus', tags: ['视觉'] },
     ]
   },
   moonshot: {
-    name: 'Moonshot', color: '#8b5cf6',
+    name: 'Kimi', color: '#8b5cf6',
     endpoint: 'https://api.moonshot.cn/v1/chat/completions',
     models: [
+      { id: 'kimi-k2.6', name: 'Kimi K2.6', tags: ['旗舰','多模态'] },
+      { id: 'kimi-k2-thinking', name: 'Kimi K2 Thinking', tags: ['思考','推理'] },
       { id: 'moonshot-v1-128k', name: 'Moonshot v1 128K', tags: ['长文'] },
       { id: 'moonshot-v1-32k', name: 'Moonshot v1 32K', tags: ['均衡'] },
       { id: 'moonshot-v1-8k', name: 'Moonshot v1 8K', tags: ['快速'] },
@@ -468,24 +494,26 @@ const PROVIDERS = {
     name: 'MiniMax', color: '#f43f5e',
     endpoint: 'https://api.minimax.chat/v1/text/chatcompletion_v2',
     models: [
+      { id: 'MiniMax-M1', name: 'MiniMax M1', tags: ['旗舰'] },
+      { id: 'abab7-chat', name: 'Abab 7', tags: ['均衡'] },
       { id: 'abab6.5s-chat', name: 'Abab 6.5s', tags: ['快速'] },
-      { id: 'abab6.5-chat', name: 'Abab 6.5', tags: ['均衡'] },
     ]
   },
   yi: {
     name: '零一万物', color: '#06b6d4',
     endpoint: 'https://api.lingyiwanwu.com/v1/chat/completions',
     models: [
-      { id: 'yi-large', name: 'Yi Large', tags: ['最强'] },
+      { id: 'yi-large', name: 'Yi Large', tags: ['旗舰'] },
       { id: 'yi-medium', name: 'Yi Medium', tags: ['均衡'] },
       { id: 'yi-spark', name: 'Yi Spark', tags: ['快速','便宜'] },
+      { id: 'yi-vision', name: 'Yi Vision', tags: ['视觉'] },
     ]
   },
   stepfun: {
     name: '阶跃星辰', color: '#ec4899',
     endpoint: 'https://api.stepfun.com/v1/chat/completions',
     models: [
-      { id: 'step-2-16k', name: 'Step 2 16K', tags: ['最强'] },
+      { id: 'step-2-16k', name: 'Step 2 16K', tags: ['旗舰'] },
       { id: 'step-1-flash', name: 'Step 1 Flash', tags: ['快速','免费'] },
     ]
   },
@@ -493,7 +521,7 @@ const PROVIDERS = {
     name: '百川智能', color: '#f97316',
     endpoint: 'https://api.baichuan-ai.com/v1/chat/completions',
     models: [
-      { id: 'Baichuan4', name: 'Baichuan 4', tags: ['最强'] },
+      { id: 'Baichuan4', name: 'Baichuan 4', tags: ['旗舰'] },
       { id: 'Baichuan3-Turbo', name: 'Baichuan 3 Turbo', tags: ['快速'] },
     ]
   },
@@ -501,15 +529,20 @@ const PROVIDERS = {
     name: '腾讯混元', color: '#0ea5e9',
     endpoint: 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
     models: [
-      { id: 'hunyuan-pro', name: 'Hunyuan Pro', tags: ['最强'] },
+      { id: 'hunyuan-pro', name: 'Hunyuan Pro', tags: ['旗舰'] },
       { id: 'hunyuan-standard', name: 'Hunyuan Standard', tags: ['均衡'] },
+      { id: 'hunyuan-turbos', name: 'Hunyuan Turbo', tags: ['快速'] },
+      { id: 'hunyuan-vision', name: 'Hunyuan Vision', tags: ['视觉'] },
     ]
   },
   xiaomi: {
     name: '小米 MiMo', color: '#ff6900',
     endpoint: 'https://api-oc.xiaomimimo.com/v1/chat/completions',
     models: [
-      { id: 'mimo-v2.5-pro', name: 'MiMo V2.5 Pro', tags: ['思考','推理'] },
+      { id: 'mimo-v2.5-pro', name: 'MiMo V2.5 Pro', tags: ['旗舰','思考','推理'] },
+      { id: 'mimo-v2.5', name: 'MiMo V2.5', tags: ['全模态','思考'] },
+      { id: 'mimo-v2.5-asr', name: 'MiMo V2.5 ASR', tags: ['语音识别'] },
+      { id: 'mimo-v2.5-tts', name: 'MiMo V2.5 TTS', tags: ['语音合成'] },
     ]
   },
   custom: {
