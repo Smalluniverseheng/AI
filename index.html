@@ -3,694 +3,1622 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI 多模型对话平台</title>
+<title>AI Hub - 多模型智能对话平台</title>
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#7c5cfc">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c5cfc'/><text x='50' y='68' text-anchor='middle' font-size='50' fill='white'>🤖</text></svg>">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--s1:#111;--s2:#1a1a1a;--s3:#242424;--b:#2a2a2a;--b2:#333;--t:#e8e8e8;--t2:#888;--t3:#555;--ac:#7c5cfc;--ac2:#a78bfa;--gr:#34d399;--rd:#f87171;--yl:#fbbf24;--bl:#60a5fa}
-html,body{height:100%;overflow:hidden}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Noto Sans CJK SC',sans-serif;background:var(--bg);color:var(--t);line-height:1.6}
-.app{display:flex;height:100vh}
+:root{
+  --bg-primary:#0a0a0a;--bg-secondary:#141414;--bg-tertiary:#1a1a1a;--bg-hover:#222;
+  --border:#2a2a2a;--border-light:#333;
+  --text-primary:#e8e8e8;--text-secondary:#999;--text-muted:#666;
+  --accent:#3b82f6;--accent-hover:#2563eb;--accent-dim:rgba(59,130,246,0.15);
+  --green:#22c55e;--red:#ef4444;--orange:#f59e0b;--purple:#a855f7;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
+  --transition:all 0.2s ease;
+}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary)}
+a{color:var(--accent);text-decoration:none}
 
-/* ===== Sidebar ===== */
-.sb{width:320px;background:var(--s1);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s}
-.sb-hd{padding:14px 18px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:8px}
-.sb-hd h1{font-size:16px;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.sb-hd .ver{font-size:9px;color:var(--t3);background:var(--s3);padding:2px 5px;border-radius:3px}
-.sb-tabs{display:flex;border-bottom:1px solid var(--b)}
-.sb-tabs button{flex:1;padding:9px 0;background:none;border:none;color:var(--t2);cursor:pointer;font-size:12px;border-bottom:2px solid transparent;transition:.2s}
-.sb-tabs button.on{color:var(--ac);border-bottom-color:var(--ac)}
-.sb-body{flex:1;overflow-y:auto;padding:8px 10px}
-.sb-body::-webkit-scrollbar{width:4px}.sb-body::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+/* Layout */
+.app{display:flex;height:100vh;overflow:hidden}
 
-/* Search */
-.search-box{margin-bottom:8px}
-.search-box input{width:100%;padding:7px 10px 7px 30px;background:var(--bg);border:1px solid var(--b);border-radius:8px;color:var(--t);font-size:12px;outline:none}
-.search-box input:focus{border-color:var(--ac)}
-.search-box{position:relative}
-.search-box::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:12px}
+/* Sidebar */
+.sidebar{width:280px;background:var(--bg-secondary);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-header .logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+.sidebar-header h1{font-size:16px;font-weight:600}
+.sidebar-actions{padding:12px;display:flex;gap:8px}
+.btn{padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-primary);cursor:pointer;font-size:13px;transition:var(--transition);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--bg-hover);border-color:var(--border-light)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-icon{padding:8px;min-width:36px;justify-content:center}
+.btn svg{width:16px;height:16px;fill:currentColor}
 
-/* Recent models */
-.recent-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--b)}
-.recent-item{font-size:11px;padding:3px 8px;background:var(--s3);border:1px solid var(--b);border-radius:5px;cursor:pointer;transition:.15s;white-space:nowrap}
-.recent-item:hover{border-color:var(--ac);color:var(--ac)}
+/* Conversation list */
+.conv-list{flex:1;overflow-y:auto;padding:8px}
+.conv-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:2px;display:flex;align-items:center;gap:10px;transition:var(--transition)}
+.conv-item:hover{background:var(--bg-hover)}
+.conv-item.active{background:var(--accent-dim);border:1px solid rgba(59,130,246,0.3)}
+.conv-item .conv-icon{width:20px;height:20px;border-radius:4px;background:var(--bg-tertiary);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0}
+.conv-item .conv-info{flex:1;min-width:0}
+.conv-item .conv-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-item .conv-time{font-size:11px;color:var(--text-muted);margin-top:2px}
+.conv-item .conv-delete{opacity:0;color:var(--text-muted);cursor:pointer;padding:4px;border-radius:4px;transition:var(--transition)}
+.conv-item:hover .conv-delete{opacity:1}
+.conv-item .conv-delete:hover{color:var(--red);background:rgba(239,68,68,0.1)}
 
-/* Provider tree */
-.tree-pr{margin-bottom:2px}
-.tree-pr-hd{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;cursor:pointer;transition:.12s;user-select:none}
-.tree-pr-hd:hover{background:var(--s2)}
-.tree-pr-hd .arrow{font-size:9px;color:var(--t3);transition:.2s;width:12px;text-align:center}
-.tree-pr-hd .arrow.open{transform:rotate(90deg)}
-.tree-pr-hd .p-icon{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
-.tree-pr-hd .p-name{font-size:12px;font-weight:600;flex:1}
-.tree-pr-hd .p-count{font-size:10px;color:var(--t3);background:var(--s3);padding:1px 5px;border-radius:3px}
-.tree-pr-hd .p-key-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.tree-models{overflow:hidden;transition:max-height .25s ease;max-height:0}
-.tree-models.open{max-height:2000px}
-.tree-md{display:flex;align-items:center;gap:6px;padding:5px 8px 5px 38px;border-radius:5px;cursor:pointer;transition:.12s;font-size:12px}
-.tree-md:hover{background:var(--s2)}
-.tree-md.sel{background:rgba(124,92,252,.12);color:var(--ac2)}
-.tree-md .md-name{flex:1}
-.tree-md .md-tags{display:flex;gap:2px}
-.tree-md .tag{font-size:9px;padding:1px 4px;border-radius:3px;background:var(--s3);color:var(--t2)}
-.tree-md .tag.hot{background:rgba(124,92,252,.2);color:var(--ac2)}
-.tree-md .tag.free{background:rgba(52,211,153,.15);color:var(--gr)}
+/* Sidebar footer */
+.sidebar-footer{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px}
+.sidebar-footer .btn{flex:1;justify-content:center;font-size:12px}
 
-/* API Keys */
-.api-area{padding:2px}
-.api-row{margin-bottom:8px}
-.api-row .api-hd{display:flex;align-items:center;gap:5px;margin-bottom:3px}
-.api-row input[type=password],.api-row input[type=text]{width:100%;padding:6px 8px;background:var(--bg);border:1px solid var(--b);border-radius:5px;color:var(--t);font-size:11px;outline:none;font-family:monospace}
-.api-row input:focus{border-color:var(--ac)}
-.api-row .ep-in{margin-top:2px}
-.api-row .ep-in label{font-size:9px;color:var(--t3);display:block;margin-bottom:1px}
-.api-row .key-status{font-size:11px;margin-left:4px}
-.api-note{padding:8px;font-size:10px;color:var(--t3);line-height:1.5}
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;background:var(--bg-primary);min-width:0}
 
-/* Stats */
-.stat-card{background:var(--s2);border:1px solid var(--b);border-radius:8px;padding:10px;margin-bottom:8px}
-.stat-card h3{font-size:12px;color:var(--ac2);margin-bottom:6px}
-.stat-r{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
-.stat-r .l{color:var(--t2)}.stat-r .v{font-weight:600}
-.stat-total{border-top:1px solid var(--b);margin-top:4px;padding-top:4px}
-.stat-total .v{color:var(--yl);font-size:14px}
+/* Top bar */
+.topbar{height:52px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;background:var(--bg-secondary)}
+.model-selector{flex:1;position:relative}
+.model-btn{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer;transition:var(--transition);max-width:320px}
+.model-btn:hover{border-color:var(--border-light)}
+.model-btn .provider-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.model-btn .model-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.model-btn .model-arrow{color:var(--text-muted);font-size:10px;margin-left:auto}
 
-/* ===== Main ===== */
-.main{flex:1;display:flex;flex-direction:column;min-width:0}
-.hd{padding:8px 16px;border-bottom:1px solid var(--b);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.mode-sw{display:flex;background:var(--s2);border-radius:7px;overflow:hidden;border:1px solid var(--b)}
-.mode-sw button{padding:6px 12px;background:none;border:none;color:var(--t2);cursor:pointer;font-size:12px;transition:.2s;white-space:nowrap}
-.mode-sw button.on{background:var(--ac);color:#fff}
-.sel-mds{display:flex;gap:4px;flex-wrap:wrap;flex:1;min-width:0}
-.sel-tag{background:var(--s2);border:1px solid var(--b);border-radius:5px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:3px;white-space:nowrap}
-.sel-tag .rm{cursor:pointer;color:var(--rd);font-weight:700;margin-left:1px}
-.debate-cfg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2);white-space:nowrap}
-.debate-cfg input[type=range]{width:100px;accent-color:var(--ac)}
-.debate-cfg input[type=number]{width:40px;background:var(--s2);border:1px solid var(--b);color:var(--t);padding:2px 4px;border-radius:4px;font-size:11px;text-align:center}
-.debate-cfg .preset-btn{padding:2px 6px;background:var(--s3);border:1px solid var(--b);border-radius:4px;color:var(--t2);cursor:pointer;font-size:10px}
-.debate-cfg .preset-btn:hover{border-color:var(--ac);color:var(--ac)}
-.hd-stats{font-size:10px;color:var(--t3);white-space:nowrap;cursor:pointer}
-.hd-stats:hover{color:var(--ac)}
+/* Model dropdown */
+.model-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;max-width:420px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);z-index:100;display:none;max-height:480px;flex-direction:column}
+.model-dropdown.show{display:flex}
+.model-search{padding:10px;border-bottom:1px solid var(--border)}
+.model-search input{width:100%;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-primary);font-size:13px;outline:none}
+.model-search input:focus{border-color:var(--accent)}
+.model-list{overflow-y:auto;flex:1;padding:6px}
+.model-group{margin-bottom:4px}
+.model-group-header{padding:6px 10px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;cursor:pointer;border-radius:var(--radius-xs);transition:var(--transition)}
+.model-group-header:hover{background:var(--bg-hover)}
+.model-group-header .arrow{transition:transform 0.2s;font-size:10px}
+.model-group-header .arrow.open{transform:rotate(90deg)}
+.model-group-header .provider-dot{width:6px;height:6px;border-radius:50%}
+.model-group-items{padding-left:8px}
+.model-item{padding:8px 10px;border-radius:var(--radius-xs);cursor:pointer;display:flex;align-items:center;gap:8px;transition:var(--transition);font-size:13px}
+.model-item:hover{background:var(--bg-hover)}
+.model-item.selected{background:var(--accent-dim);color:var(--accent)}
+.model-item .model-tags{display:flex;gap:4px;margin-left:auto}
+.model-tag{font-size:10px;padding:2px 6px;border-radius:4px;background:var(--bg-tertiary);color:var(--text-muted);border:1px solid var(--border)}
 
-/* Chat */
-.chat{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
-.chat::-webkit-scrollbar{width:5px}.chat::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
-.welcome{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--t2)}
-.welcome h2{font-size:24px;color:var(--t)}.welcome p{font-size:13px;max-width:380px;text-align:center;line-height:1.7}
+/* Mode tabs */
+.mode-tabs{display:flex;gap:4px;margin-left:12px}
+.mode-tab{padding:5px 12px;border-radius:var(--radius-xs);font-size:12px;cursor:pointer;transition:var(--transition);color:var(--text-secondary);border:1px solid transparent}
+.mode-tab:hover{background:var(--bg-hover);color:var(--text-primary)}
+.mode-tab.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(59,130,246,0.3)}
 
-/* Messages */
-.msg-g{display:flex;flex-direction:column;gap:5px}
-.msg-g.user{align-items:flex-end}.msg-g.assistant{align-items:stretch}
-.msg{max-width:88%;padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.7;word-break:break-word;position:relative}
-.msg.user{background:linear-gradient(135deg,var(--ac),#6c4ce8);color:#fff;border-bottom-right-radius:4px}
-.msg.ai{background:var(--s2);border:1px solid var(--b);border-bottom-left-radius:4px;max-width:100%}
-.msg .ml{font-size:10px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.msg .ml .pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.msg .mm{font-size:10px;color:var(--t3);margin-top:6px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.msg .mm .cost{color:var(--yl)}
-.msg .mm button{background:none;border:none;color:var(--t2);cursor:pointer;font-size:10px;padding:1px 4px}
-.msg .mm button:hover{color:var(--ac)}
+/* Chat area */
+.chat-area{flex:1;overflow-y:auto;padding:0}
+.messages{max-width:800px;margin:0 auto;padding:20px 20px 100px}
+.msg{margin-bottom:20px;display:flex;gap:12px;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-avatar{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.msg-user .msg-avatar{background:linear-gradient(135deg,#6366f1,#8b5cf6)}
+.msg-ai .msg-avatar{background:linear-gradient(135deg,var(--accent),#06b6d4)}
+.msg-content{flex:1;min-width:0}
+.msg-name{font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-secondary)}
+.msg-text{font-size:14px;line-height:1.7;word-break:break-word}
+.msg-text p{margin-bottom:8px}
+.msg-text p:last-child{margin-bottom:0}
+.msg-text pre{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin:10px 0;overflow-x:auto;position:relative}
+.msg-text code{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:13px}
+.msg-text :not(pre)>code{background:var(--bg-tertiary);padding:2px 6px;border-radius:4px;font-size:13px}
+.msg-text blockquote{border-left:3px solid var(--accent);padding:8px 12px;margin:10px 0;background:var(--accent-dim);border-radius:0 var(--radius-xs) var(--radius-xs) 0}
+.msg-text table{border-collapse:collapse;width:100%;margin:10px 0}
+.msg-text th,.msg-text td{border:1px solid var(--border);padding:8px 12px;text-align:left;font-size:13px}
+.msg-text th{background:var(--bg-tertiary);font-weight:600}
+.msg-text img{max-width:100%;border-radius:var(--radius-sm);margin:8px 0}
+.msg-text ul,.msg-text ol{padding-left:20px;margin:8px 0}
+.msg-text li{margin-bottom:4px}
+.msg-text h1,.msg-text h2,.msg-text h3{margin:16px 0 8px;font-weight:600}
+.msg-text h1{font-size:20px}
+.msg-text h2{font-size:17px}
+.msg-text h3{font-size:15px}
 
-/* Think */
-.think-blk{margin-bottom:6px;border:1px solid var(--b);border-radius:8px;overflow:hidden}
-.think-hd{display:flex;align-items:center;gap:5px;padding:6px 10px;background:var(--s3);cursor:pointer;font-size:11px;color:var(--t2);user-select:none}
-.think-hd .think-icon{animation:pulse 1.5s infinite}
-.think-hd .think-label{flex:1}
-.think-hd .think-arrow{font-size:9px;transition:.2s}
-.think-hd .think-arrow.open{transform:rotate(90deg)}
-.think-body{max-height:0;overflow:hidden;transition:max-height .3s ease;font-size:12px;color:var(--t2);line-height:1.6;padding:0 10px}
-.think-body.open{max-height:5000px;padding:8px 10px;overflow-y:auto}
-@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+/* Thinking block */
+.thinking-block{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);margin:8px 0;overflow:hidden}
+.thinking-header{padding:8px 12px;font-size:12px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
+.thinking-header:hover{background:var(--bg-hover)}
+.thinking-header .arrow{transition:transform 0.2s;font-size:10px}
+.thinking-header .arrow.open{transform:rotate(90deg)}
+.thinking-content{padding:0 12px 12px;font-size:13px;color:var(--text-secondary);line-height:1.6;display:none}
+.thinking-content.show{display:block}
 
-/* Thinking stream */
-.thinking-stream{display:flex;align-items:center;gap:3px;color:var(--t2);font-size:12px;padding:8px 12px;background:var(--s2);border:1px solid var(--b);border-radius:10px}
-.thinking-stream .dot{animation:blink 1.4s infinite}
-.thinking-stream .dot:nth-child(2){animation-delay:.2s}
-.thinking-stream .dot:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+/* Copy button */
+.copy-btn{position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-muted);font-size:11px;cursor:pointer;opacity:0;transition:var(--transition)}
+pre:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
 
-/* Multi grid */
-.multi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:8px}
-.multi-grid .msg{max-width:100%}
+/* Multi-model results */
+.multi-results{display:grid;gap:16px;margin-top:12px}
+.multi-result{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.multi-result-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+.multi-result-body{padding:14px;font-size:14px;line-height:1.7}
 
 /* Debate */
-.debate-badge{text-align:center;padding:4px}
-.debate-badge span{background:linear-gradient(135deg,#f59e0b,#ef4444);padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;color:#fff}
-.debate-round{text-align:center;padding:3px}
-.debate-round span{font-size:11px;color:var(--yl);background:rgba(251,191,36,.1);padding:3px 10px;border-radius:5px}
-.debate-summary{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:12px;margin-top:6px}
+.debate-turn{margin:16px 0;padding:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);border-left:3px solid var(--accent)}
+.debate-turn .debate-model{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px}
 
-/* Attach */
-.attach-area{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:4px}
-.attach-item{display:flex;align-items:center;gap:3px;background:var(--s3);border:1px solid var(--b);border-radius:5px;padding:3px 6px;font-size:10px}
-.attach-item img{max-width:32px;max-height:32px;border-radius:3px}
-.attach-item .att-rm{cursor:pointer;color:var(--rd);font-weight:700}
+/* Input area */
+.input-area{border-top:1px solid var(--border);padding:16px 20px;background:var(--bg-secondary);flex-shrink:0}
+.input-wrapper{max-width:800px;margin:0 auto;display:flex;gap:10px;align-items:flex-end}
+.input-box{flex:1;position:relative}
+.input-box textarea{width:100%;padding:12px 16px;padding-right:40px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-primary);font-size:14px;line-height:1.5;resize:none;outline:none;font-family:inherit;min-height:44px;max-height:200px;transition:border-color 0.2s}
+.input-box textarea:focus{border-color:var(--accent)}
+.input-box textarea::placeholder{color:var(--text-muted)}
+.send-btn{position:absolute;right:8px;bottom:8px;width:32px;height:32px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.send-btn:hover{background:var(--accent-hover)}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed}
+.send-btn svg{width:18px;height:18px}
 
-/* Input */
-.inp-area{padding:10px 16px 12px;border-top:1px solid var(--b);background:var(--s1)}
-.inp-row{display:flex;gap:6px;align-items:flex-end}
-.inp-btns{display:flex;gap:3px;align-items:center}
-.icon-btn{width:34px;height:34px;border-radius:8px;background:var(--s2);border:1px solid var(--b);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.2s;flex-shrink:0}
-.icon-btn:hover{border-color:var(--ac);color:var(--ac)}
-.icon-btn.recording{background:rgba(248,113,113,.15);border-color:var(--rd);color:var(--rd);animation:pulse 1s infinite}
-.send-btn{padding:9px 18px;background:var(--ac);border:none;border-radius:10px;color:#fff;font-size:13px;cursor:pointer;transition:.2s;white-space:nowrap;font-weight:600}
-.send-btn:hover{background:var(--ac2)}
-.send-btn:disabled{opacity:.4;cursor:not-allowed}
-.inp-hint{font-size:10px;color:var(--t3);margin-top:4px;text-align:center}
-.inp-box{flex:1}
-.inp-box textarea{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--b);border-radius:10px;color:var(--t);font-size:13px;resize:none;outline:none;min-height:38px;max-height:140px;font-family:inherit;line-height:1.5;transition:border-color .2s}
-.inp-box textarea:focus{border-color:var(--ac)}
+/* Settings panel */
+.settings-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;backdrop-filter:blur(4px)}
+.settings-overlay.show{display:flex;align-items:center;justify-content:center}
+.settings-panel{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);width:90%;max-width:640px;max-height:85vh;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.settings-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.settings-header h2{font-size:16px;font-weight:600}
+.settings-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+.settings-close:hover{background:var(--bg-hover);color:var(--text-primary)}
+.settings-body{flex:1;overflow-y:auto;padding:20px}
+.settings-section{margin-bottom:24px}
+.settings-section h3{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}
 
-/* ===== Markdown Content ===== */
-.md-content h1{font-size:1.4em;font-weight:700;margin:.7em 0 .3em;padding-bottom:.2em;border-bottom:1px solid var(--b)}
-.md-content h2{font-size:1.2em;font-weight:700;margin:.6em 0 .3em;padding-bottom:.2em;border-bottom:1px solid var(--b)}
-.md-content h3{font-size:1.1em;font-weight:600;margin:.5em 0 .2em}
-.md-content h4,.md-content h5,.md-content h6{font-size:1em;font-weight:600;margin:.4em 0 .2em}
-.md-content p{margin:.3em 0}
-.md-content ul,.md-content ol{margin:.3em 0;padding-left:1.3em}
-.md-content li{margin:.15em 0}
-.md-content blockquote{border-left:3px solid var(--ac);padding:6px 12px;margin:.5em 0;background:var(--s3);border-radius:0 6px 6px 0;color:var(--t2)}
-.md-content code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:3px;font-size:.88em;font-family:'JetBrains Mono',Consolas,monospace}
-.md-content pre{background:var(--bg);border:1px solid var(--b);border-radius:8px;margin:.5em 0;overflow:hidden;position:relative}
-.md-content pre code{display:block;padding:12px;overflow-x:auto;background:none;font-size:.83em;line-height:1.6}
-.md-content .code-hdr{display:flex;justify-content:space-between;align-items:center;padding:4px 12px;background:var(--s3);border-bottom:1px solid var(--b);font-size:10px;color:var(--t3)}
-.md-content .code-hdr button{background:none;border:none;color:var(--t2);cursor:pointer;font-size:10px}.md-content .code-hdr button:hover{color:var(--ac)}
-.md-content table{width:100%;border-collapse:collapse;margin:.5em 0;font-size:.88em;overflow-x:auto;display:block}
-.md-content table thead{background:var(--s3)}
-.md-content table th{padding:6px 10px;text-align:left;font-weight:600;border:1px solid var(--b);white-space:nowrap}
-.md-content table td{padding:6px 10px;border:1px solid var(--b)}
-.md-content table tbody tr:hover{background:rgba(124,92,252,.04)}
-.md-content img{max-width:100%;border-radius:6px;margin:.3em 0}
-.md-content a{color:var(--bl);text-decoration:none}.md-content a:hover{text-decoration:underline}
-.md-content hr{border:none;border-top:1px solid var(--b);margin:.8em 0}
-.md-content strong{font-weight:700}
-.md-content .katex-display{margin:.5em 0;overflow-x:auto}
+/* Provider cards */
+.provider-card{background:var(--bg-tertiary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:10px;transition:var(--transition)}
+.provider-card:hover{border-color:var(--border-light)}
+.provider-card-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.provider-card-header .dot{width:10px;height:10px;border-radius:50%}
+.provider-card-header .name{font-size:14px;font-weight:600}
+.provider-card-header .status{margin-left:auto;font-size:11px;padding:2px 8px;border-radius:10px}
+.provider-card-header .status.ok{background:rgba(34,197,94,0.15);color:var(--green)}
+.provider-card-header .status.none{background:var(--bg-hover);color:var(--text-muted)}
+.provider-card input[type="password"],.provider-card input[type="text"]{width:100%;padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);font-size:13px;outline:none;font-family:monospace}
+.provider-card input:focus{border-color:var(--accent)}
+.provider-card .input-row{display:flex;gap:8px;align-items:center}
+.provider-card .input-row input{flex:1}
+.provider-card .verify-btn{padding:8px 12px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-secondary);font-size:12px;cursor:pointer;white-space:nowrap;transition:var(--transition)}
+.provider-card .verify-btn:hover{background:var(--bg-hover);color:var(--text-primary)}
+.provider-card .verify-btn.loading{opacity:0.5;pointer-events:none}
+.endpoint-input{margin-top:8px}
+.endpoint-input label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px}
+.endpoint-input input{width:100%;padding:6px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);font-size:12px;outline:none;font-family:monospace}
 
-/* ===== Misc ===== */
-.toast{position:fixed;top:14px;right:14px;padding:8px 16px;border-radius:7px;font-size:12px;z-index:999;animation:slideIn .3s;max-width:300px}
-.toast.ok{background:var(--gr);color:#000}.toast.err{background:var(--rd);color:#fff}
-@keyframes slideIn{from{transform:translateX(60px);opacity:0}}
-.offpeak-badge{font-size:10px;padding:2px 6px;border-radius:4px;background:rgba(52,211,153,.15);color:var(--gr);animation:pulse 2s infinite}
+/* Settings footer */
+.settings-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
 
-@media(max-width:768px){.sb{display:none}.multi-grid{grid-template-columns:1fr}}
+/* Debate config */
+.debate-config{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:12px 0;max-width:800px;margin-left:auto;margin-right:auto}
+.debate-config label{font-size:13px;color:var(--text-secondary);display:block;margin-bottom:8px}
+.debate-config .slider-row{display:flex;align-items:center;gap:12px}
+.debate-config input[type="range"]{flex:1;accent-color:var(--accent)}
+.debate-config .slider-val{font-size:14px;font-weight:600;color:var(--accent);min-width:30px;text-align:center}
+.debate-config .preset-btns{display:flex;gap:6px;margin-top:8px}
+.debate-config .preset-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-muted);font-size:12px;cursor:pointer;transition:var(--transition)}
+.debate-config .preset-btn:hover,.debate-config .preset-btn.active{background:var(--accent-dim);color:var(--accent);border-color:rgba(59,130,246,0.3)}
+
+/* Loading dots */
+.typing{display:flex;gap:4px;padding:8px 0}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--text-muted);animation:bounce 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);gap:16px}
+.empty-state .logo-big{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),var(--purple));border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700}
+.empty-state h2{font-size:20px;color:var(--text-primary)}
+.empty-state p{font-size:14px;text-align:center;max-width:400px;line-height:1.6}
+.empty-state .quick-start{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center}
+.empty-state .quick-btn{padding:8px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);font-size:13px;cursor:pointer;transition:var(--transition)}
+.empty-state .quick-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+/* Status bar */
+.status-bar{padding:4px 16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:12px;background:var(--bg-secondary)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.status-dot.error{background:var(--red)}
+.status-dot.warning{background:var(--orange)}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-280px;top:0;bottom:0;z-index:150;transition:left 0.3s}
+  .sidebar.open{left:0}
+  .sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:140;display:none}
+  .sidebar-backdrop.show{display:block}
+  .mobile-menu{display:flex!important}
+  .mode-tabs{display:none}
+  .model-btn{max-width:180px}
+}
+.mobile-menu{display:none;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--bg-tertiary);cursor:pointer}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--border-light)}
+
+/* Multi-select models for debate */
+.selected-models{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.selected-model-chip{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--accent-dim);border:1px solid rgba(59,130,246,0.3);font-size:12px;color:var(--accent)}
+.selected-model-chip .remove{cursor:pointer;opacity:0.6;font-size:14px;line-height:1}
+.selected-model-chip .remove:hover{opacity:1}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:var(--radius-sm);background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);font-size:13px;z-index:300;box-shadow:var(--shadow);opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.success{border-color:var(--green);color:var(--green)}
 </style>
 </head>
 <body>
 <div class="app">
-  <div class="sb">
-    <div class="sb-hd"><h1>🤖 AI 多模型平台</h1><span class="ver">v3</span></div>
-    <div class="sb-tabs">
-      <button class="on" onclick="switchTab('models',this)">模型</button>
-      <button onclick="switchTab('keys',this)">API Keys</button>
-      <button onclick="switchTab('stats',this)">用量</button>
+  <!-- Sidebar backdrop (mobile) -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">H</div>
+      <h1>AI Hub</h1>
     </div>
-    <div class="sb-body" id="sbBody"></div>
-  </div>
-  <div class="main">
-    <div class="hd">
-      <div class="mode-sw">
-        <button class="on" onclick="setMode('single',this)">💬 单模型</button>
-        <button onclick="setMode('multi',this)">📋 多模型</button>
-        <button onclick="setMode('debate',this)">⚔️ 辩论</button>
-      </div>
-      <div class="sel-mds" id="selMds"></div>
-      <div class="debate-cfg" id="debateCfg" style="display:none">
-        <span>轮数:</span>
-        <input type="range" id="dRange" min="1" max="99" value="3" oninput="S.debateRounds=+this.value;document.getElementById('dNum').value=this.value">
-        <input type="number" id="dNum" min="1" max="99" value="3" onchange="S.debateRounds=+this.value;document.getElementById('dRange').value=this.value">
-        <button class="preset-btn" onclick="setDR(3)">3</button>
-        <button class="preset-btn" onclick="setDR(5)">5</button>
-        <button class="preset-btn" onclick="setDR(10)">10</button>
-        <button class="preset-btn" onclick="setDR(20)">20</button>
-      </div>
-      <div class="hd-stats" id="hdStats" onclick="switchTab('stats',document.querySelectorAll('.sb-tabs button')[2])"></div>
+    <div class="sidebar-actions">
+      <button class="btn btn-primary" style="flex:1" onclick="newConversation()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        新对话
+      </button>
     </div>
-    <div class="chat" id="chat">
-      <div class="welcome">
-        <h2>👋 欢迎使用</h2>
-        <p>左侧选择厂商和模型，输入 API Key 即可开始对话。<br>支持单模型、多模型并行、模型辩论三种模式。<br>支持语音输入、文件上传、代码执行、Markdown 富文本。</p>
-      </div>
+    <div class="conv-list" id="convList"></div>
+    <div class="sidebar-footer">
+      <button class="btn" onclick="openSettings()">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84a.48.48 0 00-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87a.48.48 0 00.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1112 8.4a3.6 3.6 0 010 7.2z"/></svg>
+        设置
+      </button>
+      <button class="btn" onclick="exportData()">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        导出
+      </button>
     </div>
-    <div class="inp-area">
-      <div class="attach-area" id="attachArea"></div>
-      <div class="inp-row">
-        <div class="inp-btns">
-          <button class="icon-btn" title="上传文件/图片" onclick="triggerFile()">📎</button>
-          <button class="icon-btn" id="micBtn" title="语音输入" onclick="toggleVoice()">🎤</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <!-- Top bar -->
+    <div class="topbar">
+      <button class="mobile-menu" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+      </button>
+      <div class="model-selector">
+        <div class="model-btn" id="modelBtn" onclick="toggleModelDropdown()">
+          <span class="provider-dot" id="providerDot" style="background:var(--accent)"></span>
+          <span class="model-name" id="modelName">选择模型</span>
+          <span class="model-arrow">▼</span>
         </div>
-        <div class="inp-box">
-          <textarea id="msgInput" placeholder="输入消息... (Enter 发送, Shift+Enter 换行)" rows="1" onkeydown="onKey(event)" oninput="autoH(this)"></textarea>
+        <div class="model-dropdown" id="modelDropdown">
+          <div class="model-search">
+            <input type="text" placeholder="搜索模型..." id="modelSearchInput" oninput="filterModels(this.value)">
+          </div>
+          <div class="model-list" id="modelList"></div>
         </div>
-        <button class="send-btn" id="sendBtn" onclick="send()">发送</button>
       </div>
-      <div class="inp-hint">Enter 发送 · Shift+Enter 换行 · 🎤 语音 · 🔊 播报 · ▶ 运行代码</div>
-      <input type="file" id="fileInput" style="display:none" multiple accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.json,.py,.js,.ts,.java,.c,.cpp,.go,.rs,.html,.css,.sql" onchange="onFiles(event)">
+      <div class="mode-tabs">
+        <div class="mode-tab active" data-mode="single" onclick="setMode('single')">💬 单模型</div>
+        <div class="mode-tab" data-mode="multi" onclick="setMode('multi')">📋 多模型</div>
+        <div class="mode-tab" data-mode="debate" onclick="setMode('debate')">⚔️ 辩论</div>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="chat-area" id="chatArea">
+      <div class="messages" id="messages">
+        <div class="empty-state" id="emptyState">
+          <div class="logo-big">H</div>
+          <h2>AI Hub</h2>
+          <p>集合 15+ 家 AI 厂商，输入 API Key 即可对话。支持单模型、多模型对比、模型辩论。</p>
+          <div class="quick-start">
+            <button class="quick-btn" onclick="openSettings()">🔑 配置 API Key</button>
+            <button class="quick-btn" onclick="quickStart()">💡 快速开始</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area">
+      <div id="debateConfig" class="debate-config" style="display:none">
+        <label>辩论轮数：<span id="debateRoundsVal">3</span> 轮</label>
+        <div class="slider-row">
+          <input type="range" min="1" max="20" value="3" id="debateRounds" oninput="document.getElementById('debateRoundsVal').textContent=this.value">
+        </div>
+        <div class="preset-btns">
+          <span class="preset-btn active" onclick="setDebateRounds(3)">3轮</span>
+          <span class="preset-btn" onclick="setDebateRounds(5)">5轮</span>
+          <span class="preset-btn" onclick="setDebateRounds(10)">10轮</span>
+          <span class="preset-btn" onclick="setDebateRounds(20)">20轮</span>
+        </div>
+        <div id="selectedModelsArea" style="margin-top:12px">
+          <label style="font-size:12px;color:var(--text-muted)">选择辩论模型（点击模型选择器添加）：</label>
+          <div class="selected-models" id="selectedModels"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <div class="input-box">
+          <textarea id="userInput" placeholder="输入消息..." rows="1" oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">就绪</span>
+      <span style="margin-left:auto" id="tokenCount"></span>
+    </div>
+  </main>
+</div>
+
+<!-- Settings overlay -->
+<div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettings()">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h2>⚙️ 设置</h2>
+      <button class="settings-close" onclick="closeSettings()">×</button>
+    </div>
+    <div class="settings-body" id="settingsBody"></div>
+    <div class="settings-footer">
+      <button class="btn" onclick="closeSettings()">关闭</button>
+      <button class="btn btn-primary" onclick="saveSettings()">保存</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script>
-// ==================== Providers ====================
-const P={
-openai:{name:'OpenAI',c:'#10a37f',i:'🟢',models:[
-  {id:'gpt-4o',name:'GPT-4o',inp:2.5,out:10,ctx:128000,tags:['vision','file']},
-  {id:'gpt-4o-mini',name:'GPT-4o Mini',inp:0.15,out:0.6,ctx:128000,tags:['vision','file','free']},
-  {id:'gpt-4-turbo',name:'GPT-4 Turbo',inp:10,out:30,ctx:128000,tags:['vision','file']},
-  {id:'o1',name:'o1',inp:15,out:60,ctx:200000,tags:['think','long']},
-  {id:'o1-mini',name:'o1-mini',inp:3,out:12,ctx:128000,tags:['think']},
-  {id:'o3-mini',name:'o3-mini',inp:1.1,out:4.4,ctx:200000,tags:['think','long']},
-],ep:'https://api.openai.com/v1/chat/completions'},
-anthropic:{name:'Anthropic',c:'#d97706',i:'🟠',models:[
-  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',inp:3,out:15,ctx:200000,tags:['vision','file','long']},
-  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',inp:0.8,out:4,ctx:200000,tags:['vision','file','long','free']},
-  {id:'claude-opus-4-20250514',name:'Claude Opus 4',inp:15,out:75,ctx:200000,tags:['vision','file','long','think']},
-],ep:'https://api.anthropic.com/v1/messages'},
-google:{name:'Google Gemini',c:'#4285f4',i:'🔵',models:[
-  {id:'gemini-2.0-flash',name:'Gemini 2.0 Flash',inp:0.1,out:0.4,ctx:1048576,tags:['vision','file','long','free']},
-  {id:'gemini-2.5-pro-preview-05-06',name:'Gemini 2.5 Pro',inp:1.25,out:10,ctx:1048576,tags:['vision','file','long','think']},
-  {id:'gemini-1.5-pro',name:'Gemini 1.5 Pro',inp:1.25,out:5,ctx:2097152,tags:['vision','file','long']},
-],ep:'https://generativelanguage.googleapis.com/v1beta'},
-deepseek:{name:'DeepSeek',c:'#4f8cff',i:'🔷',models:[
-  {id:'deepseek-chat',name:'DeepSeek V3',inp:0.27,out:1.1,ctx:65536,tags:['code']},
-  {id:'deepseek-reasoner',name:'DeepSeek R1',inp:0.55,out:2.19,ctx:65536,tags:['think','code']},
-],ep:'https://api.deepseek.com/v1/chat/completions',offpeak:{start:'00:30',end:'08:30',v3:{inp:0.135,out:0.55},r1:{inp:0.1375,out:0.5475}}},
-qwen:{name:'通义千问',c:'#6d28d9',i:'🟣',models:[
-  {id:'qwen-max',name:'Qwen-Max',inp:2.4,out:9.6,ctx:32768,tags:['vision','file']},
-  {id:'qwen-plus',name:'Qwen-Plus',inp:0.8,out:2,ctx:131072,tags:['vision','file','long']},
-  {id:'qwen-turbo',name:'Qwen-Turbo',inp:0.3,out:0.6,ctx:131072,tags:['long']},
-  {id:'qwen-long',name:'Qwen-Long',inp:0.5,out:2,ctx:10000000,tags:['file','long']},
-],ep:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions'},
-baidu:{name:'文心一言',c:'#2932e1',i:'🔴',models:[
-  {id:'ernie-4.0-turbo-8k',name:'ERNIE 4.0 Turbo',inp:15,out:45,ctx:8192,tags:['vision']},
-  {id:'ernie-3.5-8k',name:'ERNIE 3.5',inp:0.8,out:2,ctx:8192,tags:['vision']},
-  {id:'ernie-speed-8k',name:'ERNIE Speed',inp:0.004,out:0.008,ctx:8192,tags:['free']},
-],ep:'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat'},
-zhipu:{name:'智谱AI',c:'#00b4d8',i:'🩵',models:[
-  {id:'glm-4-plus',name:'GLM-4 Plus',inp:5,out:5,ctx:128000,tags:['vision','file']},
-  {id:'glm-4-flash',name:'GLM-4 Flash',inp:0,out:0,ctx:128000,tags:['vision','file','free']},
-  {id:'glm-4-long',name:'GLM-4 Long',inp:1,out:1,ctx:1000000,tags:['file','long']},
-],ep:'https://open.bigmodel.cn/api/paas/v4/chat/completions'},
-moonshot:{name:'Moonshot (Kimi)',c:'#666',i:'🌙',models:[
-  {id:'moonshot-v1-128k',name:'Moonshot v1 128K',inp:8.4,out:8.4,ctx:131072,tags:['file','long']},
-  {id:'moonshot-v1-32k',name:'Moonshot v1 32K',inp:4.2,out:4.2,ctx:32768,tags:['file']},
-  {id:'moonshot-v1-8k',name:'Moonshot v1 8K',inp:1.2,out:1.2,ctx:8192,tags:['file']},
-],ep:'https://api.moonshot.cn/v1/chat/completions'},
-xiaomi:{name:'小米 MiMo',c:'#ff6900',i:'🔶',models:[
-  {id:'mimo-v2.5-pro',name:'MiMo-V2.5-Pro',inp:3,out:6,ctx:1000000,tags:['vision','file','long','think']},
-  {id:'mimo-v2.5',name:'MiMo-V2.5',inp:1,out:2,ctx:1000000,tags:['vision','file','long']},
-],ep:'https://api.mimo.mi.com/v1/chat/completions'},
-minimax:{name:'MiniMax',c:'#ff6b35',i:'🔹',models:[
-  {id:'MiniMax-Text-01',name:'MiniMax-Text-01',inp:1,out:8,ctx:1000000,tags:['long']},
-],ep:'https://api.minimax.chat/v1/text/chatcompletion_v2'},
-yi:{name:'零一万物',c:'#888',i:'⬛',models:[
-  {id:'yi-lightning',name:'Yi-Lightning',inp:0.99,out:0.99,ctx:16384,tags:[]},
-  {id:'yi-large',name:'Yi-Large',inp:3,out:3,ctx:32768,tags:[]},
-],ep:'https://api.lingyiwanwu.com/v1/chat/completions'},
-stepfun:{name:'阶跃星辰',c:'#e11d48',i:'🔺',models:[
-  {id:'step-2-16k',name:'Step-2 16K',inp:3.3,out:9.9,ctx:16384,tags:[]},
-],ep:'https://api.stepfun.com/v1/chat/completions'},
-baichuan:{name:'百川智能',c:'#0078d4',i:'💎',models:[
-  {id:'Baichuan4',name:'Baichuan 4',inp:3,out:9,ctx:32768,tags:[]},
-],ep:'https://api.baichuan-ai.com/v1/chat/completions'},
-hunyuan:{name:'腾讯混元',c:'#07c160',i:'🟢',models:[
-  {id:'hunyuan-pro',name:'混元 Pro',inp:3.75,out:11.25,ctx:32768,tags:[]},
-],ep:'https://api.hunyuan.cloud.tencent.com/v1/chat/completions'},
+// ========== PROVIDERS CONFIG ==========
+const PROVIDERS = {
+  openai: {
+    name: 'OpenAI', color: '#10a37f',
+    endpoint: 'https://api.openai.com/v1/chat/completions',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o', tags: ['视觉','多模态'] },
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', tags: ['快速','便宜'] },
+      { id: 'gpt-4.1', name: 'GPT-4.1', tags: ['最新'] },
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', tags: ['快速'] },
+      { id: 'o1', name: 'o1', tags: ['思考','推理'] },
+      { id: 'o1-mini', name: 'o1 Mini', tags: ['思考','快速'] },
+      { id: 'o3-mini', name: 'o3 Mini', tags: ['思考','推理'] },
+    ]
+  },
+  anthropic: {
+    name: 'Anthropic', color: '#d97706',
+    endpoint: 'https://api.anthropic.com/v1/messages',
+    models: [
+      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4', tags: ['最强'] },
+      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', tags: ['快速','便宜'] },
+    ]
+  },
+  google: {
+    name: 'Google', color: '#4285f4',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+    models: [
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tags: ['思考','多模态'] },
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', tags: ['快速','便宜'] },
+      { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash', tags: ['快速'] },
+    ]
+  },
+  deepseek: {
+    name: 'DeepSeek', color: '#4f8cff',
+    endpoint: 'https://api.deepseek.com/chat/completions',
+    models: [
+      { id: 'deepseek-chat', name: 'DeepSeek V3', tags: ['便宜'] },
+      { id: 'deepseek-reasoner', name: 'DeepSeek R1', tags: ['思考','推理'] },
+    ]
+  },
+  qwen: {
+    name: '通义千问', color: '#6d28d9',
+    endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    models: [
+      { id: 'qwen-max', name: 'Qwen Max', tags: ['最强'] },
+      { id: 'qwen-plus', name: 'Qwen Plus', tags: ['均衡'] },
+      { id: 'qwen-turbo', name: 'Qwen Turbo', tags: ['快速','便宜'] },
+      { id: 'qwen-vl-max', name: 'Qwen VL Max', tags: ['视觉'] },
+    ]
+  },
+  baidu: {
+    name: '文心一言', color: '#2932e1',
+    endpoint: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat',
+    models: [
+      { id: 'ernie-4.0-turbo', name: 'ERNIE 4.0 Turbo', tags: ['最强'] },
+      { id: 'ernie-3.5', name: 'ERNIE 3.5', tags: ['均衡'] },
+      { id: 'ernie-speed', name: 'ERNIE Speed', tags: ['快速','免费'] },
+    ]
+  },
+  zhipu: {
+    name: '智谱AI', color: '#34d399',
+    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+    models: [
+      { id: 'glm-4-plus', name: 'GLM-4 Plus', tags: ['最强'] },
+      { id: 'glm-4-flash', name: 'GLM-4 Flash', tags: ['快速','免费'] },
+      { id: 'glm-4v-plus', name: 'GLM-4V Plus', tags: ['视觉'] },
+    ]
+  },
+  moonshot: {
+    name: 'Moonshot', color: '#8b5cf6',
+    endpoint: 'https://api.moonshot.cn/v1/chat/completions',
+    models: [
+      { id: 'moonshot-v1-128k', name: 'Moonshot v1 128K', tags: ['长文'] },
+      { id: 'moonshot-v1-32k', name: 'Moonshot v1 32K', tags: ['均衡'] },
+      { id: 'moonshot-v1-8k', name: 'Moonshot v1 8K', tags: ['快速'] },
+    ]
+  },
+  minimax: {
+    name: 'MiniMax', color: '#f43f5e',
+    endpoint: 'https://api.minimax.chat/v1/text/chatcompletion_v2',
+    models: [
+      { id: 'abab6.5s-chat', name: 'Abab 6.5s', tags: ['快速'] },
+      { id: 'abab6.5-chat', name: 'Abab 6.5', tags: ['均衡'] },
+    ]
+  },
+  yi: {
+    name: '零一万物', color: '#06b6d4',
+    endpoint: 'https://api.lingyiwanwu.com/v1/chat/completions',
+    models: [
+      { id: 'yi-large', name: 'Yi Large', tags: ['最强'] },
+      { id: 'yi-medium', name: 'Yi Medium', tags: ['均衡'] },
+      { id: 'yi-spark', name: 'Yi Spark', tags: ['快速','便宜'] },
+    ]
+  },
+  stepfun: {
+    name: '阶跃星辰', color: '#ec4899',
+    endpoint: 'https://api.stepfun.com/v1/chat/completions',
+    models: [
+      { id: 'step-2-16k', name: 'Step 2 16K', tags: ['最强'] },
+      { id: 'step-1-flash', name: 'Step 1 Flash', tags: ['快速','免费'] },
+    ]
+  },
+  baichuan: {
+    name: '百川智能', color: '#f97316',
+    endpoint: 'https://api.baichuan-ai.com/v1/chat/completions',
+    models: [
+      { id: 'Baichuan4', name: 'Baichuan 4', tags: ['最强'] },
+      { id: 'Baichuan3-Turbo', name: 'Baichuan 3 Turbo', tags: ['快速'] },
+    ]
+  },
+  hunyuan: {
+    name: '腾讯混元', color: '#0ea5e9',
+    endpoint: 'https://api.hunyuan.cloud.tencent.com/v1/chat/completions',
+    models: [
+      { id: 'hunyuan-pro', name: 'Hunyuan Pro', tags: ['最强'] },
+      { id: 'hunyuan-standard', name: 'Hunyuan Standard', tags: ['均衡'] },
+    ]
+  },
+  xiaomi: {
+    name: '小米 MiMo', color: '#ff6900',
+    endpoint: 'https://api-oc.xiaomimimo.com/v1/chat/completions',
+    models: [
+      { id: 'mimo-v2.5-pro', name: 'MiMo V2.5 Pro', tags: ['思考','推理'] },
+    ]
+  },
+  custom: {
+    name: '自定义', color: '#999',
+    endpoint: '',
+    models: []
+  }
 };
-const TAG_MAP={vision:{l:'视觉',c:''},file:{l:'文件',c:''},long:{l:'长文',c:''},think:{l:'思考',c:'hot'},code:{l:'代码',c:''},free:{l:'免费',c:'free'}};
 
-// ==================== State ====================
-let S={keys:{},eps:{},sel:[],mode:'single',msgs:[],totalTok:0,totalCost:0,modelUsage:{},streaming:false,tab:'models',debateRounds:3,attachments:[],mimoKey:'',recent:[],_treeOpen:{}};
-try{
-  const k=localStorage.getItem('aik'),e=localStorage.getItem('aie'),u=localStorage.getItem('aiu'),m=localStorage.getItem('aim'),r=localStorage.getItem('air');
-  if(k)S.keys=JSON.parse(k);if(e)S.eps=JSON.parse(e);if(m)S.mimoKey=m;if(r)S.recent=JSON.parse(r);
-  if(u){const d=JSON.parse(u);S.totalTok=d.t||0;S.totalCost=d.c||0;S.modelUsage=d.m||{}}
-}catch(e){}
+const PROVIDER_COLORS = {};
+Object.entries(PROVIDERS).forEach(([k,v]) => PROVIDER_COLORS[k] = v.color);
 
-mermaid.initialize({startOnLoad:false,theme:'dark',securityLevel:'loose'});
-marked.setOptions({highlight:(c,l)=>{if(l&&hljs.getLanguage(l))return hljs.highlight(c,{language:l}).value;return hljs.highlightAuto(c).value},breaks:true,gfm:true});
+// ========== STATE ==========
+let state = {
+  currentConv: null,
+  conversations: [],
+  mode: 'single', // single | multi | debate
+  selectedModel: null, // {provider, modelId}
+  debateModels: [], // [{provider, modelId}]
+  debateRounds: 3,
+  expandedGroups: {},
+  settings: { providers: {} }, // { openai: { apiKey, endpoint }, ... }
+  streaming: false,
+};
 
-// ==================== Sidebar ====================
-function switchTab(t,btn){S.tab=t;document.querySelectorAll('.sb-tabs button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderSB()}
-function renderSB(){const el=document.getElementById('sbBody');if(S.tab==='models')el.innerHTML=renderModels();else if(S.tab==='keys')el.innerHTML=renderKeys();else el.innerHTML=renderStats()}
-
-function renderModels(){
-  let h='<div class="search-box"><input type="text" placeholder="搜索模型..." oninput="filterModels(this.value)"></div>';
-  // Recent
-  if(S.recent.length){h+='<div class="recent-bar">';for(const rk of S.recent.slice(0,5)){const[pid,mid]=rk.split('/');const p=P[pid];if(!p)continue;const m=p.models.find(x=>x.id===mid);if(!m)continue;h+=`<span class="recent-item" onclick="toggleM('${pid}','${mid}')">${p.i} ${m.name}</span>`}h+='</div>'}
-  for(const[pid,p]of Object.entries(P)){
-    const hasKey=!!S.keys[pid],open=S._treeOpen[pid];
-    h+=`<div class="tree-pr" data-pid="${pid}"><div class="tree-pr-hd" onclick="toggleTree('${pid}')"><span class="arrow ${open?'open':''}">▶</span><span class="p-icon" style="background:${p.c}">${p.i}</span><span class="p-name">${p.name}</span><span class="p-count">${p.models.length}</span><span class="p-key-dot" style="background:${hasKey?'var(--gr)':'var(--t3)'}"></span></div><div class="tree-models ${open?'open':''}">`;
-    for(const m of p.models){
-      const sel=S.sel.some(s=>s.pid===pid&&s.mid===m.id);
-      const tags=m.tags.map(t=>{const tm=TAG_MAP[t];return tm?`<span class="tag ${tm.c}">${tm.l}</span>`:''}).join('');
-      h+=`<div class="tree-md ${sel?'sel':''}" data-searchable="${p.name} ${m.name}" onclick="toggleM('${pid}','${m.id}')"><span class="md-name">${m.name}</span><span class="md-tags">${tags}</span></div>`;
-    }
-    h+='</div></div>';
+// ========== INIT ==========
+function init() {
+  loadState();
+  renderModelList();
+  renderConvList();
+  if (state.conversations.length === 0) {
+    showEmptyState(true);
+  } else {
+    const last = state.conversations[0];
+    switchConversation(last.id);
   }
-  return h;
+  updateModelBtn();
+  updateSendBtn();
+
+  // Mark all groups expanded by default
+  Object.keys(PROVIDERS).forEach(k => {
+    if (state.expandedGroups[k] === undefined) state.expandedGroups[k] = true;
+  });
+
+  document.addEventListener('click', (e) => {
+    const dd = document.getElementById('modelDropdown');
+    const btn = document.getElementById('modelBtn');
+    if (!dd.contains(e.target) && !btn.contains(e.target)) {
+      dd.classList.remove('show');
+    }
+  });
 }
 
-function filterModels(q){
-  q=q.toLowerCase();
-  document.querySelectorAll('.tree-pr').forEach(pr=>{
-    const pid=pr.dataset.pid;const p=P[pid];if(!p)return;
-    let match=false;
-    pr.querySelectorAll('.tree-md').forEach(md=>{
-      const s=md.dataset.searchable.toLowerCase();
-      const show=!q||s.includes(q);md.style.display=show?'':'none';if(show)match=true;
+// ========== STORAGE ==========
+function loadState() {
+  try {
+    const saved = localStorage.getItem('ai-hub-state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state = { ...state, ...parsed };
+    }
+  } catch(e) {}
+}
+function saveState() {
+  try {
+    localStorage.setItem('ai-hub-state', JSON.stringify({
+      conversations: state.conversations,
+      selectedModel: state.selectedModel,
+      debateModels: state.debateModels,
+      debateRounds: state.debateRounds,
+      settings: state.settings,
+      expandedGroups: state.expandedGroups,
+      mode: state.mode,
+    }));
+  } catch(e) {}
+}
+
+// ========== CONVERSATIONS ==========
+function newConversation() {
+  const conv = {
+    id: Date.now().toString(),
+    title: '新对话',
+    messages: [],
+    mode: state.mode,
+    createdAt: new Date().toISOString(),
+  };
+  state.conversations.unshift(conv);
+  switchConversation(conv.id);
+  saveState();
+  renderConvList();
+  showEmptyState(true);
+}
+
+function switchConversation(id) {
+  state.currentConv = id;
+  const conv = state.conversations.find(c => c.id === id);
+  if (!conv) return;
+  state.mode = conv.mode || 'single';
+  updateModeTabs();
+  renderMessages(conv.messages);
+  renderConvList();
+  document.getElementById('emptyState')?.remove();
+  updateDebateConfig();
+}
+
+function deleteConversation(id, e) {
+  e.stopPropagation();
+  state.conversations = state.conversations.filter(c => c.id !== id);
+  if (state.currentConv === id) {
+    if (state.conversations.length > 0) {
+      switchConversation(state.conversations[0].id);
+    } else {
+      state.currentConv = null;
+      showEmptyState(true);
+    }
+  }
+  saveState();
+  renderConvList();
+}
+
+function getCurrentConv() {
+  return state.conversations.find(c => c.id === state.currentConv);
+}
+
+function renderConvList() {
+  const list = document.getElementById('convList');
+  list.innerHTML = state.conversations.map(c => `
+    <div class="conv-item ${c.id === state.currentConv ? 'active' : ''}" onclick="switchConversation('${c.id}')">
+      <div class="conv-icon">💬</div>
+      <div class="conv-info">
+        <div class="conv-title">${escapeHtml(c.title)}</div>
+        <div class="conv-time">${formatTime(c.createdAt)}</div>
+      </div>
+      <div class="conv-delete" onclick="deleteConversation('${c.id}', event)">×</div>
+    </div>
+  `).join('');
+}
+
+// ========== MODE ==========
+function setMode(mode) {
+  state.mode = mode;
+  const conv = getCurrentConv();
+  if (conv) conv.mode = mode;
+  updateModeTabs();
+  updateDebateConfig();
+  updateModelBtn();
+  saveState();
+}
+
+function updateModeTabs() {
+  document.querySelectorAll('.mode-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.mode === state.mode);
+  });
+}
+
+function updateDebateConfig() {
+  const dc = document.getElementById('debateConfig');
+  dc.style.display = state.mode === 'debate' ? 'block' : 'none';
+  if (state.mode === 'debate') {
+    document.getElementById('debateRounds').value = state.debateRounds;
+    document.getElementById('debateRoundsVal').textContent = state.debateRounds;
+    renderSelectedModels();
+  }
+}
+
+function setDebateRounds(n) {
+  state.debateRounds = n;
+  document.getElementById('debateRounds').value = n;
+  document.getElementById('debateRoundsVal').textContent = n;
+  document.querySelectorAll('.preset-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === n + '轮');
+  });
+  saveState();
+}
+
+function renderSelectedModels() {
+  const area = document.getElementById('selectedModels');
+  area.innerHTML = state.debateModels.map((m, i) => {
+    const p = PROVIDERS[m.provider];
+    const model = p?.models.find(md => md.id === m.modelId);
+    return `<span class="selected-model-chip">
+      <span style="width:6px;height:6px;border-radius:50%;background:${p?.color || '#999'}"></span>
+      ${model?.name || m.modelId}
+      <span class="remove" onclick="removeDebateModel(${i})">×</span>
+    </span>`;
+  }).join('');
+}
+
+function removeDebateModel(i) {
+  state.debateModels.splice(i, 1);
+  renderSelectedModels();
+  saveState();
+}
+
+// ========== MODEL SELECTOR ==========
+function toggleModelDropdown() {
+  const dd = document.getElementById('modelDropdown');
+  dd.classList.toggle('show');
+  if (dd.classList.contains('show')) {
+    document.getElementById('modelSearchInput').value = '';
+    filterModels('');
+    setTimeout(() => document.getElementById('modelSearchInput').focus(), 50);
+  }
+}
+
+function renderModelList() {
+  const list = document.getElementById('modelList');
+  let html = '';
+  for (const [key, provider] of Object.entries(PROVIDERS)) {
+    if (key === 'custom') continue;
+    const hasKey = !!state.settings.providers?.[key]?.apiKey;
+    const expanded = state.expandedGroups[key] !== false;
+    html += `<div class="model-group" data-provider="${key}">
+      <div class="model-group-header" onclick="toggleGroup('${key}')">
+        <span class="arrow ${expanded ? 'open' : ''}">▶</span>
+        <span class="provider-dot" style="background:${provider.color}"></span>
+        ${provider.name}
+        ${hasKey ? '<span style="font-size:10px;color:var(--green);margin-left:4px">●</span>' : ''}
+      </div>
+      <div class="model-group-items" style="display:${expanded ? 'block' : 'none'}">
+        ${provider.models.map(m => `
+          <div class="model-item" data-search="${(provider.name + ' ' + m.name + ' ' + m.tags.join(' ')).toLowerCase()}"
+               onclick="selectModel('${key}','${m.id}')">
+            <span style="width:6px;height:6px;border-radius:50%;background:${provider.color};flex-shrink:0"></span>
+            ${m.name}
+            <span class="model-tags">${m.tags.map(t => `<span class="model-tag">${t}</span>`).join('')}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+  // Custom provider
+  html += `<div class="model-group" data-provider="custom">
+    <div class="model-group-header" onclick="toggleGroup('custom')">
+      <span class="arrow ${state.expandedGroups.custom ? 'open' : ''}">▶</span>
+      <span class="provider-dot" style="background:#999"></span>
+      自定义模型
+    </div>
+    <div class="model-group-items" style="display:${state.expandedGroups.custom !== false ? 'block' : 'none'}">
+      <div style="padding:8px 10px;font-size:12px;color:var(--text-muted)">在设置中添加自定义 Endpoint 和模型</div>
+    </div>
+  </div>`;
+  list.innerHTML = html;
+}
+
+function toggleGroup(key) {
+  state.expandedGroups[key] = state.expandedGroups[key] === false ? true : false;
+  renderModelList();
+  saveState();
+}
+
+function selectModel(provider, modelId) {
+  state.selectedModel = { provider, modelId };
+  updateModelBtn();
+  document.getElementById('modelDropdown').classList.remove('show');
+
+  // In debate mode, add to debate models
+  if (state.mode === 'debate') {
+    const exists = state.debateModels.find(m => m.provider === provider && m.modelId === modelId);
+    if (!exists) {
+      state.debateModels.push({ provider, modelId });
+      renderSelectedModels();
+    }
+  }
+
+  saveState();
+}
+
+function filterModels(query) {
+  const q = query.toLowerCase();
+  document.querySelectorAll('.model-item').forEach(item => {
+    const search = item.dataset.search || '';
+    item.style.display = search.includes(q) ? '' : 'none';
+  });
+  // Show all groups when searching
+  if (q) {
+    document.querySelectorAll('.model-group-items').forEach(g => g.style.display = 'block');
+    document.querySelectorAll('.model-group-header .arrow').forEach(a => a.classList.add('open'));
+  }
+}
+
+function updateModelBtn() {
+  const dot = document.getElementById('providerDot');
+  const name = document.getElementById('modelName');
+  if (state.selectedModel) {
+    const p = PROVIDERS[state.selectedModel.provider];
+    const m = p?.models.find(md => md.id === state.selectedModel.modelId);
+    dot.style.background = p?.color || '#999';
+    name.textContent = m?.name || state.selectedModel.modelId;
+  } else {
+    dot.style.background = 'var(--accent)';
+    name.textContent = '选择模型';
+  }
+}
+
+// ========== SETTINGS ==========
+function openSettings() {
+  const body = document.getElementById('settingsBody');
+  let html = '<div class="settings-section"><h3>API Key 配置</h3>';
+
+  for (const [key, provider] of Object.entries(PROVIDERS)) {
+    if (key === 'custom') continue;
+    const cfg = state.settings.providers?.[key] || {};
+    const hasKey = !!cfg.apiKey;
+    html += `<div class="provider-card" id="card-${key}">
+      <div class="provider-card-header">
+        <span class="dot" style="background:${provider.color}"></span>
+        <span class="name">${provider.name}</span>
+        <span class="status ${hasKey ? 'ok' : 'none'}">${hasKey ? '已配置' : '未配置'}</span>
+      </div>
+      <div class="input-row">
+        <input type="password" id="key-${key}" placeholder="输入 API Key..." value="${cfg.apiKey || ''}" onchange="updateProviderKey('${key}')">
+        <button class="verify-btn" onclick="verifyKey('${key}')">验证</button>
+      </div>
+      <div class="endpoint-input">
+        <label>API Endpoint（可选，留空使用默认）</label>
+        <input type="text" id="ep-${key}" placeholder="${provider.endpoint}" value="${cfg.endpoint || ''}" onchange="updateProviderEndpoint('${key}')">
+      </div>
+    </div>`;
+  }
+
+  // Custom provider
+  const customCfg = state.settings.providers?.custom || {};
+  html += `<div class="provider-card" id="card-custom">
+    <div class="provider-card-header">
+      <span class="dot" style="background:#999"></span>
+      <span class="name">自定义 Provider</span>
+      <span class="status ${customCfg.apiKey ? 'ok' : 'none'}">${customCfg.apiKey ? '已配置' : '未配置'}</span>
+    </div>
+    <div class="input-row">
+      <input type="password" id="key-custom" placeholder="输入 API Key..." value="${customCfg.apiKey || ''}" onchange="updateProviderKey('custom')">
+    </div>
+    <div class="endpoint-input">
+      <label>Endpoint（必填）</label>
+      <input type="text" id="ep-custom" placeholder="https://your-api.com/v1/chat/completions" value="${customCfg.endpoint || ''}" onchange="updateProviderEndpoint('custom')">
+    </div>
+    <div class="endpoint-input">
+      <label>模型 ID（用逗号分隔多个）</label>
+      <input type="text" id="models-custom" placeholder="model-a,model-b" value="${(customCfg.models || []).join(',')}" onchange="updateCustomModels()">
+    </div>
+  </div>`;
+
+  html += '</div>';
+  body.innerHTML = html;
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('show');
+}
+
+function saveSettings() {
+  saveState();
+  renderModelList();
+  closeSettings();
+  showToast('设置已保存', 'success');
+}
+
+function updateProviderKey(key) {
+  if (!state.settings.providers) state.settings.providers = {};
+  if (!state.settings.providers[key]) state.settings.providers[key] = {};
+  state.settings.providers[key].apiKey = document.getElementById(`key-${key}`).value.trim();
+  const card = document.getElementById(`card-${key}`);
+  const status = card.querySelector('.status');
+  if (state.settings.providers[key].apiKey) {
+    status.textContent = '已配置';
+    status.className = 'status ok';
+  } else {
+    status.textContent = '未配置';
+    status.className = 'status none';
+  }
+  saveState();
+}
+
+function updateProviderEndpoint(key) {
+  if (!state.settings.providers) state.settings.providers = {};
+  if (!state.settings.providers[key]) state.settings.providers[key] = {};
+  state.settings.providers[key].endpoint = document.getElementById(`ep-${key}`).value.trim();
+  saveState();
+}
+
+function updateCustomModels() {
+  if (!state.settings.providers) state.settings.providers = {};
+  if (!state.settings.providers.custom) state.settings.providers.custom = {};
+  const val = document.getElementById('models-custom').value.trim();
+  state.settings.providers.custom.models = val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  // Update PROVIDERS.custom.models
+  PROVIDERS.custom.models = state.settings.providers.custom.models.map(id => ({
+    id, name: id, tags: ['自定义']
+  }));
+  saveState();
+}
+
+async function verifyKey(key) {
+  const btn = document.querySelector(`#card-${key} .verify-btn`);
+  btn.textContent = '验证中...';
+  btn.classList.add('loading');
+
+  const cfg = state.settings.providers?.[key];
+  const provider = PROVIDERS[key];
+  if (!cfg?.apiKey) {
+    btn.textContent = '✗ 无Key';
+    btn.classList.remove('loading');
+    setTimeout(() => { btn.textContent = '验证'; }, 2000);
+    return;
+  }
+
+  const endpoint = cfg.endpoint || provider.endpoint;
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${cfg.apiKey}`,
+    };
+    // Anthropic uses x-api-key
+    if (key === 'anthropic') {
+      headers['x-api-key'] = cfg.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      delete headers['Authorization'];
+    }
+
+    const testModel = provider.models[0]?.id || 'gpt-4o-mini';
+    const body = {
+      model: testModel,
+      messages: [{ role: 'user', content: 'hi' }],
+      max_tokens: 5,
+    };
+    if (key === 'anthropic') {
+      body.max_tokens = 5;
+    }
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
     });
-    if(q){S._treeOpen[pid]=match;pr.querySelector('.arrow').classList.toggle('open',match);pr.querySelector('.tree-models').classList.toggle('open',match)}
-    pr.style.display=(!q||match)?'':'none';
-  });
-}
 
-function renderKeys(){
-  let h='<div class="api-area">';
-  for(const[pid,p]of Object.entries(P)){
-    const v=S.keys[pid]||'';
-    h+=`<div class="api-row"><div class="api-hd"><span class="p-icon" style="background:${p.c};width:16px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">${p.i}</span><span style="font-size:11px;font-weight:600">${p.name}</span><span class="key-status" id="ks_${pid}">${v?'⏳':''}</span></div><input type="password" placeholder="sk-..." value="${v}" onchange="saveKey('${pid}',this.value)"><div class="ep-in"><label>自定义 Endpoint</label><input type="text" placeholder="${p.ep.split('/')[2]||''}" value="${S.eps[pid]||''}" onchange="saveEp('${pid}',this.value)"></div></div>`;
-  }
-  h+=`<div class="api-row" style="margin-top:12px;border-top:1px solid var(--b);padding-top:10px"><div class="api-hd"><span style="font-size:11px;font-weight:600">🎤 MiMo ASR Key</span><span class="key-status" id="ks_mimo"></span></div><input type="password" placeholder="MiMo API Key (语音输入)" value="${S.mimoKey}" onchange="S.mimoKey=this.value.trim();localStorage.setItem('aim',S.mimoKey)"></div>`;
-  h+='<div class="api-note">💡 所有 Key 仅存储在浏览器本地，不会上传到任何服务器。<br>语音输入优先使用浏览器内置 Web Speech API（免费），MiMo ASR 作为兜底。</div></div>';
-  setTimeout(()=>{for(const pid of Object.keys(P)){if(S.keys[pid])verifyKey(pid)}},100);
-  return h;
-}
-
-function renderStats(){
-  let h=`<div class="stat-card"><h3>📊 累计用量</h3><div class="stat-r"><span class="l">总 Token</span><span class="v">${fmtN(S.totalTok)}</span></div><div class="stat-r"><span class="l">总费用</span><span class="v">$${S.totalCost.toFixed(4)}</span></div><div class="stat-r"><span class="l">≈ 人民币</span><span class="v">¥${(S.totalCost*7.25).toFixed(4)}</span></div></div>`;
-  const ent=Object.entries(S.modelUsage).sort((a,b)=>b[1].cost-a[1].cost);
-  if(ent.length){h+='<div class="stat-card"><h3>🔍 模型明细</h3>';for(const[k,u]of ent){h+=`<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--b)"><div style="font-size:11px;font-weight:600;margin-bottom:2px">${k}</div><div class="stat-r"><span class="l">调用</span><span class="v">${u.calls}次</span></div><div class="stat-r"><span class="l">Token</span><span class="v">${fmtN(u.tokens)}</span></div><div class="stat-r"><span class="l">费用</span><span class="v cost">$${u.cost.toFixed(4)}</span></div></div>`}h+='</div>'}
-  h+='<div style="text-align:center;margin-top:8px"><button style="padding:5px 12px;background:var(--rd);border:none;border-radius:6px;color:#fff;font-size:11px;cursor:pointer" onclick="clearU()">清除记录</button></div>';
-  return h;
-}
-
-// ==================== Actions ====================
-function toggleTree(pid){S._treeOpen[pid]=!S._treeOpen[pid];renderSB()}
-function toggleM(pid,mid){
-  const idx=S.sel.findIndex(s=>s.pid===pid&&s.mid===mid);
-  if(idx>=0)S.sel.splice(idx,1);
-  else{if(S.mode==='single')S.sel=[];S.sel.push({pid,mid})}
-  // Update recent
-  const rk=`${pid}/${mid}`;S.recent=S.recent.filter(r=>r!==rk);S.recent.unshift(rk);if(S.recent.length>10)S.recent.pop();localStorage.setItem('air',JSON.stringify(S.recent));
-  renderSel();renderSB();updateHint();
-}
-function removeM(i){S.sel.splice(i,1);renderSel();renderSB();updateHint()}
-function saveKey(pid,v){S.keys[pid]=v.trim();localStorage.setItem('aik',JSON.stringify(S.keys));renderSB();verifyKey(pid);toast('Key 已保存','ok')}
-function saveEp(pid,v){S.eps[pid]=v.trim();localStorage.setItem('aie',JSON.stringify(S.eps))}
-function clearU(){S.totalTok=0;S.totalCost=0;S.modelUsage={};localStorage.removeItem('aiu');renderSB();updHdStats();toast('已清除','ok')}
-function setDR(n){S.debateRounds=n;document.getElementById('dRange').value=n;document.getElementById('dNum').value=n}
-
-// Verify key
-async function verifyKey(pid){
-  const el=document.getElementById('ks_'+pid);if(!el)return;
-  el.textContent='⏳';el.title='验证中...';
-  const p=P[pid],key=S.keys[pid];
-  try{
-    let ok=false;
-    if(pid==='anthropic'){
-      const r=await fetch(p.ep.replace('/messages','/models'),{headers:{'x-api-key':key,'anthropic-version':'2023-06-01'}});ok=r.ok;
-    }else if(pid==='google'){
-      const r=await fetch(`${p.ep}/models?key=${key}`);ok=r.ok;
-    }else if(pid==='baidu'){
-      ok=true; // Baidu uses access_token, hard to verify without model
-    }else{
-      const ep=S.eps[pid];const url=ep?`${ep.replace(/\/$/,'')}/models`:p.ep.replace('/chat/completions','/models');
-      const r=await fetch(url,{headers:{'Authorization':`Bearer ${key}`}});ok=r.ok||r.status===404; // Some providers don't have /models but key is valid
+    if (resp.ok || resp.status === 200) {
+      btn.textContent = '✓ 通过';
+      btn.style.color = 'var(--green)';
+    } else {
+      const err = await resp.text();
+      btn.textContent = `✗ ${resp.status}`;
+      btn.style.color = 'var(--red)';
+      console.error('Verify error:', err);
     }
-    el.textContent=ok?'✅':'❌';el.title=ok?'Key 有效':'Key 无效或无权限';
-  }catch(e){el.textContent='⚠️';el.title='网络错误，无法验证'}
-}
-
-// ==================== Header ====================
-function renderSel(){
-  const el=document.getElementById('selMds');
-  if(!S.sel.length){el.innerHTML='';return}
-  el.innerHTML=S.sel.map((s,i)=>{const p=P[s.pid],m=p.models.find(x=>x.id===s.mid);return`<span class="sel-tag" style="border-left:3px solid ${p.c}">${p.i} ${m.name} <span class="rm" onclick="removeM(${i})">×</span></span>`}).join('');
-}
-function setMode(m,btn){S.mode=m;document.querySelectorAll('.mode-sw button').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('debateCfg').style.display=m==='debate'?'flex':'none';if(m==='single'&&S.sel.length>1){S.sel=[S.sel[0]];renderSel();renderSB()}updateHint()}
-function updateHint(){const h={single:'单模型',multi:'多模型并行',debate:'辩论'};document.getElementById('modeHint')&&(document.getElementById('modeHint').textContent=h[S.mode]||S.mode)}
-function updHdStats(){document.getElementById('hdStats').innerHTML=`💰 $${S.totalCost.toFixed(4)} · 📝 ${fmtN(S.totalTok)}`}
-function scrollBtm(){const el=document.getElementById('chat');requestAnimationFrame(()=>el.scrollTop=el.scrollHeight)}
-function autoH(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px'}
-function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}}
-function fmtN(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n+''}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
-function toast(m,t){const d=document.createElement('div');d.className=`toast ${t}`;d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),3000)}
-function isOffpeak(){const n=new Date();const h=n.getHours(),m=n.getMinutes();return(h===0&&m>=30)||(h>=1&&h<8)||(h===8&&m<=30)}
-
-// ==================== File Upload ====================
-function triggerFile(){document.getElementById('fileInput').click()}
-function onFiles(e){
-  for(const f of e.target.files){
-    if(f.size>20*1024*1024){toast(`${f.name} 超过20MB`,'err');continue}
-    const att={name:f.name,size:f.size,type:f.type,file:f};
-    if(f.type.startsWith('image/')){const r=new FileReader();r.onload=()=>{att.preview=r.result;S.attachments.push(att);renderAttach()};r.readAsDataURL(f)}
-    else if(f.type.startsWith('text/')||/\.(txt|md|csv|json|py|js|ts|java|c|cpp|go|rs|html|css|sql|xml|yaml|toml|sh)$/i.test(f.name)){const r=new FileReader();r.onload=()=>{att.content=r.result;S.attachments.push(att);renderAttach()};r.readAsText(f)}
-    else S.attachments.push(att);renderAttach();
+  } catch (e) {
+    btn.textContent = '✗ 失败';
+    btn.style.color = 'var(--red)';
   }
-  e.target.value='';
+  btn.classList.remove('loading');
+  setTimeout(() => { btn.textContent = '验证'; btn.style.color = ''; }, 3000);
 }
-function renderAttach(){const el=document.getElementById('attachArea');if(!S.attachments.length){el.innerHTML='';return}el.innerHTML=S.attachments.map((a,i)=>{let inner=a.preview?`<img src="${a.preview}">`:'📄';return`<div class="attach-item">${inner}<span>${a.name}</span><span class="att-rm" onclick="S.attachments.splice(${i},1);renderAttach()">×</span></div>`}).join('')}
 
-// ==================== Voice Input ====================
-let mediaRec=null,audioChunks=[],isRec=false;
-async function toggleVoice(){
-  if(isRec){if(mediaRec)mediaRec.stop();isRec=false;document.getElementById('micBtn').classList.remove('recording');return}
-  // Try Web Speech API first
-  if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
-    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-    const sr=new SR();sr.lang='zh-CN';sr.continuous=true;sr.interimResults=true;
-    let final='';
-    sr.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)final+=e.results[i][0].transcript}document.getElementById('msgInput').value=final;autoH(document.getElementById('msgInput'))};
-    sr.onend=()=>{isRec=false;document.getElementById('micBtn').classList.remove('recording');toast('语音识别完成','ok')};
-    sr.onerror=e=>{isRec=false;document.getElementById('micBtn').classList.remove('recording');if(e.error==='not-allowed')toast('麦克风权限被拒绝','err');else toast('语音识别错误: '+e.error,'err')};
-    sr.start();isRec=true;document.getElementById('micBtn').classList.add('recording');toast('🎤 语音识别中...','ok');return;
+// ========== MESSAGES ==========
+function showEmptyState(show) {
+  const area = document.getElementById('messages');
+  if (show && !document.getElementById('emptyState')) {
+    area.innerHTML = `<div class="empty-state" id="emptyState">
+      <div class="logo-big">H</div>
+      <h2>AI Hub</h2>
+      <p>集合 15+ 家 AI 厂商，输入 API Key 即可对话。支持单模型、多模型对比、模型辩论。</p>
+      <div class="quick-start">
+        <button class="quick-btn" onclick="openSettings()">🔑 配置 API Key</button>
+        <button class="quick-btn" onclick="quickStart()">💡 快速开始</button>
+      </div>
+    </div>`;
+  } else if (!show) {
+    document.getElementById('emptyState')?.remove();
   }
-  // Fallback: MiMo ASR
-  if(!S.mimoKey){toast('当前浏览器不支持语音识别，请配置 MiMo ASR Key','err');return}
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm;codecs=opus'});
-    audioChunks=[];
-    mediaRec.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data)};
-    mediaRec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());await transcribe(new Blob(audioChunks,{type:'audio/webm'}))};
-    mediaRec.start();isRec=true;document.getElementById('micBtn').classList.add('recording');toast('🎤 录音中 (MiMo ASR)...','ok');
-  }catch(e){toast('麦克风访问失败','err')}
-}
-async function transcribe(blob){
-  toast('正在识别...','ok');
-  const fd=new FormData();fd.append('file',blob,'audio.webm');fd.append('model','mimo-v2.5-asr');fd.append('language','zh');
-  try{
-    const r=await fetch('https://api.mimo.mi.com/v1/audio/transcriptions',{headers:{'Authorization':`Bearer ${S.mimoKey}`},body:fd,method:'POST'});
-    if(!r.ok)throw new Error(await r.text());
-    const d=await r.json();const t=d.text||d.result||'';
-    if(t){const inp=document.getElementById('msgInput');inp.value+=(inp.value?'\n':'')+t;autoH(inp);toast('✅ 识别完成','ok')}else toast('未识别到内容','err');
-  }catch(e){toast('识别失败: '+e.message,'err')}
 }
 
-// ==================== TTS ====================
-function speak(text){
-  if(!('speechSynthesis' in window)){toast('浏览器不支持语音播报','err');return}
-  speechSynthesis.cancel();
-  const clean=text.replace(/[#*>\-\|]/g,'').replace(/`/g,'');
-  const chunks=clean.split(/(?<=[。！？.!?\n])/g).filter(Boolean);
-  let i=0;
-  function next(){if(i>=chunks.length)return;const u=new SpeechSynthesisUtterance(chunks[i++]);u.lang='zh-CN';u.rate=1;u.onend=next;speechSynthesis.speak(u)}
-  next();toast('🔊 播报中...','ok');
+function quickStart() {
+  openSettings();
 }
 
-// ==================== Send ====================
-async function send(){
-  const inp=document.getElementById('msgInput');const text=inp.value.trim();
-  if(!text||S.streaming)return;
-  if(!S.sel.length){toast('请先选择模型','err');return}
-  for(const s of S.sel){if(!S.keys[s.pid]){toast(`请先输入 ${P[s.pid].name} 的 Key`,'err');return}}
-  inp.value='';autoH(inp);
-  const userMsg={role:'user',content:text,attachments:S.attachments.length?S.attachments.map(a=>({name:a.name,type:a.type,preview:a.preview,content:a.content})):undefined};
-  S.attachments=[];renderAttach();
-  S.msgs.push(userMsg);renderMsgs();scrollBtm();
-  if(S.mode==='single')await streamSingle();
-  else if(S.mode==='multi')await streamMulti();
-  else await runDebate();
+function renderMessages(messages) {
+  const area = document.getElementById('messages');
+  if (!messages || messages.length === 0) {
+    showEmptyState(true);
+    return;
+  }
+  showEmptyState(false);
+  area.innerHTML = messages.map((msg, i) => renderMessage(msg, i)).join('');
+  scrollToBottom();
 }
 
-// ==================== API Call ====================
-function buildMsgs(pid,mid){
-  const p=P[pid],m=p.models.find(x=>x.id===mid);
-  const canV=m.tags.includes('vision'),canF=m.tags.includes('file');
-  const msgs=[];
-  for(const msg of S.msgs){
-    if(msg.role==='user'){
-      const parts=[];
-      if(msg.attachments?.length&&(canV||canF)){
-        for(const a of msg.attachments){
-          if(a.preview&&canV)parts.push({type:'image_url',image_url:{url:a.preview}});
-          else if(a.content&&canF)parts.push({type:'text',text:`[文件: ${a.name}]\n${a.content}`});
-        }
+function renderMessage(msg, index) {
+  if (msg.role === 'user') {
+    return `<div class="msg msg-user">
+      <div class="msg-avatar">👤</div>
+      <div class="msg-content">
+        <div class="msg-name">你</div>
+        <div class="msg-text">${escapeHtml(msg.content)}</div>
+      </div>
+    </div>`;
+  }
+
+  // AI message
+  let content = '';
+  if (msg.mode === 'multi' && msg.results) {
+    content = '<div class="multi-results">';
+    msg.results.forEach(r => {
+      const p = PROVIDERS[r.provider];
+      content += `<div class="multi-result">
+        <div class="multi-result-header">
+          <span style="width:8px;height:8px;border-radius:50%;background:${p?.color || '#999'}"></span>
+          ${r.modelName || r.model}
+          <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">${r.provider}</span>
+        </div>
+        <div class="multi-result-body">${renderMarkdown(r.content || r.error || '无响应')}</div>
+      </div>`;
+    });
+    content += '</div>';
+  } else if (msg.mode === 'debate' && msg.turns) {
+    content = msg.turns.map(turn => `
+      <div class="debate-turn" style="border-left-color:${PROVIDERS[turn.provider]?.color || 'var(--accent)'}">
+        <div class="debate-model">${turn.modelName || turn.model}（第${turn.round}轮）</div>
+        <div class="msg-text">${renderMarkdown(turn.content)}</div>
+      </div>
+    `).join('');
+    if (msg.summary) {
+      content += `<div class="debate-turn" style="border-left-color:var(--green)">
+        <div class="debate-model">📋 辩论总结</div>
+        <div class="msg-text">${renderMarkdown(msg.summary)}</div>
+      </div>`;
+    }
+  } else {
+    // Single model or streaming
+    let thinkingHtml = '';
+    if (msg.thinking) {
+      thinkingHtml = `<div class="thinking-block">
+        <div class="thinking-header" onclick="this.nextElementSibling.classList.toggle('show');this.querySelector('.arrow').classList.toggle('open')">
+          <span class="arrow">▶</span> 💭 思考过程
+        </div>
+        <div class="thinking-content">${renderMarkdown(msg.thinking)}</div>
+      </div>`;
+    }
+    content = thinkingHtml + renderMarkdown(msg.content || '');
+  }
+
+  const p = msg.provider ? PROVIDERS[msg.provider] : null;
+  return `<div class="msg msg-ai">
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-content">
+      <div class="msg-name">${msg.modelName || 'AI'} ${p ? `<span style="color:${p.color};font-size:11px">${p.name}</span>` : ''}</div>
+      <div class="msg-text">${content}</div>
+    </div>
+  </div>`;
+}
+
+// ========== SEND MESSAGE ==========
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || state.streaming) return;
+
+  // Ensure conversation exists
+  if (!state.currentConv) {
+    newConversation();
+  }
+  const conv = getCurrentConv();
+  if (!conv) return;
+
+  // Remove empty state
+  showEmptyState(false);
+
+  // Add user message
+  conv.messages.push({ role: 'user', content: text });
+  if (conv.messages.length === 1) {
+    conv.title = text.slice(0, 40) + (text.length > 40 ? '...' : '');
+    renderConvList();
+  }
+
+  renderMessages(conv.messages);
+  input.value = '';
+  input.style.height = 'auto';
+  updateSendBtn();
+
+  if (state.mode === 'single') {
+    await sendSingleMessage(conv, text);
+  } else if (state.mode === 'multi') {
+    await sendMultiMessage(conv, text);
+  } else if (state.mode === 'debate') {
+    await sendDebateMessage(conv, text);
+  }
+
+  saveState();
+}
+
+async function sendSingleMessage(conv, text) {
+  if (!state.selectedModel) {
+    showToast('请先选择模型', 'error');
+    return;
+  }
+
+  const { provider, modelId } = state.selectedModel;
+  const cfg = state.settings.providers?.[provider];
+  if (!cfg?.apiKey) {
+    showToast(`请先在设置中配置 ${PROVIDERS[provider]?.name} 的 API Key`, 'error');
+    openSettings();
+    return;
+  }
+
+  const providerInfo = PROVIDERS[provider];
+  const modelInfo = providerInfo.models.find(m => m.id === modelId);
+  const endpoint = cfg.endpoint || providerInfo.endpoint;
+
+  // Add placeholder AI message
+  const aiMsg = {
+    role: 'assistant',
+    content: '',
+    thinking: '',
+    provider,
+    modelName: modelInfo?.name || modelId,
+    mode: 'single',
+  };
+  conv.messages.push(aiMsg);
+  renderMessages(conv.messages);
+
+  setStatus('streaming', '正在生成...');
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (provider === 'anthropic') {
+      headers['x-api-key'] = cfg.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+    } else {
+      headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+    }
+
+    const messages = conv.messages
+      .filter(m => m.role === 'user' || (m.role === 'assistant' && m.content))
+      .slice(0, -1)
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
+
+    messages.push({ role: 'user', content: text });
+
+    let body;
+    if (provider === 'anthropic') {
+      body = {
+        model: modelId,
+        messages,
+        max_tokens: 4096,
+        stream: true,
+      };
+    } else {
+      body = {
+        model: modelId,
+        messages,
+        stream: true,
+      };
+    }
+
+    state.streaming = true;
+    updateSendBtn();
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`API 错误 ${resp.status}: ${err.slice(0, 200)}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullContent = '';
+    let thinkingContent = '';
+    let isThinking = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const json = JSON.parse(data);
+          let delta = '';
+
+          if (provider === 'anthropic') {
+            if (json.type === 'content_block_delta') {
+              if (json.delta?.type === 'thinking_delta') {
+                thinkingContent += json.delta.thinking || '';
+                isThinking = true;
+              } else if (json.delta?.type === 'text_delta') {
+                delta = json.delta.text || '';
+                isThinking = false;
+              }
+            }
+          } else {
+            const choice = json.choices?.[0];
+            if (choice?.delta) {
+              // Check for reasoning content (DeepSeek R1, etc.)
+              if (choice.delta.reasoning_content) {
+                thinkingContent += choice.delta.reasoning_content;
+                isThinking = true;
+              } else if (choice.delta.content) {
+                delta = choice.delta.content;
+                isThinking = false;
+              }
+            }
+          }
+
+          if (delta) fullContent += delta;
+
+          // Update UI
+          aiMsg.content = fullContent;
+          aiMsg.thinking = thinkingContent;
+          updateLastMessage(aiMsg);
+        } catch (e) {}
       }
-      if(pid==='anthropic'){
-        const c=[];
-        for(const p2 of parts){if(p2.type==='image_url')c.push({type:'image',source:{type:'base64',media_type:'image/jpeg',data:p2.image_url.url.split(',')[1]}});else c.push({type:'text',text:p2.text})}
-        c.push({type:'text',text:msg.content});msgs.push({role:'user',content:c});
-      }else if(parts.length)msgs.push({role:'user',content:[...parts,{type:'text',text:msg.content}]});
-      else msgs.push({role:'user',content:msg.content});
-    }else if(msg.role==='assistant')msgs.push({role:'assistant',content:msg.content});
-  }
-  return msgs;
-}
-
-async function callAPI(pid,mid,msgs){
-  const p=P[pid],m=p.models.find(x=>x.id===mid);const key=S.keys[pid],ep=S.eps[pid];
-  let url,headers,body;
-  if(pid==='anthropic'){url=ep?`${ep}/v1/messages`:p.ep;headers={'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'};const sys=msgs.find(x=>x.role==='system');const um=msgs.filter(x=>x.role!=='system');body={model:mid,max_tokens:8192,messages:um,stream:true};if(sys)body.system=sys.content;if(m.tags.includes('think'))body.thinking={type:'enabled',budget_tokens:4096}}
-  else if(pid==='google'){const b=ep||p.ep;url=`${b}/models/${mid}:streamGenerateContent?key=${key}&alt=sse`;headers={'Content-Type':'application/json'};const c=[];for(const msg of msgs){if(msg.role==='system')continue;const pts=[];if(typeof msg.content==='string')pts.push({text:msg.content});else if(Array.isArray(msg.content))for(const c2 of msg.content){if(c2.type==='text')pts.push({text:c2.text});else if(c2.type==='image_url')pts.push({inlineData:{mimeType:'image/jpeg',data:c2.image_url.url.split(',')[1]}})}c.push({role:msg.role==='assistant'?'model':'user',parts:pts})}body={contents:c,generationConfig:{maxOutputTokens:8192}};const sys=msgs.find(x=>x.role==='system');if(sys)body.systemInstruction={parts:[{text:sys.content}]}}
-  else if(pid==='baidu'){url=`${p.ep}/${mid}?access_token=${key}`;headers={'Content-Type':'application/json'};body={messages:msgs.filter(m2=>m2.role!=='system').map(m2=>({role:m2.role,content:typeof m2.content==='string'?m2.content:JSON.stringify(m2.content)})),stream:true};const sys=msgs.find(x=>x.role==='system');if(sys)body.system=sys.content}
-  else{url=ep?`${ep.replace(/\/$/,'')}/v1/chat/completions`:p.ep;headers={'Content-Type':'application/json','Authorization':`Bearer ${key}`};body={model:mid,messages:msgs.map(m2=>({role:m2.role,content:typeof m2.content==='string'?m2.content:JSON.stringify(m2.content)})),stream:true}}
-  const resp=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
-  if(!resp.ok){const t=await resp.text();let msg;try{msg=JSON.parse(t).error?.message||JSON.parse(t).message||t}catch(e){msg=t};throw new Error(`${resp.status}: ${msg}`)}
-  let content='',thinking='',inTok=0,outTok=0;const reader=resp.body.getReader(),dec=new TextDecoder();let buf='',thinkBuf='',isThinking=false;
-  while(true){const{done,value}=await reader.read();if(done)break;buf+=dec.decode(value,{stream:true});const lines=buf.split('\n');buf=lines.pop()||'';
-    for(const line of lines){if(!line.startsWith('data:'))continue;const data=line.slice(line.indexOf(':')+1).trim();if(data==='[DONE]')continue;try{const json=JSON.parse(data);
-      if(pid==='anthropic'){if(json.type==='content_block_start'){if(json.content_block?.type==='thinking')isThinking=true}else if(json.type==='content_block_delta'){if(isThinking&&json.delta?.thinking)thinkBuf+=json.delta.thinking;else if(json.delta?.text){if(isThinking){isThinking=false;thinking=thinkBuf}content+=json.delta.text}}else if(json.type==='message_start')inTok=json.message?.usage?.input_tokens||0;else if(json.type==='message_delta')outTok=json.usage?.output_tokens||0}
-      else if(pid==='google'){const txt=json.candidates?.[0]?.content?.parts?.[0]?.text;if(txt)content+=txt;const u=json.usageMetadata;if(u){inTok=u.promptTokenCount||inTok;outTok=u.candidatesTokenCount||outTok}}
-      else if(pid==='baidu'){content+=json.result||'';if(json.usage){inTok=json.usage.prompt_tokens||inTok;outTok=json.usage.completion_tokens||outTok}}
-      else{const d=json.choices?.[0]?.delta;if(d?.reasoning_content||d?.thinking){thinkBuf+=d.reasoning_content||d.thinking;isThinking=true}else if(d?.content){if(isThinking){isThinking=false;thinking=thinkBuf}content+=d.content}if(json.usage){inTok=json.usage.prompt_tokens||inTok;outTok=json.usage.completion_tokens||outTok}}
-    }catch(e){}}}
-  if(isThinking&&thinkBuf)thinking=thinkBuf;
-  if(!inTok&&!outTok){const tc=msgs.reduce((s,m2)=>s+(typeof m2.content==='string'?m2.content:JSON.stringify(m2.content)).length,0)+content.length;inTok=Math.ceil(tc*0.4);outTok=Math.ceil(content.length*0.4)}
-  // Offpeak pricing for DeepSeek
-  let inpPrice=m.inp,outPrice=m.out;
-  if(pid==='deepseek'&&isOffpeak()){const op=p.offpeak;if(mid==='deepseek-chat'&&op.v3){inpPrice=op.v3.inp;outPrice=op.v3.out}else if(mid==='deepseek-reasoner'&&op.r1){inpPrice=op.r1.inp;outPrice=op.r1.out}}
-  const cost=(inTok*inpPrice+outTok*outPrice)/1000000;
-  return{content,thinking,tokens:inTok+outTok,cost};
-}
-
-// ==================== Streaming ====================
-async function streamSingle(){
-  const s=S.sel[0],p=P[s.pid],m=p.models.find(x=>x.id===s.mid);const key=`${p.name}/${m.name}`;
-  S.streaming=true;document.getElementById('sendBtn').disabled=true;addThinking(key);
-  try{const msgs=buildMsgs(s.pid,s.mid);const r=await callAPI(s.pid,s.mid,msgs);removeThinking();S.msgs.push({role:'assistant',content:r.content,key,tokens:r.tokens,cost:r.cost,thinking:r.thinking});addUsage(s.pid,s.mid,r.tokens,r.cost);renderMsgs();scrollBtm()}
-  catch(e){removeThinking();toast('错误: '+e.message,'err');S.msgs.push({role:'assistant',content:`❌ ${e.message}`,key,tokens:0,cost:0});renderMsgs()}
-  S.streaming=false;document.getElementById('sendBtn').disabled=false;
-}
-
-async function streamMulti(){
-  S.streaming=true;document.getElementById('sendBtn').disabled=true;
-  for(const s of S.sel){const p=P[s.pid],m=p.models.find(x=>x.id===s.mid);addThinking(`${p.name}/${m.name}`)}
-  const proms=S.sel.map(async s=>{const p=P[s.pid],m=p.models.find(x=>x.id===s.mid);const key=`${p.name}/${m.name}`;try{const msgs=buildMsgs(s.pid,s.mid);const r=await callAPI(s.pid,s.mid,msgs);addUsage(s.pid,s.mid,r.tokens,r.cost);return{key,color:p.c,...r}}catch(e){return{key,color:p.c,content:`❌ ${e.message}`,tokens:0,cost:0}}});
-  const res=await Promise.all(proms);removeThinking();S.msgs.push({role:'multi',responses:res});renderMsgs();scrollBtm();S.streaming=false;document.getElementById('sendBtn').disabled=false;
-}
-
-async function runDebate(){
-  S.streaming=true;document.getElementById('sendBtn').disabled=true;
-  const R=S.debateRounds,models=S.sel.slice(0,8);
-  S.msgs.push({role:'debate-hd',text:`⚔️ 辩论 · ${models.length} 模型 · ${R} 轮`});renderMsgs();
-  const allRounds=[];
-  for(let r=0;r<R;r++){
-    S.msgs.push({role:'debate-rd',round:r+1});renderMsgs();
-    const roundResp=[];
-    for(const s of models){
-      const p=P[s.pid],m=p.models.find(x=>x.id===s.mid);const key=`${p.name}/${m.name}`;addThinking(`[R${r+1}] ${key}`);
-      try{
-        const sys=r===R-1?`你是 ${key}，最后一轮。总结核心观点，回应质疑，给出最终结论。`:`你是 ${key}，第${r+1}/${R}轮。陈述观点，指出他人不足，提出新论据。`;
-        const apiMsgs=[{role:'system',content:sys}];
-        if(r===0)apiMsgs.push({role:'user',content:`请就以下问题给出你的观点：\n\n${S.msgs[S.msgs.length-1-roundResp.length-1]?.content||''}`});
-        else{let ctx=`原始问题：${S.msgs.find(m2=>m2.role==='user')?.content||''}\n\n`;for(const prev of allRounds)for(const resp of prev)ctx+=`**${resp.key}**（R${prev._round}）：${resp.content.substring(0,500)}\n\n`;ctx+=`请给出第${r+1}轮回应。`;apiMsgs.push({role:'user',content:ctx})}
-        const result=await callAPI(s.pid,s.mid,apiMsgs);addUsage(s.pid,s.mid,result.tokens,result.cost);roundResp.push({key,color:p.c,...result});
-      }catch(e){roundResp.push({key,color:p.c,content:`❌ ${e.message}`,tokens:0,cost:0})}
-      removeThinking();
     }
-    roundResp._round=r+1;allRounds.push(roundResp);
-    S.msgs.push({role:'debate-resp',responses:roundResp,round:r+1});renderMsgs();scrollBtm();
+
+    setStatus('ready', '就绪');
+  } catch (e) {
+    aiMsg.content = `❌ 错误：${e.message}`;
+    setStatus('error', '出错了');
+    showToast(e.message, 'error');
   }
-  // Summary
-  if(R>=2){
-    addThinking('📝 辩论总结');
-    try{
-      let summaryCtx=`以下是${models.length}个AI模型经过${R}轮辩论的内容，请作为中立裁判总结各方观点优劣，给出综合结论：\n\n`;
-      for(const rd of allRounds)for(const resp of rd)summaryCtx+=`**${resp.key}**：${resp.content.substring(0,800)}\n\n`;
-      const summaryMsgs=[{role:'system',content:'你是中立裁判，总结辩论各方观点，分析优劣，给出综合结论。'},{role:'user',content:summaryCtx}];
-      const sumResult=await callAPI(models[0].pid,models[0].mid,summaryMsgs);removeThinking();
-      S.msgs.push({role:'debate-summary',content:sumResult.content,key:'📝 辩论总结'});renderMsgs();scrollBtm();
-    }catch(e){removeThinking()}
-  }
-  S.msgs.push({role:'debate-end'});renderMsgs();S.streaming=false;document.getElementById('sendBtn').disabled=false;
+
+  state.streaming = false;
+  updateSendBtn();
+  renderMessages(conv.messages);
 }
 
-function addUsage(pid,mid,tok,cost){const p=P[pid],m=p.models.find(x=>x.id===mid);const key=`${p.name}/${m.name}`;S.totalTok+=tok;S.totalCost+=cost;if(!S.modelUsage[key])S.modelUsage[key]={tokens:0,cost:0,calls:0};S.modelUsage[key].tokens+=tok;S.modelUsage[key].cost+=cost;S.modelUsage[key].calls+=1;localStorage.setItem('aiu',JSON.stringify({t:S.totalTok,c:S.totalCost,m:S.modelUsage}));updHdStats()}
-
-// ==================== Rendering ====================
-function renderMsgs(){
-  const el=document.getElementById('chat');let h='';
-  // Offpeak badge
-  if(isOffpeak())h+=`<div style="text-align:center"><span class="offpeak-badge">🌿 DeepSeek 错峰时段 (00:30-08:30) · V3五折 · R1二五折</span></div>`;
-  for(const msg of S.msgs){
-    if(msg.role==='user'){let ah='';if(msg.attachments?.length){ah='<div style="margin-top:4px;display:flex;gap:3px;flex-wrap:wrap">';for(const a of msg.attachments){if(a.preview)ah+=`<img src="${a.preview}" style="max-width:60px;max-height:60px;border-radius:4px">`;else ah+=`<span style="font-size:10px;background:rgba(255,255,255,.15);padding:1px 5px;border-radius:3px">📄 ${a.name}</span>`}ah+='</div>'}h+=`<div class="msg-g user"><div class="msg user">${esc(msg.content)}${ah}</div></div>`}
-    else if(msg.role==='assistant'){h+=`<div class="msg-g assistant"><div class="msg ai">${thinkBlk(msg.thinking)}<div class="ml"><span class="pdot" style="background:${keyColor(msg.key)}"></span>${msg.key}</div><div class="md-content">${renderMD(msg.content)}</div><div class="mm"><span>📝 ${fmtN(msg.tokens)} tok</span><span class="cost">💰 $${msg.cost.toFixed(4)}</span><button onclick="speak(this.closest('.msg').querySelector('.md-content').textContent)">🔊</button><button onclick="copyTxt(this.closest('.msg').querySelector('.md-content').textContent)">📋</button></div></div></div>`}
-    else if(msg.role==='multi'){h+=`<div class="msg-g assistant"><div class="multi-grid">`;for(const r of msg.responses){h+=`<div class="msg ai" style="border-left:3px solid ${r.color}">${thinkBlk(r.thinking)}<div class="ml"><span class="pdot" style="background:${r.color}"></span>${r.key}</div><div class="md-content">${renderMD(r.content)}</div><div class="mm"><span>📝 ${fmtN(r.tokens)}</span><span class="cost">💰 $${r.cost.toFixed(4)}</span><button onclick="speak(this.closest('.msg').querySelector('.md-content').textContent)">🔊</button></div></div>`}h+='</div></div>'}
-    else if(msg.role==='debate-hd')h+=`<div class="debate-badge"><span>${msg.text}</span></div>`;
-    else if(msg.role==='debate-rd')h+=`<div class="debate-round"><span>📌 第 ${msg.round} 轮</span></div>`;
-    else if(msg.role==='debate-resp'){h+=`<div class="msg-g assistant"><div class="multi-grid">`;for(const r of msg.responses){h+=`<div class="msg ai" style="border-left:3px solid ${r.color}">${thinkBlk(r.thinking)}<div class="ml"><span class="pdot" style="background:${r.color}"></span>${r.key}</div><div class="md-content">${renderMD(r.content)}</div><div class="mm"><span>📝 ${fmtN(r.tokens)}</span><span class="cost">💰 $${msg.cost?.toFixed(4)||'0'}</span></div></div>`}h+='</div></div>'}
-    else if(msg.role==='debate-summary')h+=`<div class="msg-g assistant"><div class="msg ai debate-summary"><div class="ml"><span class="pdot" style="background:var(--yl)"></span>${msg.key}</div><div class="md-content">${renderMD(msg.content)}</div></div></div>`;
-    else if(msg.role==='debate-end')h+=`<div class="debate-badge"><span>✅ 辩论结束</span></div>`;
+async function sendMultiMessage(conv, text) {
+  // Get models with API keys configured
+  const targets = [];
+  for (const [key, provider] of Object.entries(PROVIDERS)) {
+    if (key === 'custom') continue;
+    const cfg = state.settings.providers?.[key];
+    if (cfg?.apiKey && provider.models.length > 0) {
+      // Use first model of each provider
+      targets.push({ provider: key, modelId: provider.models[0].id, modelName: provider.models[0].name });
+    }
   }
-  el.innerHTML=h;renderMermaid();addCopyBtns();
-}
 
-function thinkBlk(t){if(!t)return'';const id='t_'+Math.random().toString(36).slice(2,7);return`<div class="think-blk"><div class="think-hd" onclick="document.getElementById('${id}b').classList.toggle('open');document.getElementById('${id}a').classList.toggle('open')"><span class="think-icon">🧠</span><span class="think-label">思考过程</span><span class="think-arrow" id="${id}a">▶</span></div><div class="think-body" id="${id}b">${renderMD(t)}</div></div>`}
+  if (targets.length === 0) {
+    showToast('请先在设置中配置至少一个 API Key', 'error');
+    openSettings();
+    return;
+  }
 
-function addThinking(label){const el=document.getElementById('chat');const d=document.createElement('div');d.className='thinking-stream';d.id='th_'+Date.now();d.innerHTML=`<span>🧠 ${label}</span><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>`;el.appendChild(d);scrollBtm()}
-function removeThinking(){document.querySelectorAll('[id^="th_"]').forEach(e=>e.remove())}
+  const aiMsg = {
+    role: 'assistant',
+    mode: 'multi',
+    results: targets.map(t => ({
+      ...t,
+      content: '',
+      loading: true,
+    })),
+  };
+  conv.messages.push(aiMsg);
+  renderMessages(conv.messages);
+  setStatus('streaming', `正在对比 ${targets.length} 个模型...`);
 
-// ==================== Markdown ====================
-function renderMD(text){
-  if(!text)return'';let t=text;
-  t=t.replace(/```mermaid\n([\s\S]*?)```/g,(m,c)=>`<div class="mermaid-block" data-code="${btoa(unescape(encodeURIComponent(c)))}"></div>`);
-  t=t.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g,(m,c)=>{try{return katex.renderToString(c.trim(),{displayMode:true,throwOnError:false})}catch(e){return`<pre>${c}</pre>`}});
-  t=t.replace(/\$([^\$\n]+?)\$/g,(m,c)=>{try{return katex.renderToString(c.trim(),{displayMode:false,throwOnError:false})}catch(e){return m}});
-  let html=marked.parse(t);
-  // Add run button for python code blocks
-  html=html.replace(/<pre><code class="language-python">([\s\S]*?)<\/code><\/pre>/g,(m,code)=>{
-    const id='py_'+Math.random().toString(36).slice(2,7);return`<div class="code-hdr"><span>Python</span><button onclick="runPy('${id}')">▶ 运行</button></div><pre><code id="${id}" class="language-python">${code}</code></pre><div id="${id}_out" style="display:none;background:var(--s3);border:1px solid var(--b);border-radius:0 0 8px 8px;padding:10px;font-size:12px;max-height:300px;overflow:auto"></div>`;
+  // Send to all models in parallel
+  const promises = targets.map(async (t, i) => {
+    const cfg = state.settings.providers[t.provider];
+    const providerInfo = PROVIDERS[t.provider];
+    const endpoint = cfg.endpoint || providerInfo.endpoint;
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (t.provider === 'anthropic') {
+        headers['x-api-key'] = cfg.apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+      } else {
+        headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+      }
+
+      const body = t.provider === 'anthropic'
+        ? { model: t.modelId, messages: [{ role: 'user', content: text }], max_tokens: 2048 }
+        : { model: t.modelId, messages: [{ role: 'user', content: text }] };
+
+      const resp = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      let content = '';
+      if (t.provider === 'anthropic') {
+        content = data.content?.[0]?.text || '';
+      } else {
+        content = data.choices?.[0]?.message?.content || '';
+      }
+
+      aiMsg.results[i].content = content;
+      aiMsg.results[i].loading = false;
+    } catch (e) {
+      aiMsg.results[i].content = '';
+      aiMsg.results[i].error = `❌ ${e.message}`;
+      aiMsg.results[i].loading = false;
+    }
   });
-  return html;
-}
-function renderMermaid(){document.querySelectorAll('.mermaid-block').forEach(el=>{const code=decodeURIComponent(escape(atob(el.dataset.code)));const id='m_'+Math.random().toString(36).slice(2,7);try{mermaid.render(id,code).then(({svg})=>{el.innerHTML=svg}).catch(e=>{el.innerHTML=`<pre>${code}</pre>`})}catch(e){el.innerHTML=`<pre>${code}</pre>`}})}
-function addCopyBtns(){document.querySelectorAll('.md-content pre:not(.has-btn)').forEach(pre=>{pre.classList.add('has-btn')})}
-function keyColor(key){for(const p of Object.values(P)){if(key.startsWith(p.name))return p.c}return'var(--ac)'}
-function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('已复制','ok')).catch(()=>{})}
 
-// ==================== Python Execution (simplified) ====================
-async function runPy(id){
-  const code=document.getElementById(id)?.textContent;if(!code)return;
-  const out=document.getElementById(id+'_out');if(!out)return;
-  out.style.display='block';out.innerHTML='<span style="color:var(--t2)">⏳ 正在加载 Python 运行时...</span>';
-  try{
-    if(!window._pyodide){window._pyodide=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'})}
-    const py=window._pyodide;
-    // Capture stdout
-    py.runPython('import sys,io;_stdout=io.StringIO();sys.stdout=_stdout');
-    py.runPython(code);
-    const output=py.runPython('_stdout.getvalue()');
-    out.innerHTML=`<pre style="margin:0;white-space:pre-wrap;color:var(--t)">${esc(output)}</pre>`;
-  }catch(e){out.innerHTML=`<pre style="margin:0;color:var(--rd)">${esc(e.message)}</pre>`}
+  await Promise.all(promises);
+  setStatus('ready', '就绪');
+  state.streaming = false;
+  renderMessages(conv.messages);
 }
 
-// ==================== Init ====================
-renderSB();renderSel();updHdStats();updateHint();
-if(!S._treeOpen)S._treeOpen={};S._treeOpen.openai=true;renderSB();
+async function sendDebateMessage(conv, text) {
+  if (state.debateModels.length < 2) {
+    showToast('辩论模式至少需要选择 2 个模型', 'error');
+    return;
+  }
 
-// Register PWA
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+  const rounds = state.debateRounds;
+  const aiMsg = {
+    role: 'assistant',
+    mode: 'debate',
+    turns: [],
+    summary: '',
+  };
+  conv.messages.push(aiMsg);
+  renderMessages(conv.messages);
+  setStatus('streaming', `辩论进行中（${rounds}轮）...`);
+
+  let debateContext = text;
+
+  for (let round = 1; round <= rounds; round++) {
+    for (const dm of state.debateModels) {
+      const cfg = state.settings.providers?.[dm.provider];
+      if (!cfg?.apiKey) continue;
+
+      const providerInfo = PROVIDERS[dm.provider];
+      const modelInfo = providerInfo.models.find(m => m.id === dm.modelId);
+      const endpoint = cfg.endpoint || providerInfo.endpoint;
+
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (dm.provider === 'anthropic') {
+          headers['x-api-key'] = cfg.apiKey;
+          headers['anthropic-version'] = '2023-06-01';
+        } else {
+          headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+        }
+
+        const prompt = round === 1
+          ? `辩论主题：${text}\n\n请发表你的观点（你是${modelInfo?.name || dm.modelId}）。`
+          : `辩论主题：${text}\n\n以下是其他模型的观点：\n${debateContext}\n\n请发表你的第${round}轮回应，可以反驳或补充。`;
+
+        const body = dm.provider === 'anthropic'
+          ? { model: dm.modelId, messages: [{ role: 'user', content: prompt }], max_tokens: 2048 }
+          : { model: dm.modelId, messages: [{ role: 'user', content: prompt }] };
+
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+
+        let content = '';
+        if (dm.provider === 'anthropic') {
+          content = data.content?.[0]?.text || '';
+        } else {
+          content = data.choices?.[0]?.message?.content || '';
+        }
+
+        aiMsg.turns.push({
+          provider: dm.provider,
+          model: dm.modelId,
+          modelName: modelInfo?.name || dm.modelId,
+          round,
+          content,
+        });
+
+        debateContext += `\n\n【${modelInfo?.name || dm.modelId}】：${content}`;
+        renderMessages(conv.messages);
+        scrollToBottom();
+      } catch (e) {
+        aiMsg.turns.push({
+          provider: dm.provider,
+          model: dm.modelId,
+          modelName: modelInfo?.name || dm.modelId,
+          round,
+          content: `❌ 错误：${e.message}`,
+        });
+      }
+    }
+  }
+
+  // Generate summary
+  try {
+    const summaryProvider = state.debateModels[0];
+    const cfg = state.settings.providers?.[summaryProvider.provider];
+    const providerInfo = PROVIDERS[summaryProvider.provider];
+    const endpoint = cfg.endpoint || providerInfo.endpoint;
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (summaryProvider.provider === 'anthropic') {
+      headers['x-api-key'] = cfg.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+    } else {
+      headers['Authorization'] = `Bearer ${cfg.apiKey}`;
+    }
+
+    const summaryPrompt = `以下是${rounds}轮辩论的完整内容：\n\n${debateContext}\n\n请作为中立裁判，总结各方观点，指出共识和分歧，给出综合评价。`;
+
+    const body = summaryProvider.provider === 'anthropic'
+      ? { model: summaryProvider.modelId, messages: [{ role: 'user', content: summaryPrompt }], max_tokens: 2048 }
+      : { model: summaryProvider.modelId, messages: [{ role: 'user', content: summaryPrompt }] };
+
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (summaryProvider.provider === 'anthropic') {
+        aiMsg.summary = data.content?.[0]?.text || '';
+      } else {
+        aiMsg.summary = data.choices?.[0]?.message?.content || '';
+      }
+    }
+  } catch (e) {}
+
+  setStatus('ready', '就绪');
+  state.streaming = false;
+  renderMessages(conv.messages);
+}
+
+function updateLastMessage(msg) {
+  const msgs = document.querySelectorAll('.msg-ai');
+  if (msgs.length === 0) return;
+  const last = msgs[msgs.length - 1];
+  const textEl = last.querySelector('.msg-text');
+  if (!textEl) return;
+
+  let content = '';
+  if (msg.thinking) {
+    content += `<div class="thinking-block">
+      <div class="thinking-header" onclick="this.nextElementSibling.classList.toggle('show');this.querySelector('.arrow').classList.toggle('open')">
+        <span class="arrow">▶</span> 💭 思考过程
+      </div>
+      <div class="thinking-content">${renderMarkdown(msg.thinking)}</div>
+    </div>`;
+  }
+  content += renderMarkdown(msg.content || '');
+  textEl.innerHTML = content;
+  scrollToBottom();
+}
+
+// ========== RENDERING ==========
+function renderMarkdown(text) {
+  if (!text) return '';
+  try {
+    // Configure marked
+    marked.setOptions({
+      highlight: function(code, lang) {
+        if (lang && hljs.getLanguage(lang)) {
+          return hljs.highlight(code, { language: lang }).value;
+        }
+        return hljs.highlightAuto(code).value;
+      },
+      breaks: true,
+      gfm: true,
+    });
+
+    let html = marked.parse(text);
+
+    // KaTeX for math
+    html = html.replace(/\$\$(.+?)\$\$/gs, (_, tex) => {
+      try { return katex.renderToString(tex, { displayMode: true, throwOnError: false }); }
+      catch(e) { return tex; }
+    });
+    html = html.replace(/\$(.+?)\$/g, (_, tex) => {
+      try { return katex.renderToString(tex, { displayMode: false, throwOnError: false }); }
+      catch(e) { return tex; }
+    });
+
+    return html;
+  } catch (e) {
+    return escapeHtml(text).replace(/\n/g, '<br>');
+  }
+}
+
+// ========== UI HELPERS ==========
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  updateSendBtn();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function updateSendBtn() {
+  const btn = document.getElementById('sendBtn');
+  const input = document.getElementById('userInput');
+  btn.disabled = !input.value.trim() || state.streaming;
+}
+
+function scrollToBottom() {
+  const area = document.getElementById('chatArea');
+  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 50);
+}
+
+function setStatus(type, text) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot' + (type === 'error' ? ' error' : type === 'streaming' ? ' warning' : '');
+  txt.textContent = text;
+}
+
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => { toast.className = 'toast'; }, 3000);
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  sidebar.classList.toggle('open');
+  backdrop.classList.toggle('show');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '小时前';
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+}
+
+function exportData() {
+  const data = JSON.stringify(state.conversations, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ai-hub-conversations.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('导出成功', 'success');
+}
+
+// Copy code
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('copy-btn')) {
+    const code = e.target.parentElement.querySelector('code');
+    if (code) {
+      navigator.clipboard.writeText(code.textContent).then(() => {
+        e.target.textContent = '已复制';
+        setTimeout(() => { e.target.textContent = '复制'; }, 2000);
+      });
+    }
+  }
+});
+
+// Add copy buttons to code blocks
+const observer = new MutationObserver(() => {
+  document.querySelectorAll('pre').forEach(pre => {
+    if (!pre.querySelector('.copy-btn')) {
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = '复制';
+      pre.style.position = 'relative';
+      pre.appendChild(btn);
+    }
+  });
+});
+observer.observe(document.getElementById('messages'), { childList: true, subtree: true });
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// Init
+init();
 </script>
 </body>
 </html>
