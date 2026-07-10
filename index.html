@@ -741,7 +741,7 @@ async function callAI(conv,text){
       headers['anthropic-version']='2023-06-01';
       body={model:m.modelId,messages:conv.messages.filter(x=>x.role==='user'||(x.role==='assistant'&&x.content)).map(x=>({role:x.role,content:x.content})),max_tokens:4096,stream:true};
     }else{
-      headers['Authorization']=`Bearer ${m.apiKey}`;
+      headers['api-key']=m.apiKey;
       body={model:m.modelId,messages:conv.messages.filter(x=>x.role==='user'||(x.role==='assistant'&&x.content)).map(x=>({role:x.role,content:x.content})),stream:true};
     }
 
