@@ -815,7 +815,7 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 'use strict';
 
 /* ==================== Constants ==================== */
-const APP_VERSION = '5.1';
+const APP_VERSION = '5.2';
 const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
 const MIMO_BASE = 'https://api.xiaomimimo.com';
@@ -857,11 +857,19 @@ const MODELS = [
 ];
 
 const CHANGELOG = [
-  { version:'5.0', date:'2026-07-11', items:[
-    '全新 UI 设计，仿 Kimi 左侧边栏布局',
-    '支持多种模型类型：对话、TTS、语音克隆、语音设计、语音识别',
+  { version:'5.1', date:'2026-07-11 02:00', major:false, items:[
+    '登录页添加注册功能（身份选择/姓名/邮箱/手机号/密码）',
+    '模型选择器添加详情展开箭头，可查看模型ID、类型、功能标签',
+  ]},
+  { version:'5.0', date:'2026-07-11 01:45', major:true, items:[
+    '全面重写UI，仿Kimi左侧边栏布局',
+    '15个厂商27个模型树状分组展示',
+    '语音合成TTS：文本+音色+语速+情绪→音频播放',
+    '语音克隆：上传参考音频+文本→克隆音色播放',
+    '语音设计：文字描述音色→生成播放',
+    '语音识别ASR：上传音频→转文字',
     '深色/浅色主题切换',
-    '移动端响应式适配，侧边栏可滑出收起',
+    '移动端响应式适配',
     '流式输出支持',
     '模型分组选择器',
     '会话按时间分组显示',
@@ -1623,13 +1631,15 @@ function renderChangelog() {
   const list = $('changelogList');
   let html = '';
   CHANGELOG.forEach((log, i) => {
-    const isFirst = i === 0;
+    const isMajor = log.major !== false;
+    const majorLabel = isMajor ? ' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--accent);color:#fff;margin-left:4px">大更新</span>' : ' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--bg-hover);color:var(--text-tertiary);margin-left:4px">小更新</span>';
     html += `<div class="changelog-item">
-      <div>
-        <span class="version-tag">v${log.version}</span>
+      <div style="display:flex;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <span class="version-tag">v${log.version}</span>${majorLabel}
         <span class="changelog-date">${log.date}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">${isMajor?'▼':'▶'}</span>
       </div>
-      <ul>${log.items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}</ul>
+      <ul style="${isMajor?'':'display:none'}">${log.items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}</ul>
     </div>`;
   });
   list.innerHTML = html;
