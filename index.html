@@ -440,7 +440,7 @@ pre:hover .copy-btn{opacity:1}
 <div class="toast" id="toast"></div>
 
 <script>
-const APP_VERSION='4.2';
+const APP_VERSION='4.3';
 
 // ========== DEFAULT MODELS ==========
 const DEFAULT_MODELS = [
@@ -1182,43 +1182,6 @@ function showToast(msg,type=''){
   setTimeout(()=>t.className='toast',3000);
 }
 
-
-// ========== UPDATE LOG ==========
-const UPDATE_LOG = [
-  {version:'4.0',time:'2026-07-11 01:30',changes:['修复MiMo API调用问题（api-key header）','修正API端点为api.xiaomimimo.com','添加更新日志功能','版本号强制刷新旧缓存']},
-  {version:'3.4',time:'2026-07-11 01:00',changes:['强制更新MiMo API Key','添加版本号自动清除旧缓存']},
-  {version:'3.3',time:'2026-07-11 00:45',changes:['修正小米MiMo API端点','配置完整API Key']},
-  {version:'3.2',time:'2026-07-11 00:30',changes:['添加APP_VERSION版本控制','自动刷新旧localStorage数据']},
-  {version:'3.1',time:'2026-07-10 23:59',changes:['微信风格输入界面','语音/文字切换','+菜单（文件/图片/拍照/视频/文档）','录音覆盖层动画']},
-  {version:'3.0',time:'2026-07-10 23:30',changes:['完全重写UI','管理员账号1234/1234','React+Tailwind CSS风格','消息气泡区分用户/AI','输入区域渐变流动','深度思考彩虹效果','设置面板模型管理','浅色/深色主题切换']},
-  {version:'2.1',time:'2026-07-10 23:00',changes:['全面更新所有厂商模型列表','OpenAI GPT-5全系','Claude Opus/Sonnet/Haiku 4','DeepSeek V4','Qwen3全系','ERNIE 5.1/5.0','GLM-5.2/5.1','Kimi K2.6','小米MiMo V2.5全系']},
-  {version:'2.0',time:'2026-07-10 22:30',changes:['参考LobeChat/OpenWebUI重写UI','API Key设置面板','模型选择下拉框','15+厂商模型树状分组','流式输出+思考链']},
-  {version:'1.0',time:'2026-07-10 22:00',changes:['初始版本','基础对话功能','GitHub Pages部署']},
-];
-
-function showUpdateLog(){
-  const body=document.getElementById('settingsBody');
-  let html='<div class="section-title">📋 更新日志</div>';
-  UPDATE_LOG.forEach(log=>{
-    html+=`<div style="margin-bottom:12px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <div style="padding:10px 14px;background:var(--bg);cursor:pointer;display:flex;align-items:center;gap:8px" onclick="this.nextElementSibling.classList.toggle('show');this.querySelector('.arrow').classList.toggle('open')">
-        <span class="arrow" style="transition:transform 0.2s;font-size:10px">▶</span>
-        <span style="font-weight:600;font-size:14px">v${log.version}</span>
-        <span style="font-size:12px;color:var(--text-muted);margin-left:auto">${log.time}</span>
-      </div>
-      <div style="display:none;padding:0 14px 12px">
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--text-secondary);line-height:1.8">
-          ${log.changes.map(c=>'<li>'+c+'</li>').join('')}
-        </ul>
-      </div>
-    </div>`;
-  });
-  html+=`<div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
-    <div style="font-size:12px;color:var(--text-muted)">当前版本：v${APP_VERSION}</div>
-  </div>`;
-  body.innerHTML=html;
-  document.getElementById('settingsModal').classList.add('show');
-}
 
 // ========== INIT ==========
 init();
