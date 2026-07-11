@@ -127,6 +127,12 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .send-btn{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--transition),opacity var(--transition);}
 .send-btn:hover{background:var(--accent-hover);}
 .send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.attach-btn{width:34px;height:34px;border-radius:50%;background:var(--bg-hover);color:var(--text-secondary);font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--transition);}
+.attach-btn:hover{background:var(--bg-active);}
+.attach-btn.has-file{background:var(--accent-light);color:var(--accent);}
+.img-preview{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);margin-bottom:6px;font-size:12px;color:var(--text-secondary);}
+.img-preview img{width:40px;height:40px;object-fit:cover;border-radius:4px;}
+.img-preview .img-x{cursor:pointer;color:var(--text-tertiary);margin-left:auto;}.img-preview .img-x:hover{color:var(--danger);}
 .input-hint{font-size:10px;color:var(--text-tertiary);text-align:center;margin-top:6px;}
 
 /* Multi-Model / Debate Config Bar */
@@ -347,11 +353,14 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <!-- Input: Chat -->
       <div class="input-area" id="chatInputArea">
         <div class="input-inner">
+          <div id="imgPreview"></div>
           <div class="input-box">
+            <button class="attach-btn" id="attachBtn" title="上传图片">＋</button>
+            <input type="file" id="imgInput" accept="image/*" style="display:none">
             <textarea id="chatInput" rows="1" placeholder="输入消息..."></textarea>
             <button class="send-btn" id="sendBtn">➤</button>
           </div>
-          <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+          <div class="input-hint">Enter 发送 · Shift+Enter 换行 · ＋上传图片</div>
         </div>
       </div>
 
@@ -512,43 +521,110 @@ var PROVIDER_ICONS = {
   'MiniMax':'https://cdn.simpleicons.org/minimax/000000',
   '零一万物':'https://cdn.simpleicons.org/01ai/000000',
   '阶跃星辰':'https://cdn.simpleicons.org/stepfun/4F46E5',
-  '百川智能':'https://cdn.simpleicons.org/baichuan/2B5CE6'
+  '百川智能':'https://cdn.simpleicons.org/baichuan/2B5CE6',
+  'Mistral':'https://cdn.simpleicons.org/mistral/FF7000',
+  'Meta':'https://cdn.simpleicons.org/meta/0668E1',
+  'Cohere':'https://cdn.simpleicons.org/cohere/39594D',
+  'xAI':'https://cdn.simpleicons.org/xai/FFFFFF',
+  '火山引擎':'https://cdn.simpleicons.org/bytedance/3B7DF0',
+  'Groq':'https://cdn.simpleicons.org/groq/F55036'
 };
 
+// ctx = context window in K tokens, vision = supports image input
 var MODELS = [
-  {id:'mimo-v2.5-pro',name:'MiMo v2.5 Pro',provider:'小米 MiMo',type:'chat'},
-  {id:'mimo-v2.5',name:'MiMo v2.5',provider:'小米 MiMo',type:'chat'},
+  // ===== 小米 MiMo =====
+  {id:'mimo-v2.5-pro',name:'MiMo v2.5 Pro',provider:'小米 MiMo',type:'chat',ctx:128},
+  {id:'mimo-v2.5',name:'MiMo v2.5',provider:'小米 MiMo',type:'chat',ctx:128},
   {id:'mimo-v2.5-tts',name:'MiMo v2.5 TTS',provider:'小米 MiMo',type:'tts'},
   {id:'mimo-v2.5-tts-voiceclone',name:'MiMo VoiceClone',provider:'小米 MiMo',type:'voiceclone'},
   {id:'mimo-v2.5-tts-voicedesign',name:'MiMo VoiceDesign',provider:'小米 MiMo',type:'voicedesign'},
   {id:'mimo-v2.5-asr',name:'MiMo ASR',provider:'小米 MiMo',type:'asr'},
-  {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',type:'chat'},
-  {id:'gpt-4o-mini',name:'GPT-4o Mini',provider:'OpenAI',type:'chat'},
-  {id:'o3',name:'o3',provider:'OpenAI',type:'chat'},
-  {id:'o4-mini',name:'o4-mini',provider:'OpenAI',type:'chat'},
-  {id:'claude-opus-4-20250514',name:'Claude Opus 4',provider:'Anthropic',type:'chat'},
-  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',provider:'Anthropic',type:'chat'},
-  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',provider:'Anthropic',type:'chat'},
-  {id:'gemini-2.5-pro',name:'Gemini 2.5 Pro',provider:'Google',type:'chat'},
-  {id:'gemini-2.5-flash',name:'Gemini 2.5 Flash',provider:'Google',type:'chat'},
-  {id:'deepseek-chat',name:'DeepSeek V3',provider:'DeepSeek',type:'chat'},
-  {id:'deepseek-reasoner',name:'DeepSeek R1',provider:'DeepSeek',type:'chat'},
-  {id:'qwen-max',name:'通义千问 Max',provider:'通义千问',type:'chat'},
-  {id:'qwen-vl-max',name:'通义千问 VL Max',provider:'通义千问',type:'chat'},
-  {id:'glm-4-plus',name:'GLM-4 Plus',provider:'智谱AI',type:'chat'},
-  {id:'moonshot-v1-128k',name:'Kimi 128K',provider:'Kimi',type:'chat'},
-  {id:'ernie-4.0-turbo-8k',name:'文心一言 4.0',provider:'文心一言',type:'chat'},
-  {id:'hunyuan-pro',name:'混元 Pro',provider:'腾讯混元',type:'chat'},
-  {id:'abab6.5s-chat',name:'MiniMax M1',provider:'MiniMax',type:'chat'},
-  {id:'yi-large',name:'Yi Large',provider:'零一万物',type:'chat'},
-  {id:'step-2-16k',name:'Step 2 16K',provider:'阶跃星辰',type:'chat'},
-  {id:'Baichuan4',name:'百川4',provider:'百川智能',type:'chat'}
+  // ===== OpenAI =====
+  {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4o-mini',name:'GPT-4o Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4.1',name:'GPT-4.1',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4.1-mini',name:'GPT-4.1 Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4.1-nano',name:'GPT-4.1 Nano',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'o3',name:'o3',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'o3-mini',name:'o3-mini',provider:'OpenAI',type:'chat',ctx:128},
+  {id:'o4-mini',name:'o4-mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  // ===== Anthropic =====
+  {id:'claude-opus-4-20250514',name:'Claude Opus 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-5-sonnet-20241022',name:'Claude 3.5 Sonnet',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  // ===== Google =====
+  {id:'gemini-2.5-pro',name:'Gemini 2.5 Pro',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-2.5-flash',name:'Gemini 2.5 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-2.0-flash',name:'Gemini 2.0 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
+  // ===== DeepSeek =====
+  {id:'deepseek-chat',name:'DeepSeek V3',provider:'DeepSeek',type:'chat',ctx:128},
+  {id:'deepseek-reasoner',name:'DeepSeek R1',provider:'DeepSeek',type:'chat',ctx:128},
+  // ===== 通义千问 =====
+  {id:'qwen-max',name:'通义千问 Max',provider:'通义千问',type:'chat',ctx:128,vision:true},
+  {id:'qwen-plus',name:'通义千问 Plus',provider:'通义千问',type:'chat',ctx:128,vision:true},
+  {id:'qwen-turbo',name:'通义千问 Turbo',provider:'通义千问',type:'chat',ctx:128},
+  {id:'qwen-vl-max',name:'通义千问 VL Max',provider:'通义千问',type:'chat',ctx:128,vision:true},
+  {id:'qwen-long',name:'通义千问 Long',provider:'通义千问',type:'chat',ctx:1024},
+  // ===== 智谱AI =====
+  {id:'glm-4-plus',name:'GLM-4 Plus',provider:'智谱AI',type:'chat',ctx:128,vision:true},
+  {id:'glm-4-flash',name:'GLM-4 Flash',provider:'智谱AI',type:'chat',ctx:128,vision:true},
+  {id:'glm-4-long',name:'GLM-4 Long',provider:'智谱AI',type:'chat',ctx:1024},
+  {id:'glm-4v-plus',name:'GLM-4V Plus',provider:'智谱AI',type:'chat',ctx:128,vision:true},
+  // ===== Kimi =====
+  {id:'moonshot-v1-128k',name:'Kimi 128K',provider:'Kimi',type:'chat',ctx:128},
+  {id:'moonshot-v1-32k',name:'Kimi 32K',provider:'Kimi',type:'chat',ctx:32},
+  {id:'moonshot-v1-8k',name:'Kimi 8K',provider:'Kimi',type:'chat',ctx:8},
+  // ===== 文心一言 =====
+  {id:'ernie-4.0-turbo-8k',name:'文心一言 4.0',provider:'文心一言',type:'chat',ctx:8,vision:true},
+  {id:'ernie-4.0-turbo-128k',name:'文心一言 4.0 长文本',provider:'文心一言',type:'chat',ctx:128},
+  {id:'ernie-3.5-8k',name:'文心一言 3.5',provider:'文心一言',type:'chat',ctx:8},
+  // ===== 腾讯混元 =====
+  {id:'hunyuan-pro',name:'混元 Pro',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
+  {id:'hunyuan-turbo',name:'混元 Turbo',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
+  {id:'hunyuan-lite',name:'混元 Lite',provider:'腾讯混元',type:'chat',ctx:128},
+  // ===== MiniMax =====
+  {id:'abab6.5s-chat',name:'MiniMax M1',provider:'MiniMax',type:'chat',ctx:1024},
+  {id:'abab6.5g-chat',name:'MiniMax M1 Pro',provider:'MiniMax',type:'chat',ctx:128,vision:true},
+  // ===== 零一万物 =====
+  {id:'yi-large',name:'Yi Large',provider:'零一万物',type:'chat',ctx:128},
+  {id:'yi-vision',name:'Yi Vision',provider:'零一万物',type:'chat',ctx:128,vision:true},
+  {id:'yi-lightning',name:'Yi Lightning',provider:'零一万物',type:'chat',ctx:128},
+  // ===== 阶跃星辰 =====
+  {id:'step-2-16k',name:'Step 2 16K',provider:'阶跃星辰',type:'chat',ctx:16},
+  {id:'step-2-mini',name:'Step 2 Mini',provider:'阶跃星辰',type:'chat',ctx:128},
+  // ===== 百川智能 =====
+  {id:'Baichuan4',name:'百川4',provider:'百川智能',type:'chat',ctx:128},
+  // ===== 火山引擎(豆包) =====
+  {id:'doubao-1.5-pro-256k',name:'豆包 1.5 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  {id:'doubao-1.5-lite-32k',name:'豆包 1.5 Lite',provider:'火山引擎',type:'chat',ctx:32},
+  {id:'doubao-pro-256k',name:'豆包 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  // ===== Mistral =====
+  {id:'mistral-large-latest',name:'Mistral Large',provider:'Mistral',type:'chat',ctx:128},
+  {id:'mistral-small-latest',name:'Mistral Small',provider:'Mistral',type:'chat',ctx:128,vision:true},
+  {id:'pixtral-large-latest',name:'Pixtral Large',provider:'Mistral',type:'chat',ctx:128,vision:true},
+  // ===== Meta (via API providers) =====
+  {id:'llama-3.1-405b',name:'Llama 3.1 405B',provider:'Meta',type:'chat',ctx:128},
+  {id:'llama-3.1-70b',name:'Llama 3.1 70B',provider:'Meta',type:'chat',ctx:128},
+  {id:'llama-3.3-70b',name:'Llama 3.3 70B',provider:'Meta',type:'chat',ctx:128},
+  // ===== Cohere =====
+  {id:'command-r-plus',name:'Command R+',provider:'Cohere',type:'chat',ctx:128},
+  {id:'command-r',name:'Command R',provider:'Cohere',type:'chat',ctx:128},
+  // ===== xAI =====
+  {id:'grok-2',name:'Grok 2',provider:'xAI',type:'chat',ctx:128,vision:true},
+  {id:'grok-3',name:'Grok 3',provider:'xAI',type:'chat',ctx:128,vision:true},
+  // ===== Groq =====
+  {id:'llama-3.1-70b-versatile',name:'Llama 3.1 70B (Groq)',provider:'Groq',type:'chat',ctx:128},
+  {id:'mixtral-8x7b-32768',name:'Mixtral 8x7B (Groq)',provider:'Groq',type:'chat',ctx:32}
 ];
 
 var CHANGELOG = [
-  {version:'6.0',date:'2026-07-11',major:true,items:['底部导航栏5tab：聊天/AI/论坛/更多/我的','设置、日志移到"我的"页面','MiMo双计费方案切换（会员计划/按量付费）','修正全部模型ID','多模型/辩论模式UI']},
-  {version:'5.5',date:'2026-07-11',items:['辩论模式','修复页面卡死']},
-  {version:'5.0',date:'2026-07-11',items:['全面重写UI','27个模型','语音合成/克隆/设计/识别','深色模式']}
+  {version:'7.0',date:'2026-07-11',major:true,items:['50+国内外主流模型全覆盖','图片上传（支持视觉模型）','上下文关联对话','上下文长度限制管理','20个厂商图标','辩论轮数自定义输入']},
+  {version:'6.3',date:'2026-07-11',items:['更新日志独立弹窗，与设置分开']},
+  {version:'6.2',date:'2026-07-11',items:['辩论轮数改为自定义输入(1-50)']},
+  {version:'6.1',date:'2026-07-11',items:['思考动画','多模型名称标签','彩色头像区分']},
+  {version:'6.0',date:'2026-07-11',major:true,items:['底部导航栏5tab','设置日志移到我的','MiMo双方案切换']},
+  {version:'5.5',date:'2026-07-11',items:['辩论模式','修复页面卡死']}
 ];
 
 /* ==================== State ==================== */
@@ -599,6 +675,68 @@ function getKeyForModel(m){
   if(m.provider==='Google') return k.google||'';
   if(m.provider==='DeepSeek') return k.deepseek||'';
   return k.general||'';
+}
+
+/* ==================== Image Upload ==================== */
+var attachedImage=null; // {dataUrl, base64, mimeType}
+function setupImageUpload(){
+  var attachBtn=$('attachBtn'),imgInput=$('imgInput'),preview=$('imgPreview');
+  attachBtn.addEventListener('click',function(){
+    var m=getModel(state.currentModelId);
+    if(!m||!m.vision){showToast('当前模型不支持图片上传','error');return;}
+    imgInput.click();
+  });
+  imgInput.addEventListener('change',function(){
+    if(!imgInput.files.length)return;
+    var file=imgInput.files[0];
+    if(file.size>10*1024*1024){showToast('图片不能超过10MB','error');return;}
+    var reader=new FileReader();
+    reader.onload=function(){
+      var dataUrl=reader.result;
+      var base64=dataUrl.split(',')[1];
+      attachedImage={dataUrl:dataUrl,base64:base64,mimeType:file.type};
+      preview.innerHTML='<div class="img-preview"><img src="'+dataUrl+'"><span>'+escapeHtml(file.name)+'</span><span class="img-x" onclick="clearImage()">✕</span></div>';
+      attachBtn.classList.add('has-file');
+    };
+    reader.readAsDataURL(file);
+    imgInput.value='';
+  });
+}
+function clearImage(){
+  attachedImage=null;$('imgPreview').innerHTML='';$('attachBtn').classList.remove('has-file');
+}
+
+/* ==================== Context History ==================== */
+function buildMessages(chat,currentContent,imageData){
+  var m=getModel(state.currentModelId);
+  var ctxLimit=m?(m.ctx||128)*1024:128*1024;
+  var msgs=[];
+  // Estimate tokens (rough: 1 token ~ 2 chars for Chinese, ~4 chars for English)
+  var totalTokens=0;
+  var history=chat.messages.slice();
+  // Add current user message
+  var userMsg={role:'user',content:currentContent};
+  if(imageData&&m&&m.vision){
+    userMsg.content=[
+      {type:'text',text:currentContent},
+      {type:'image_url',image_url:{url:'data:'+imageData.mimeType+';base64,'+imageData.base64}}
+    ];
+  }
+  // Build from newest to oldest, then reverse
+  var tempMsgs=[userMsg];
+  var estTokens=currentContent.length/2;
+  if(imageData)estTokens+=1000; // images ~ 1000 tokens
+  // Add history messages (from most recent backwards)
+  for(var i=history.length-1;i>=0;i--){
+    var msg=history[i];
+    var msgTokens=(msg.content||'').length/2;
+    if(totalTokens+msgTokens+estTokens>ctxLimit*0.8)break; // leave 20% margin
+    tempMsgs.push({role:msg.role,content:msg.content});
+    totalTokens+=msgTokens;
+  }
+  // Reverse to correct order
+  for(var i=tempMsgs.length-1;i>=0;i--)msgs.push(tempMsgs[i]);
+  return msgs;
 }
 
 /* ==================== API Calls ==================== */
@@ -711,7 +849,10 @@ function renderModelDD(){
     for(var m=0;m<models.length;m++){
       var mod=models[m],active=mod.id===state.currentModelId?' active':'';
       var mIcon=icon?'<img src="'+icon+'" width="16" height="16" style="border-radius:3px" onerror="this.style.display=\'none\'">':'';
-      html+='<div class="model-dd-item'+active+'" onclick="selectModel(\''+mod.id+'\')">'+mIcon+'<span>'+escapeHtml(mod.name)+'</span></div>';
+      var badges='';
+      if(mod.vision)badges+='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--success);color:#fff;margin-left:4px">视觉</span>';
+      if(mod.ctx)badges+='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg-active);color:var(--text-tertiary);margin-left:2px">'+mod.ctx+'K</span>';
+      html+='<div class="model-dd-item'+active+'" onclick="selectModel(\''+mod.id+'\')">'+mIcon+'<span style="flex:1">'+escapeHtml(mod.name)+'</span>'+badges+'</div>';
     }
   }
   dd.innerHTML=html;
@@ -796,6 +937,10 @@ function renderMessages(){
     var msg=chat.messages[i],isUser=msg.role==='user';
     var cls=isUser?'user':'ai';
     var content=isUser?escapeHtml(msg.content):renderMarkdown(msg.content);
+    if(isUser&&msg.hasImage){
+      // Find the corresponding image in the previous user message context
+      content='<div style="margin-bottom:6px;font-size:11px;color:var(--text-tertiary)">📷 已发送图片</div>'+content;
+    }
     var avatar=isUser?'你':'AI';
     var modelTag='';
     if(!isUser && msg.modelId){
@@ -831,20 +976,25 @@ function sendMsg(content){
   if(chatMode==='multi') return sendMulti(content);
   if(chatMode==='debate') return sendDebate(content);
   var chat=ensureChat();
-  chat.messages.push({role:'user',content:content.trim(),time:Date.now()});
-  if(chat.messages.length===1)chat.title=content.slice(0,30)+(content.length>30?'...':'');
-  saveState();renderMessages();
+  var imgData=attachedImage;
+  var userContent=content.trim();
+  chat.messages.push({role:'user',content:userContent,time:Date.now(),hasImage:!!imgData});
+  if(chat.messages.length===1)chat.title=userContent.slice(0,30)+(userContent.length>30?'...':'');
+  saveState();renderMessages();clearImage();
 
   isGenerating=true;updateSendBtn();
   var aiMsg={role:'assistant',content:'',time:Date.now()};chat.messages.push(aiMsg);
   var m=getModel(state.currentModelId);
   var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
-  row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,1):'A')+'</div><div><div class="msg-model-tag">'+(m?escapeHtml(m.name):'AI')+'</div><div class="thinking-bubble" id="streamBubble"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+  row.innerHTML='<div class="msg-avatar" style="background:var(--accent)">'+(m?m.name.slice(0,1):'A')+'</div><div><div class="msg-model-tag">'+(m?escapeHtml(m.name):'AI')+'</div><div class="thinking-bubble" id="streamBubble"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
   container.appendChild(row);
   var area=$('chatArea');area.scrollTop=area.scrollHeight;
   var bubble=$('streamBubble');
 
-  callChatAPI(chat.messages.slice(0,-1).map(function(m){return{role:m.role,content:m.content};}),state.currentModelId,function(chunk,full){
+  // Build messages with context history
+  var apiMsgs=buildMessages(chat,userContent,imgData);
+
+  callChatAPI(apiMsgs,state.currentModelId,function(chunk,full){
     aiMsg.content=full;bubble.className='msg-bubble stream-cursor';bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
   }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;bubble.className='msg-bubble';bubble.innerHTML=renderMarkdown(aiMsg.content);aiMsg.time=Date.now();})
   .catch(function(e){if(!aiMsg.content){chat.messages.pop();row.remove();}else{bubble.className='msg-bubble';}showToast(e.message,'error');})
@@ -1071,6 +1221,7 @@ function init(){
   // Upload areas
   setupUpload('vcUpload','vcFile','vcFname');
   setupUpload('asrUpload','asrFile','asrFname');
+  setupImageUpload();
 
   // Render
   renderModelDD();updateModelName();switchInputPanel();applyTheme();
