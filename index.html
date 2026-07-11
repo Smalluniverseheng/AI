@@ -89,6 +89,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin-top:2px;}
 .msg-row.ai .msg-avatar{background:var(--accent);color:#fff;}
 .msg-row.user .msg-avatar{background:var(--success);color:#fff;order:2;}
+.msg-model-tag{font-size:10px;color:var(--text-tertiary);margin-bottom:3px;font-weight:500;}
+.msg-row.user .msg-model-tag{text-align:right;}
+.thinking-bubble{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius);font-size:13px;color:var(--text-secondary);}
+.thinking-dots{display:flex;gap:3px;}
+.thinking-dots span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:thinkBounce 1.2s infinite ease-in-out;}
+.thinking-dots span:nth-child(2){animation-delay:0.15s;}
+.thinking-dots span:nth-child(3){animation-delay:0.3s;}
+@keyframes thinkBounce{0%,60%,100%{transform:translateY(0);opacity:0.3}30%{transform:translateY(-6px);opacity:1}}
+.avatar-colors{--c0:#4F46E5;--c1:#059669;--c1:#D97706;--c2:#DC2626;--c3:#7C3AED;--c4:#0891B2;--c5:#BE185D;--c6:#4338CA;}
 .msg-bubble{padding:10px 14px;border-radius:var(--radius);font-size:13px;line-height:1.65;max-width:78%;word-break:break-word;}
 .msg-row.ai .msg-bubble{background:var(--bg-secondary);border:1px solid var(--border-color);}
 .msg-row.user .msg-bubble{background:var(--bg-user-msg);}
@@ -779,7 +788,21 @@ function renderMessages(){
     var msg=chat.messages[i],isUser=msg.role==='user';
     var cls=isUser?'user':'ai';
     var content=isUser?escapeHtml(msg.content):renderMarkdown(msg.content);
-    html+='<div class="msg-row '+cls+'"><div class="msg-avatar">'+(isUser?'你':'AI')+'</div><div><div class="msg-bubble">'+content+'</div><div class="msg-time">'+formatDate(msg.time)+'</div></div></div>';
+    var avatar=isUser?'你':'AI';
+    var modelTag='';
+    if(!isUser && msg.modelId){
+      var mm=getModel(msg.modelId);
+      avatar=mm?mm.name.slice(0,1):'A';
+      modelTag='<div class="msg-model-tag">'+(mm?escapeHtml(mm.name):msg.modelId)+(msg.round?' · 第'+msg.round+'轮':'')+'</div>';
+    }
+    var avatarStyle='';
+    if(!isUser && msg.modelId){
+      var idx=0;
+      var allIds=[];for(var j=0;j<chat.messages.length;j++){if(chat.messages[j].modelId&&allIds.indexOf(chat.messages[j].modelId)===-1)allIds.push(chat.messages[j].modelId);}
+      idx=allIds.indexOf(msg.modelId);
+      avatarStyle=' style="background:hsl('+(idx*47%360)+',60%,50%)"';
+    }
+    html+='<div class="msg-row '+cls+'"><div class="msg-avatar"'+avatarStyle+'>'+avatar+'</div><div>'+modelTag+'<div class="msg-bubble">'+content+'</div><div class="msg-time">'+formatDate(msg.time)+'</div></div></div>';
   }
   container.innerHTML=html;
   var area=$('chatArea');area.scrollTop=area.scrollHeight;
@@ -806,16 +829,17 @@ function sendMsg(content){
 
   isGenerating=true;updateSendBtn();
   var aiMsg={role:'assistant',content:'',time:Date.now()};chat.messages.push(aiMsg);
+  var m=getModel(state.currentModelId);
   var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
-  row.innerHTML='<div class="msg-avatar">AI</div><div><div class="msg-bubble stream-cursor" id="streamBubble"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+  row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,1):'A')+'</div><div><div class="msg-model-tag">'+(m?escapeHtml(m.name):'AI')+'</div><div class="thinking-bubble" id="streamBubble"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
   container.appendChild(row);
   var area=$('chatArea');area.scrollTop=area.scrollHeight;
   var bubble=$('streamBubble');
 
   callChatAPI(chat.messages.slice(0,-1).map(function(m){return{role:m.role,content:m.content};}),state.currentModelId,function(chunk,full){
-    aiMsg.content=full;bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
-  }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);aiMsg.time=Date.now();})
-  .catch(function(e){if(!aiMsg.content){chat.messages.pop();row.remove();}else{bubble.classList.remove('stream-cursor');}showToast(e.message,'error');})
+    aiMsg.content=full;bubble.className='msg-bubble stream-cursor';bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
+  }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;bubble.className='msg-bubble';bubble.innerHTML=renderMarkdown(aiMsg.content);aiMsg.time=Date.now();})
+  .catch(function(e){if(!aiMsg.content){chat.messages.pop();row.remove();}else{bubble.className='msg-bubble';}showToast(e.message,'error');})
   .finally(function(){isGenerating=false;abortCtrl=null;updateSendBtn();saveState();});
 }
 
@@ -828,19 +852,19 @@ function sendMulti(content){
   isGenerating=true;updateSendBtn();
   var promises=[];
   for(var i=0;i<models.length;i++){
-    (function(modelId){
+    (function(modelId,idx){
       var m=getModel(modelId);
       var aiMsg={role:'assistant',content:'',time:Date.now(),modelId:modelId};chat.messages.push(aiMsg);
       var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
-      row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,2):'AI')+'</div><div><div class="msg-bubble stream-cursor" id="stream-'+i+'"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+      row.innerHTML='<div class="msg-avatar" style="background:hsl('+(idx*47%360)+',60%,50%)">'+(m?m.name.slice(0,1):'A')+'</div><div><div class="msg-model-tag">'+(m?escapeHtml(m.name):modelId)+'</div><div class="thinking-bubble" id="stream-'+idx+'"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
       container.appendChild(row);
-      var bubble=document.getElementById('stream-'+i);
+      var bubble=document.getElementById('stream-'+idx);
       var area=$('chatArea');area.scrollTop=area.scrollHeight;
       promises.push(callChatAPI([{role:'user',content:content.trim()}],modelId,function(chunk,full){
-        aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
-      }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}})
-      .catch(function(e){if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}}));
-    })(models[i]);
+        aiMsg.content=full;if(bubble){bubble.className='msg-bubble stream-cursor';bubble.innerHTML=renderMarkdown(full);}area.scrollTop=area.scrollHeight;
+      }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;if(bubble){bubble.className='msg-bubble';bubble.innerHTML=renderMarkdown(aiMsg.content);}})
+      .catch(function(e){if(bubble){bubble.className='msg-bubble';bubble.innerHTML='❌ '+e.message;}}));
+    })(models[i],i);
   }
   Promise.all(promises).finally(function(){isGenerating=false;updateSendBtn();saveState();});
 }
@@ -862,19 +886,20 @@ function sendDebate(content){
     var prompt=round===0?'辩论主题: '+content+'\n\n请发表你的观点。':'辩论主题: '+content+'\n\n其他观点:\n'+context+'\n\n请发表第'+(round+1)+'轮回应。';
     var aiMsg={role:'assistant',content:'',time:Date.now(),modelId:modelId};chat.messages.push(aiMsg);
     var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
-    row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,2):'AI')+' R'+(round+1)+'</div><div><div class="msg-bubble stream-cursor" id="debate-'+round+'"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+    var colorIdx=models.indexOf(modelId);
+    row.innerHTML='<div class="msg-avatar" style="background:hsl('+(colorIdx*47%360)+',60%,50%)">'+(m?m.name.slice(0,1):'A')+'</div><div><div class="msg-model-tag">'+(m?escapeHtml(m.name):modelId)+' · 第'+(round+1)+'轮</div><div class="thinking-bubble" id="debate-'+round+'"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
     container.appendChild(row);
     var bubble=document.getElementById('debate-'+round);
     var area=$('chatArea');area.scrollTop=area.scrollHeight;
     callChatAPI([{role:'user',content:prompt}],modelId,function(chunk,full){
-      aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
+      aiMsg.content=full;if(bubble){bubble.className='msg-bubble stream-cursor';bubble.innerHTML=renderMarkdown(full);}area.scrollTop=area.scrollHeight;
     }).then(function(r){
       if(r&&!aiMsg.content)aiMsg.content=r;
-      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}
+      if(bubble){bubble.className='msg-bubble';bubble.innerHTML=renderMarkdown(aiMsg.content);}
       context+='\n\n【'+(m?m.name:modelId)+'】: '+aiMsg.content;
       round++;doRound();
     }).catch(function(e){
-      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}
+      if(bubble){bubble.className='msg-bubble';bubble.innerHTML='❌ '+e.message;}
       round++;doRound();
     });
   }
@@ -882,15 +907,15 @@ function sendDebate(content){
     var prompt='辩论内容:\n'+context+'\n\n请作为裁判总结各方观点。';
     var aiMsg={role:'assistant',content:'',time:Date.now()};chat.messages.push(aiMsg);
     var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
-    row.innerHTML='<div class="msg-avatar">裁判</div><div><div class="msg-bubble stream-cursor" id="summary"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+    row.innerHTML='<div class="msg-avatar" style="background:#10B981">裁</div><div><div class="msg-model-tag">裁判总结</div><div class="thinking-bubble" id="summary"><div class="thinking-dots"><span></span><span></span><span></span></div><span>思考中...</span></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
     container.appendChild(row);
     var bubble=$('summary');
     callChatAPI([{role:'user',content:prompt}],models[0],function(chunk,full){
-      aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);
+      aiMsg.content=full;if(bubble){bubble.className='msg-bubble stream-cursor';bubble.innerHTML=renderMarkdown(full);}
     }).then(function(r){
       if(r&&!aiMsg.content)aiMsg.content=r;
-      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}
-    }).catch(function(e){if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}})
+      if(bubble){bubble.className='msg-bubble';bubble.innerHTML=renderMarkdown(aiMsg.content);}
+    }).catch(function(e){if(bubble){bubble.className='msg-bubble';bubble.innerHTML='❌ '+e.message;}})
     .finally(function(){isGenerating=false;updateSendBtn();saveState();});
   }
   doRound();
