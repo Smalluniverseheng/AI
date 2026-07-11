@@ -470,6 +470,11 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude 系列</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 系列</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">DeepSeek API Key</div></div><input type="password" class="api-key-input" id="keyDeepSeek" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Kimi API Key</div><div class="setting-desc">moonshot-v1 系列</div></div><input type="password" class="api-key-input" id="keyKimi" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">通义千问 API Key</div></div><input type="password" class="api-key-input" id="keyQwen" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">智谱AI API Key</div></div><input type="password" class="api-key-input" id="keyGLM" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">文心一言 API Key</div></div><input type="password" class="api-key-input" id="keyErnie" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">豆包 API Key</div></div><input type="password" class="api-key-input" id="keyDoubao" placeholder="输入 Key"></div>
       </div>
       <div class="modal-section">
         <h4>外观</h4>
@@ -509,10 +514,6 @@ var MIMO_PLANS = {
 
 var PROVIDER_ICONS = {
   '小米 MiMo':'https://cdn.simpleicons.org/xiaomi/FF6900',
-  'OpenAI':'https://cdn.simpleicons.org/openai/000000',
-  'Anthropic':'https://cdn.simpleicons.org/anthropic/D4A574',
-  'Google':'https://cdn.simpleicons.org/google/4285F4',
-  'DeepSeek':'https://cdn.simpleicons.org/deepseek/0066FF',
   '通义千问':'https://cdn.simpleicons.org/alibabacloud/FF6A00',
   '智谱AI':'https://cdn.simpleicons.org/zhipuai/2B5CE6',
   'Kimi':'https://cdn.simpleicons.org/moonshot/6236FF',
@@ -522,12 +523,23 @@ var PROVIDER_ICONS = {
   '零一万物':'https://cdn.simpleicons.org/01ai/000000',
   '阶跃星辰':'https://cdn.simpleicons.org/stepfun/4F46E5',
   '百川智能':'https://cdn.simpleicons.org/baichuan/2B5CE6',
+  '火山引擎':'https://cdn.simpleicons.org/bytedance/3B7DF0',
+  'DeepSeek':'https://cdn.simpleicons.org/deepseek/0066FF',
+  'OpenAI':'https://cdn.simpleicons.org/openai/000000',
+  'Anthropic':'https://cdn.simpleicons.org/anthropic/D4A574',
+  'Google':'https://cdn.simpleicons.org/google/4285F4',
   'Mistral':'https://cdn.simpleicons.org/mistral/FF7000',
   'Meta':'https://cdn.simpleicons.org/meta/0668E1',
   'Cohere':'https://cdn.simpleicons.org/cohere/39594D',
   'xAI':'https://cdn.simpleicons.org/xai/FFFFFF',
-  '火山引擎':'https://cdn.simpleicons.org/bytedance/3B7DF0',
   'Groq':'https://cdn.simpleicons.org/groq/F55036'
+};
+// Fallback: colored circle with first letter for providers without icons
+var PROVIDER_COLORS={
+  '小米 MiMo':'#FF6900','OpenAI':'#10A37F','Anthropic':'#D4A574','Google':'#4285F4','DeepSeek':'#0066FF',
+  '通义千问':'#FF6A00','智谱AI':'#2B5CE6','Kimi':'#6236FF','文心一言':'#2319DC','腾讯混元':'#07C160',
+  'MiniMax':'#000000','零一万物':'#000000','阶跃星辰':'#4F46E5','百川智能':'#2B5CE6','火山引擎':'#3B7DF0',
+  'Mistral':'#FF7000','Meta':'#0668E1','Cohere':'#39594D','xAI':'#333333','Groq':'#F55036'
 };
 
 // ctx = context window in K tokens, vision = supports image input
@@ -656,6 +668,7 @@ function loadState() {
   if(!state.debateModels) state.debateModels=[];
   if(!state.apiKeys.mimoTokenPlan) state.apiKeys.mimoTokenPlan='tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
   if(!state.apiKeys.mimoPayAsYouGo) state.apiKeys.mimoPayAsYouGo='';
+  if(!state.apiKeys.kimi) state.apiKeys.kimi='sk-srWDh3AwB0ffevHlyAop7CnyJ2Rmv2aL0AAyPVHf0oJRcjcM';
   if(!state.apiKeys.mimoPlan) state.apiKeys.mimoPlan='tokenPlan';
 }
 function saveState() { try{localStorage.setItem('ai_chat_state',JSON.stringify(state));}catch(e){} }
@@ -683,6 +696,16 @@ function formatDate(ts){var d=new Date(ts);return d.toLocaleDateString('zh-CN')+
 /* ==================== Model Helpers ==================== */
 function getModel(id){for(var i=0;i<MODELS.length;i++){if(MODELS[i].id===id)return MODELS[i];}return null;}
 function getProviders(){var seen={},acc=[];for(var i=0;i<MODELS.length;i++){if(!seen[MODELS[i].provider]){seen[MODELS[i].provider]=1;acc.push(MODELS[i].provider);}}return acc;}
+function providerIconHtml(prov,size){
+  size=size||16;
+  var url=PROVIDER_ICONS[prov];
+  var color=PROVIDER_COLORS[prov]||'#666';
+  var letter=prov.charAt(0);
+  var fontSize=Math.round(size*0.55);
+  var fallback='<span style="display:inline-flex;align-items:center;justify-content:center;width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+color+';color:#fff;font-size:'+fontSize+'px;font-weight:600;flex-shrink:0">'+letter+'</span>';
+  if(url) return '<img src="'+url+'" width="'+size+'" height="'+size+'" style="border-radius:3px;flex-shrink:0" onerror="this.replaceWith(document.createRange().createContextualFragment(\''+fallback.replace(/'/g,"\\'")+'\'))">';
+  return fallback;
+}
 function getProviderModels(p){return MODELS.filter(function(m){return m.provider===p;});}
 function getMiMoBase(){return MIMO_PLANS[state.apiKeys.mimoPlan||'tokenPlan'].base;}
 function getKeyForModel(m){
@@ -692,6 +715,13 @@ function getKeyForModel(m){
   if(m.provider==='Anthropic') return k.anthropic||'';
   if(m.provider==='Google') return k.google||'';
   if(m.provider==='DeepSeek') return k.deepseek||'';
+  if(m.provider==='Kimi') return k.kimi||'';
+  if(m.provider==='通义千问') return k.qwen||'';
+  if(m.provider==='智谱AI') return k.glm||'';
+  if(m.provider==='文心一言') return k.ernie||'';
+  if(m.provider==='腾讯混元') return k.hunyuan||'';
+  if(m.provider==='MiniMax') return k.minimax||'';
+  if(m.provider==='火山引擎') return k.doubao||'';
   return k.general||'';
 }
 
@@ -767,6 +797,13 @@ function callChatAPI(messages,modelId,onChunk){
   if(model.provider==='小米 MiMo'){base=getMiMoBase();headers={'Content-Type':'application/json','api-key':key};}
   else if(model.provider==='OpenAI'){base='https://api.openai.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
   else if(model.provider==='DeepSeek'){base='https://api.deepseek.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='Kimi'){base='https://api.moonshot.cn';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='通义千问'){base='https://dashscope.aliyuncs.com/compatible-mode';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='智谱AI'){base='https://open.bigmodel.cn/api/paas';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='文心一言'){base='https://aip.baidubce.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='腾讯混元'){base='https://api.hunyuan.cloud.tencent.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='MiniMax'){base='https://api.minimax.chat';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='火山引擎'){base='https://ark.cn-beijing.volces.com/api';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
   else{base='https://api.openai.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
   var body={model:modelId,messages:messages.map(function(m){return{role:m.role,content:m.content};}),stream:!!onChunk};
   return fetch(base+'/v1/chat/completions',{method:'POST',headers:headers,body:JSON.stringify(body)}).then(function(resp){
@@ -860,17 +897,15 @@ function renderModelDD(){
   var dd=$('modelDD'),html='';
   var provs=getProviders();
   for(var p=0;p<provs.length;p++){
-    var prov=provs[p],icon=PROVIDER_ICONS[prov]||'';
-    var iconHtml=icon?'<img src="'+icon+'" width="13" height="13" style="border-radius:2px;vertical-align:middle" onerror="this.style.display=\'none\'"> ':'';
-    html+='<div class="model-dd-group">'+iconHtml+escapeHtml(prov)+'</div>';
+    var prov=provs[p];
+    html+='<div class="model-dd-group">'+providerIconHtml(prov,13)+' '+escapeHtml(prov)+'</div>';
     var models=getProviderModels(prov);
     for(var m=0;m<models.length;m++){
       var mod=models[m],active=mod.id===state.currentModelId?' active':'';
-      var mIcon=icon?'<img src="'+icon+'" width="16" height="16" style="border-radius:3px" onerror="this.style.display=\'none\'">':'';
       var badges='';
       if(mod.vision)badges+='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--success);color:#fff;margin-left:4px">视觉</span>';
       if(mod.ctx)badges+='<span style="font-size:9px;padding:1px 4px;border-radius:3px;background:var(--bg-active);color:var(--text-tertiary);margin-left:2px">'+mod.ctx+'K</span>';
-      html+='<div class="model-dd-item'+active+'" onclick="selectModel(\''+mod.id+'\')">'+mIcon+'<span style="flex:1">'+escapeHtml(mod.name)+'</span>'+badges+'</div>';
+      html+='<div class="model-dd-item'+active+'" onclick="selectModel(\''+mod.id+'\')">'+providerIconHtml(prov,16)+'<span style="flex:1">'+escapeHtml(mod.name)+'</span>'+badges+'</div>';
     }
   }
   dd.innerHTML=html;
@@ -881,7 +916,7 @@ function selectModel(id){
 }
 function updateModelName(){
   var m=getModel(state.currentModelId),el=$('curModelName');
-  if(m){var icon=PROVIDER_ICONS[m.provider]||'';el.innerHTML=(icon?'<img src="'+icon+'" width="16" height="16" style="border-radius:3px;vertical-align:middle;margin-right:4px" onerror="this.style.display=\'none\'">':'')+escapeHtml(m.name);}
+  if(m)el.innerHTML=providerIconHtml(m.provider,16)+' '+escapeHtml(m.name);
   else el.textContent='选择模型';
 }
 function switchInputPanel(){
@@ -937,8 +972,7 @@ function renderPickerDD(){
     var models=getProviderModels(provs[p]);
     for(var m=0;m<models.length;m++){
       var mod=models[m];if(mod.type!=='chat')continue;
-      var icon=PROVIDER_ICONS[mod.provider]||'';
-      html+='<div class="model-picker-item" onclick="addChip(\''+mod.id+'\')">'+(icon?'<img src="'+icon+'" width="14" height="14" style="border-radius:2px" onerror="this.style.display=\'none\'">':'')+'<span>'+escapeHtml(mod.name)+'</span></div>';
+      html+='<div class="model-picker-item" onclick="addChip(\''+mod.id+'\')">'+providerIconHtml(mod.provider,14)+'<span>'+escapeHtml(mod.name)+'</span></div>';
     }
   }
   dd.innerHTML=html;
@@ -1125,6 +1159,11 @@ function loadSettingsUI(){
   $('keyAnthropic').value=state.apiKeys.anthropic||'';
   $('keyGoogle').value=state.apiKeys.google||'';
   $('keyDeepSeek').value=state.apiKeys.deepseek||'';
+  if($('keyKimi'))$('keyKimi').value=state.apiKeys.kimi||'';
+  if($('keyQwen'))$('keyQwen').value=state.apiKeys.qwen||'';
+  if($('keyGLM'))$('keyGLM').value=state.apiKeys.glm||'';
+  if($('keyErnie'))$('keyErnie').value=state.apiKeys.ernie||'';
+  if($('keyDoubao'))$('keyDoubao').value=state.apiKeys.doubao||'';
   var plan=state.apiKeys.mimoPlan||'tokenPlan';
   switchPlanUI(plan);
   applyTheme();
@@ -1136,6 +1175,11 @@ function saveSettings(){
   state.apiKeys.anthropic=$('keyAnthropic').value.trim();
   state.apiKeys.google=$('keyGoogle').value.trim();
   state.apiKeys.deepseek=$('keyDeepSeek').value.trim();
+  if($('keyKimi'))state.apiKeys.kimi=$('keyKimi').value.trim();
+  if($('keyQwen'))state.apiKeys.qwen=$('keyQwen').value.trim();
+  if($('keyGLM'))state.apiKeys.glm=$('keyGLM').value.trim();
+  if($('keyErnie'))state.apiKeys.ernie=$('keyErnie').value.trim();
+  if($('keyDoubao'))state.apiKeys.doubao=$('keyDoubao').value.trim();
   saveState();
 }
 function switchPlan(plan){state.apiKeys.mimoPlan=plan;saveState();switchPlanUI(plan);}
