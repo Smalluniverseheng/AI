@@ -825,6 +825,24 @@ const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
 const MIMO_BASE = 'https://api.xiaomimimo.com';
 
+// Provider icons via Simple Icons CDN (auto-updated, no manual assets needed)
+const PROVIDER_ICONS = {
+  '小米 MiMo':    'https://cdn.simpleicons.org/xiaomi/FF6900',
+  'OpenAI':       'https://cdn.simpleicons.org/openai/000000',
+  'Anthropic':    'https://cdn.simpleicons.org/anthropic/D4A574',
+  'Google':       'https://cdn.simpleicons.org/google/4285F4',
+  'DeepSeek':     'https://cdn.simpleicons.org/deepseek/0066FF',
+  '通义千问':      'https://cdn.simpleicons.org/alibabacloud/FF6A00',
+  '智谱AI':       'https://cdn.simpleicons.org/zhipuai/2B5CE6',
+  'Kimi':         'https://cdn.simpleicons.org/moonshot/6236FF',
+  '文心一言':      'https://cdn.simpleicons.org/baidu/2319DC',
+  '腾讯混元':      'https://cdn.simpleicons.org/tencent/07C160',
+  'MiniMax':      'https://cdn.simpleicons.org/minimax/000000',
+  '零一万物':      'https://cdn.simpleicons.org/01ai/000000',
+  '阶跃星辰':      'https://cdn.simpleicons.org/stepfun/4F46E5',
+  '百川智能':      'https://cdn.simpleicons.org/baichuan/2B5CE6',
+};
+
 const MODELS = [
   // MiMo
   { id:'mimo-v2.5-pro', name:'MiMo v2.5 Pro', provider:'小米 MiMo', type:'chat' },
@@ -834,28 +852,28 @@ const MODELS = [
   { id:'mimo-v2.5-tts-voicedesign', name:'MiMo v2.5 VoiceDesign', provider:'小米 MiMo', type:'voicedesign' },
   { id:'mimo-v2.5-asr', name:'MiMo v2.5 ASR', provider:'小米 MiMo', type:'asr' },
   // OpenAI
-  { id:'gpt-5', name:'GPT-5', provider:'OpenAI', type:'chat' },
-  { id:'gpt-5-mini', name:'GPT-5 Mini', provider:'OpenAI', type:'chat' },
   { id:'gpt-4o', name:'GPT-4o', provider:'OpenAI', type:'chat' },
+  { id:'gpt-4o-mini', name:'GPT-4o Mini', provider:'OpenAI', type:'chat' },
   { id:'o3', name:'o3', provider:'OpenAI', type:'chat' },
+  { id:'o4-mini', name:'o4-mini', provider:'OpenAI', type:'chat' },
   // Anthropic
-  { id:'claude-opus-4-8', name:'Claude Opus 4', provider:'Anthropic', type:'chat' },
-  { id:'claude-sonnet-4-6', name:'Claude Sonnet 4', provider:'Anthropic', type:'chat' },
-  { id:'claude-haiku-4-5-20251001', name:'Claude Haiku 4.5', provider:'Anthropic', type:'chat' },
+  { id:'claude-opus-4-20250514', name:'Claude Opus 4', provider:'Anthropic', type:'chat' },
+  { id:'claude-sonnet-4-20250514', name:'Claude Sonnet 4', provider:'Anthropic', type:'chat' },
+  { id:'claude-3-5-haiku-20241022', name:'Claude 3.5 Haiku', provider:'Anthropic', type:'chat' },
   // Google
   { id:'gemini-2.5-pro', name:'Gemini 2.5 Pro', provider:'Google', type:'chat' },
   { id:'gemini-2.5-flash', name:'Gemini 2.5 Flash', provider:'Google', type:'chat' },
   // DeepSeek
-  { id:'deepseek-v4-pro', name:'DeepSeek V4 Pro', provider:'DeepSeek', type:'chat' },
-  { id:'deepseek-r1', name:'DeepSeek R1', provider:'DeepSeek', type:'chat' },
+  { id:'deepseek-chat', name:'DeepSeek V3', provider:'DeepSeek', type:'chat' },
+  { id:'deepseek-reasoner', name:'DeepSeek R1', provider:'DeepSeek', type:'chat' },
   // Others
   { id:'qwen-max', name:'通义千问 Max', provider:'通义千问', type:'chat' },
   { id:'qwen-vl-max', name:'通义千问 VL Max', provider:'通义千问', type:'chat' },
-  { id:'glm-5.2', name:'GLM-5.2', provider:'智谱AI', type:'chat' },
-  { id:'kimi-k2.6', name:'Kimi K2.6', provider:'Kimi', type:'chat' },
-  { id:'ernie-5.1', name:'文心一言 5.1', provider:'文心一言', type:'chat' },
+  { id:'glm-4-plus', name:'GLM-4 Plus', provider:'智谱AI', type:'chat' },
+  { id:'moonshot-v1-128k', name:'Kimi 128K', provider:'Kimi', type:'chat' },
+  { id:'ernie-4.0-turbo-8k', name:'文心一言 4.0', provider:'文心一言', type:'chat' },
   { id:'hunyuan-pro', name:'混元 Pro', provider:'腾讯混元', type:'chat' },
-  { id:'MiniMax-M1', name:'MiniMax M1', provider:'MiniMax', type:'chat' },
+  { id:'abab6.5s-chat', name:'MiniMax M1', provider:'MiniMax', type:'chat' },
   { id:'yi-large', name:'Yi Large', provider:'零一万物', type:'chat' },
   { id:'step-2-16k', name:'Step 2 16K', provider:'阶跃星辰', type:'chat' },
   { id:'Baichuan4', name:'百川4', provider:'百川智能', type:'chat' },
@@ -1263,23 +1281,25 @@ function renderModelDropdown() {
   let html = '';
   const providers = getProviders();
   providers.forEach(prov => {
-    html += `<div class="model-group-label">${escapeHtml(prov)}</div>`;
+    const iconUrl = PROVIDER_ICONS[prov] || '';
+    const iconHtml = iconUrl ? `<img src="${iconUrl}" width="14" height="14" style="border-radius:2px;vertical-align:middle" onerror="this.style.display='none'" /> ` : '';
+    html += `<div class="model-group-label">${iconHtml}${escapeHtml(prov)}</div>`;
     getProviderModels(prov).forEach(m => {
       const active = m.id === state.currentModelId ? ' active' : '';
       const typeLabel = m.type === 'chat' ? '' : m.type.toUpperCase();
-      const tags = (m.tags || []).map(t => `<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:var(--bg-primary);border:1px solid var(--border-color);color:var(--text-tertiary)">${t}</span>`).join('');
+      const modelIcon = iconUrl ? `<img src="${iconUrl}" width="16" height="16" style="border-radius:3px;flex-shrink:0" onerror="this.style.display='none'" />` : '';
       const typeDesc = {chat:'文本对话',tts:'语音合成',voiceclone:'语音克隆',voicedesign:'音色设计',asr:'语音识别'}[m.type]||'';
       html += `<div class="model-option${active}" data-id="${m.id}" style="flex-direction:column;align-items:stretch;padding:8px 12px">
         <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="event.stopPropagation();selectAndClose('${m.id}')">
+          ${modelIcon}
           <span style="flex:1;font-weight:500">${escapeHtml(m.name)}</span>
           ${typeLabel ? `<span class="model-type-badge">${typeLabel}</span>` : ''}
           <span id="arrow-${m.id}" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;transition:transform 0.2s;transform:rotate(0deg)" onclick="event.stopPropagation();toggleModelDetail('${m.id}')">▶</span>
         </div>
         <div id="detail-${m.id}" style="display:none;margin-top:6px;padding:8px;background:var(--bg-primary);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.6">
           <div><b>类型：</b>${typeDesc}</div>
-          <div><b>模型ID：</b><code style="font-size:11px;background:var(--bg-secondary);padding:1px 4px;border-radius:3px">${m.modelId}</code></div>
+          <div><b>模型ID：</b><code style="font-size:11px;background:var(--bg-secondary);padding:1px 4px;border-radius:3px">${m.id}</code></div>
           <div><b>提供商：</b>${escapeHtml(m.provider)}</div>
-          ${tags ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${tags}</div>` : ''}
         </div>
       </div>`;
     });
@@ -1298,7 +1318,14 @@ function selectAndClose(id) {
 
 function updateModelName() {
   const m = getModel(state.currentModelId);
-  $('currentModelName').textContent = m ? m.name : '选择模型';
+  const nameEl = $('currentModelName');
+  if (m) {
+    const iconUrl = PROVIDER_ICONS[m.provider] || '';
+    const iconHtml = iconUrl ? `<img src="${iconUrl}" width="16" height="16" style="border-radius:3px;vertical-align:middle;margin-right:4px" onerror="this.style.display='none'" />` : '';
+    nameEl.innerHTML = iconHtml + escapeHtml(m.name);
+  } else {
+    nameEl.textContent = '选择模型';
+  }
 }
 
 function switchInputPanel() {
