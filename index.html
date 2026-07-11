@@ -21,13 +21,13 @@
   --font-mono: 'SF Mono','Fira Code','JetBrains Mono',monospace;
 }
 [data-theme="dark"] {
-  --bg-primary: #0F172A; --bg-secondary: #1E293B; --bg-hover: #334155; --bg-active: #475569;
-  --bg-input: #1E293B; --bg-user-msg: #1E3A5F; --bg-modal: #1E293B; --bg-overlay: rgba(0,0,0,0.65);
-  --text-primary: #F1F5F9; --text-secondary: #94A3B8; --text-tertiary: #64748B;
-  --border-color: #334155; --accent: #818CF8; --accent-hover: #6366F1;
-  --accent-light: rgba(129,140,248,0.12); --accent-glow: rgba(129,140,248,0.25);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.25); --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
-  --shadow-lg: 0 12px 40px rgba(0,0,0,0.45); --shadow-glow: 0 0 24px var(--accent-glow);
+  --bg-primary: #171412; --bg-secondary: #1E1B18; --bg-hover: #2A2622; --bg-active: #36312B;
+  --bg-input: #1E1B18; --bg-user-msg: #2A2419; --bg-modal: #1E1B18; --bg-overlay: rgba(0,0,0,0.65);
+  --text-primary: #F5F0E8; --text-secondary: #A8A098; --text-tertiary: #78706A;
+  --border-color: #2E2A25; --accent: #E8A838; --accent-hover: #D49520;
+  --accent-light: rgba(232,168,56,0.12); --accent-glow: rgba(232,168,56,0.2);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3); --shadow-md: 0 4px 12px rgba(0,0,0,0.4); --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px var(--accent-glow);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;}
@@ -603,10 +603,16 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
         </div><!-- end chat main -->
       </div><!-- end AI content -->
 
-    <!-- Forum Tab -->
-    <div class="tab-page" id="pageForum">
-      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:16px;font-weight:700;flex-shrink:0">论坛</div>
-      <div class="placeholder-page"><div class="ph-icon">📰</div><div class="ph-text">朋友圈/论坛即将上线</div></div>
+    <!-- Image Tab -->
+    <div class="tab-page" id="pageImage">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:16px;font-weight:700;flex-shrink:0">🎨 画图</div>
+      <div class="placeholder-page"><div class="ph-icon">🎨</div><div class="ph-text">AI 画图功能即将上线</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:8px">支持文生图 · 图生图 · 风格迁移</div></div>
+    </div>
+
+    <!-- PPT Tab -->
+    <div class="tab-page" id="pagePPT">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:16px;font-weight:700;flex-shrink:0">📊 PPT</div>
+      <div class="placeholder-page"><div class="ph-icon">📊</div><div class="ph-text">AI PPT 生成功能即将上线</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:8px">一句话生成演示文稿 · 多模板可选</div></div>
     </div>
 
     <!-- More Tab -->
@@ -666,8 +672,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
   <nav class="bottom-nav">
     <div class="nav-tab" data-page="pageChat" onclick="switchTab('pageChat')"><span class="nav-icon">💬</span><span class="nav-label">聊天</span></div>
     <div class="nav-tab active" data-page="pageAI" onclick="switchTab('pageAI')"><span class="nav-icon">🤖</span><span class="nav-label">AI</span></div>
-    <div class="nav-tab" data-page="pageForum" onclick="switchTab('pageForum')"><span class="nav-icon">📰</span><span class="nav-label">论坛</span></div>
-    <div class="nav-tab" data-page="pageMore" onclick="switchTab('pageMore')"><span class="nav-icon">🔮</span><span class="nav-label">更多</span></div>
+    <div class="nav-tab" data-page="pageImage" onclick="switchTab('pageImage')"><span class="nav-icon">🎨</span><span class="nav-label">画图</span></div>
+    <div class="nav-tab" data-page="pagePPT" onclick="switchTab('pagePPT')"><span class="nav-icon">📊</span><span class="nav-label">PPT</span></div>
     <div class="nav-tab" data-page="pageProfile" onclick="switchTab('pageProfile')"><span class="nav-icon">👤</span><span class="nav-label">我的</span></div>
   </nav>
 </div>
@@ -755,7 +761,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
    ==================== Models Configuration ====================
    ================================================================ */
 
-var APP_VERSION = '1.4';
+var APP_VERSION = '1.5';
 var ADMIN_USER = '1234';
 var ADMIN_PASS = '1234';
 
@@ -949,6 +955,10 @@ var MODELS = [
    ================================================================ */
 
 var CHANGELOG = [
+  {version:'1.5',date:'2026-07-12',items:[
+    '底部导航新增画图和PPT入口（预留功能）',
+    '暗色主题改为暖色调（参考ToxAI黑金风格）'
+  ]},
   {version:'1.4',date:'2026-07-12',items:[
     '下拉菜单滑动动画升级（参考ToxAI风格）',
     '模型选择器/模式选择器/弹窗平滑过渡',
