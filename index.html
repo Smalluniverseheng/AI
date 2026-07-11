@@ -589,8 +589,8 @@ var PROVIDER_COLORS={
 // ctx = context window in K tokens, vision = supports image input
 var MODELS = [
   // ===== 小米 MiMo =====
-  {id:'mimo-v2.5-pro',name:'MiMo v2.5 Pro',provider:'小米 MiMo',type:'chat',ctx:128},
-  {id:'mimo-v2.5-pro-ultraspeed',name:'MiMo v2.5 Pro UltraSpeed',provider:'小米 MiMo',type:'chat',ctx:128},
+  {id:'mimo-v2.5-pro',name:'MiMo v2.5 Pro',provider:'小米 MiMo',type:'chat',ctx:128,thinking:true},
+  {id:'mimo-v2.5-pro-ultraspeed',name:'MiMo v2.5 Pro UltraSpeed',provider:'小米 MiMo',type:'chat',ctx:128,thinking:true},
   {id:'mimo-v2.5',name:'MiMo v2.5',provider:'小米 MiMo',type:'chat',ctx:128},
   {id:'mimo-v2.5-tts',name:'MiMo v2.5 TTS',provider:'小米 MiMo',type:'tts'},
   {id:'mimo-v2.5-tts-voiceclone',name:'MiMo VoiceClone',provider:'小米 MiMo',type:'voiceclone'},
@@ -636,7 +636,7 @@ var MODELS = [
   // ===== Kimi =====
   {id:'kimi-k2.7-code',name:'Kimi K2.7 Code',provider:'Kimi',type:'chat',ctx:256,thinking:true},
   {id:'kimi-k2.6',name:'Kimi K2.6',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
-  {id:'kimi-k2.5',name:'Kimi K2.5',provider:'Kimi',type:'chat',ctx:256,vision:true},
+  {id:'kimi-k2.5',name:'Kimi K2.5',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
   {id:'moonshot-v1-128k',name:'Moonshot V1 128K',provider:'Kimi',type:'chat',ctx:128},
   {id:'moonshot-v1-32k',name:'Moonshot V1 32K',provider:'Kimi',type:'chat',ctx:32},
   {id:'moonshot-v1-8k',name:'Moonshot V1 8K',provider:'Kimi',type:'chat',ctx:8},
@@ -855,6 +855,18 @@ function callChatAPI(messages,modelId,onChunk,onThinking){
   else if(model.provider==='火山引擎'){base='https://ark.cn-beijing.volces.com/api';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
   else{base='https://api.openai.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
   var body={model:modelId,messages:messages.map(function(m){return{role:m.role,content:m.content};}),stream:!!onChunk};
+  // Enable thinking mode for MiMo models that support it
+  if(model.provider==='小米 MiMo' && (modelId.indexOf('pro')!==-1 || modelId.indexOf('ultraspeed')!==-1)){
+    body.enable_thinking=true;
+  }
+  // Enable thinking for DeepSeek reasoning models
+  if(model.provider==='DeepSeek' && model.thinking){
+    body.enable_thinking=true;
+  }
+  // Enable thinking for Kimi thinking models
+  if(model.provider==='Kimi' && model.thinking){
+    body.enable_thinking=true;
+  }
   return fetch(base+'/v1/chat/completions',{method:'POST',headers:headers,body:JSON.stringify(body)}).then(function(resp){
     if(!resp.ok)return resp.text().then(function(t){throw new Error('API错误('+resp.status+'): '+t.slice(0,200));});
     if(onChunk)return streamSSE(resp,onChunk,onThinking);
