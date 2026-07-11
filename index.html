@@ -327,7 +327,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
           </div>
           <div class="debate-rounds" id="debateRoundsWrap" style="display:none">
             <label>讨论轮数：</label>
-            <select id="debateRounds"><option value="2">2轮</option><option value="3" selected>3轮</option><option value="5">5轮</option></select>
+            <input type="number" id="debateRounds" value="3" min="1" max="50" style="width:60px;padding:3px 8px;font-size:12px;border-radius:4px;text-align:center">
+            <span style="font-size:12px;color:var(--text-secondary)">轮</span>
           </div>
         </div>
       </div>
@@ -872,7 +873,7 @@ function sendMulti(content){
 function sendDebate(content){
   var models=state.debateModels.length?state.debateModels:[state.currentModelId];
   if(models.length<2){showToast('辩论至少需要2个模型','error');return;}
-  var rounds=parseInt($('debateRounds').value)||3;
+  var rounds=Math.max(1,Math.min(50,parseInt($('debateRounds').value)||3));
   var chat=ensureChat();
   chat.messages.push({role:'user',content:'辩论主题: '+content.trim(),time:Date.now()});
   saveState();renderMessages();
