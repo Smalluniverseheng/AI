@@ -128,6 +128,31 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .mode-dd-item .mode-item-desc{font-size:11px;color:var(--text-tertiary);font-weight:400;margin-top:1px;}
 .mode-dd-divider{height:1px;background:var(--border-color);margin:4px 0;}
 
+/* ==================== History Sidebar ==================== */
+.history-sidebar{width:260px;background:var(--bg-secondary);border-right:1px solid var(--border-color);display:none;flex-direction:column;flex-shrink:0;}
+.history-sidebar.show{display:flex;}
+.history-header{padding:12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-color);}
+.history-header h3{font-size:14px;font-weight:700;flex:1;}
+.history-header button{padding:5px 10px;border-radius:6px;background:var(--accent);color:#fff;font-size:11px;font-weight:600;transition:background 0.15s;}
+.history-header button:hover{background:var(--accent-hover);}
+.history-list{flex:1;overflow-y:auto;padding:8px;}
+.history-item{padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;margin-bottom:4px;transition:all 0.15s;display:flex;align-items:center;gap:8px;}
+.history-item:hover{background:var(--bg-hover);}
+.history-item.active{background:var(--accent-light);color:var(--accent);}
+.history-item-icon{font-size:16px;flex-shrink:0;}
+.history-item-info{flex:1;min-width:0;}
+.history-item-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-item-meta{font-size:10px;color:var(--text-tertiary);margin-top:2px;}
+.history-item-actions{display:none;gap:4px;}
+.history-item:hover .history-item-actions{display:flex;}
+.history-item-btn{padding:3px 6px;border-radius:4px;font-size:10px;color:var(--text-tertiary);transition:all 0.15s;}
+.history-item-btn:hover{background:var(--bg-active);color:var(--text-primary);}
+.history-item-btn.danger:hover{background:rgba(239,68,68,0.1);color:var(--danger);}
+.history-footer{padding:8px 12px;border-top:1px solid var(--border-color);display:flex;gap:6px;}
+.history-footer button{flex:1;padding:7px;border-radius:6px;font-size:11px;font-weight:600;border:1px solid var(--border-color);background:var(--bg-primary);color:var(--text-secondary);transition:all 0.15s;}
+.history-footer button:hover{border-color:var(--accent);color:var(--accent);}
+@media(max-width:768px){.history-sidebar{position:fixed;left:0;top:0;bottom:0;z-index:400;width:280px;box-shadow:var(--shadow-lg);}}
+
 /* ==================== Chat Area ==================== */
 .chat-area{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column;scroll-behavior:smooth;}
 .chat-msgs{flex:1;padding:20px 16px;display:flex;flex-direction:column;gap:16px;max-width:760px;width:100%;margin:0 auto;}
@@ -377,6 +402,25 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 
     <!-- AI Tab -->
     <div class="tab-page active" id="pageAI">
+      <!-- AI Content with History Sidebar -->
+      <div style="display:flex;flex:1;overflow:hidden">
+        <!-- History Sidebar -->
+        <div class="history-sidebar" id="historySidebar">
+          <div class="history-header">
+            <span style="font-size:16px">💬</span>
+            <h3>对话历史</h3>
+            <button onclick="createNewChat()">+ 新对话</button>
+          </div>
+          <div class="history-list" id="historyList"></div>
+          <div class="history-footer">
+            <button onclick="exportAllHistory()">📥 导出MD</button>
+            <button onclick="importHistory()">📤 导入MD</button>
+            <button onclick="clearAllHistory()" style="color:var(--danger)">🗑 清空</button>
+          </div>
+        </div>
+
+        <!-- Chat Main -->
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
       <!-- Top Bar -->
       <div class="ai-topbar">
         <div class="model-sel" id="modelSelWrap">
@@ -386,6 +430,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
           </button>
           <div class="model-dd" id="modelDD"></div>
         </div>
+        <button class="mode-sel-btn" id="historyToggleBtn" onclick="toggleHistory()" style="background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border-color);padding:5px 10px;font-size:12px">☰ 历史</button>
         <div class="mode-selector">
           <button class="mode-sel-btn" id="modeSelBtn">
             <span class="mode-icon" id="modeIcon">💬</span>
@@ -552,6 +597,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       </div>
     </div>
 
+        </div><!-- end chat main -->
+      </div><!-- end AI content -->
+
     <!-- Forum Tab -->
     <div class="tab-page" id="pageForum">
       <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:16px;font-weight:700;flex-shrink:0">论坛</div>
@@ -704,7 +752,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
    ==================== Models Configuration ====================
    ================================================================ */
 
-var APP_VERSION = '1.2';
+var APP_VERSION = '1.3';
 var ADMIN_USER = '1234';
 var ADMIN_PASS = '1234';
 
@@ -898,6 +946,13 @@ var MODELS = [
    ================================================================ */
 
 var CHANGELOG = [
+  {version:'1.3',date:'2026-07-12',items:[
+    '新增对话历史侧栏（点击☰历史按钮展开）',
+    '支持创建/切换/删除对话',
+    '支持Markdown格式导出单个或全部对话',
+    '支持Markdown格式导入对话记录',
+    '清空历史功能'
+  ]},
   {version:'1.2',date:'2026-07-12',items:[
     '模型选择器改为左右布局（左侧品牌侧栏+右侧模型列表）',
     '参考ToxAI设计风格',
@@ -2437,6 +2492,171 @@ function init() {
   updateModelName();
   switchInputPanel();
   applyTheme();
+}
+
+/* ================================================================
+   ==================== Chat History ====================
+   ================================================================ */
+
+var historyVisible = false;
+
+function toggleHistory() {
+  historyVisible = !historyVisible;
+  $('historySidebar').classList.toggle('show', historyVisible);
+  if (historyVisible) renderHistoryList();
+}
+
+function createNewChat() {
+  var chat = { id: genId(), title: '新对话', messages: [], createdAt: Date.now(), updatedAt: Date.now() };
+  state.chats.unshift(chat);
+  state.currentChatId = chat.id;
+  saveState();
+  renderHistoryList();
+  renderMessages();
+  showToast('新对话已创建', 'success');
+}
+
+function switchChat(chatId) {
+  state.currentChatId = chatId;
+  saveState();
+  renderHistoryList();
+  renderMessages();
+}
+
+function deleteChat(chatId, e) {
+  e.stopPropagation();
+  if (!confirm('确定删除这个对话？')) return;
+  state.chats = state.chats.filter(function(c) { return c.id !== chatId; });
+  if (state.currentChatId === chatId) {
+    state.currentChatId = state.chats.length ? state.chats[0].id : null;
+  }
+  saveState();
+  renderHistoryList();
+  renderMessages();
+  showToast('对话已删除', 'info');
+}
+
+function renderHistoryList() {
+  var el = $('historyList');
+  if (!el) return;
+  if (!state.chats.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-tertiary)"><div style="font-size:32px;margin-bottom:8px">💬</div><div style="font-size:13px">暂无对话</div><div style="font-size:11px;margin-top:4px">点击上方按钮开始新对话</div></div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < state.chats.length; i++) {
+    var c = state.chats[i];
+    var active = c.id === state.currentChatId ? ' active' : '';
+    var msgCount = c.messages ? c.messages.length : 0;
+    var date = new Date(c.updatedAt || c.createdAt);
+    var dateStr = (date.getMonth()+1) + '/' + date.getDate() + ' ' + date.getHours() + ':' + String(date.getMinutes()).padStart(2,'0');
+    html += '<div class="history-item' + active + '" onclick="switchChat(\'' + c.id + '\')">';
+    html += '<span class="history-item-icon">💬</span>';
+    html += '<div class="history-item-info">';
+    html += '<div class="history-item-title">' + escapeHtml(c.title || '新对话') + '</div>';
+    html += '<div class="history-item-meta">' + msgCount + ' 条消息 · ' + dateStr + '</div>';
+    html += '</div>';
+    html += '<div class="history-item-actions">';
+    html += '<span class="history-item-btn" onclick="exportChatMd(\'' + c.id + '\)" title="导出">📥</span>';
+    html += '<span class="history-item-btn danger" onclick="deleteChat(\'' + c.id + '\',event)" title="删除">✕</span>';
+    html += '</div></div>';
+  }
+  el.innerHTML = html;
+}
+
+function exportChatMd(chatId) {
+  var chat = state.chats.find(function(c) { return c.id === chatId; });
+  if (!chat) return;
+  var md = '# ' + (chat.title || '对话记录') + '\n\n';
+  md += '> 导出时间: ' + new Date().toLocaleString('zh-CN') + '\n\n---\n\n';
+  for (var i = 0; i < chat.messages.length; i++) {
+    var msg = chat.messages[i];
+    var role = msg.role === 'user' ? '**👤 用户**' : '**🤖 AI**';
+    md += role + '\n\n' + msg.content + '\n\n---\n\n';
+  }
+  var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (chat.title || '对话') + '.md';
+  a.click();
+  showToast('已导出为 Markdown', 'success');
+}
+
+function exportAllHistory() {
+  if (!state.chats.length) { showToast('没有对话可导出', 'error'); return; }
+  var md = '# 第三方科技 AI 对话记录\n\n';
+  md += '> 导出时间: ' + new Date().toLocaleString('zh-CN') + '\n\n';
+  for (var i = 0; i < state.chats.length; i++) {
+    var c = state.chats[i];
+    md += '## ' + (c.title || '对话') + '\n\n';
+    for (var j = 0; j < c.messages.length; j++) {
+      var msg = c.messages[j];
+      var role = msg.role === 'user' ? '**👤 用户**' : '**🤖 AI**';
+      md += role + '\n\n' + msg.content + '\n\n';
+    }
+    md += '---\n\n';
+  }
+  var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'AI对话记录_' + new Date().toISOString().slice(0,10) + '.md';
+  a.click();
+  showToast('已导出全部对话', 'success');
+}
+
+function importHistory() {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.md,.txt';
+  input.onchange = function() {
+    if (!input.files.length) return;
+    var reader = new FileReader();
+    reader.onload = function() {
+      var text = reader.result;
+      var chat = { id: genId(), title: '导入的对话', messages: [], createdAt: Date.now(), updatedAt: Date.now() };
+      var lines = text.split('\n');
+      var currentRole = null;
+      var currentContent = [];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.indexOf('**👤 用户**') >= 0) {
+          if (currentRole && currentContent.length) chat.messages.push({ role: currentRole, content: currentContent.join('\n').trim(), time: Date.now() });
+          currentRole = 'user';
+          currentContent = [];
+        } else if (line.indexOf('**🤖 AI**') >= 0) {
+          if (currentRole && currentContent.length) chat.messages.push({ role: currentRole, content: currentContent.join('\n').trim(), time: Date.now() });
+          currentRole = 'assistant';
+          currentContent = [];
+        } else if (line !== '---' && line.indexOf('> 导出时间') < 0 && line.indexOf('# ') !== 0) {
+          currentContent.push(line);
+        }
+      }
+      if (currentRole && currentContent.length) chat.messages.push({ role: currentRole, content: currentContent.join('\n').trim(), time: Date.now() });
+      if (chat.messages.length) {
+        chat.title = chat.messages[0].content.slice(0, 30) || '导入的对话';
+        state.chats.unshift(chat);
+        state.currentChatId = chat.id;
+        saveState();
+        renderHistoryList();
+        renderMessages();
+        showToast('导入成功，共 ' + chat.messages.length + ' 条消息', 'success');
+      } else {
+        showToast('未找到有效对话内容', 'error');
+      }
+    };
+    reader.readAsText(input.files[0]);
+  };
+  input.click();
+}
+
+function clearAllHistory() {
+  if (!confirm('确定清空所有对话历史？此操作不可撤销。')) return;
+  state.chats = [];
+  state.currentChatId = null;
+  saveState();
+  renderHistoryList();
+  renderMessages();
+  showToast('已清空所有对话', 'info');
 }
 
 // Boot with error handling
