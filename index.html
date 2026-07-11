@@ -769,7 +769,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
    ==================== Models Configuration ====================
    ================================================================ */
 
-var APP_VERSION = '1.7';
+var APP_VERSION = '1.8';
 var ADMIN_USER = '1234';
 var ADMIN_PASS = '1234';
 
@@ -1001,6 +1001,10 @@ var MODELS = [
    ================================================================ */
 
 var CHANGELOG = [
+  {version:'1.8',date:'2026-07-12',items:[
+    '修复模型选择器下拉框超出屏幕的问题',
+    '移动端自适应优化（max-height:70vh）'
+  ]},
   {version:'1.7',date:'2026-07-12',items:[
     '模型数量增加到150+',
     '新增 GPT-5、Claude Opus 4.7、Gemini 3.1、DeepSeek V4 等最新模型',
