@@ -421,7 +421,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
         </div>
         <div class="profile-menu">
           <div class="profile-menu-item" onclick="openSettings()"><span class="menu-icon">⚙</span><span>设置</span><span class="menu-arrow">›</span></div>
-          <div class="profile-menu-item" onclick="openSettings()"><span class="menu-icon">📋</span><span>更新日志</span><span class="menu-arrow">›</span></div>
+          <div class="profile-menu-item" onclick="openChangelog()"><span class="menu-icon">📋</span><span>更新日志</span><span class="menu-arrow">›</span></div>
           <div class="profile-divider"></div>
           <div class="profile-menu-item" onclick="toggleDarkMode()"><span class="menu-icon">🌙</span><span>深色模式</span><span class="menu-arrow" id="darkStatus">关闭</span></div>
           <div class="profile-divider"></div>
@@ -470,8 +470,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
         <h4>数据管理</h4>
         <div class="setting-row"><div><div class="setting-label">清除所有数据</div><div class="setting-desc">删除所有聊天记录和设置</div></div><button class="danger-btn" id="clearBtn">清除</button></div>
       </div>
-      <div class="modal-section"><h4>更新日志</h4><div id="changelogList"></div></div>
     </div>
+  </div>
+</div>
+
+<!-- Changelog Modal -->
+<div class="modal-overlay" id="changelogModal">
+  <div class="modal">
+    <div class="modal-header"><h3>📋 更新日志</h3><button class="modal-close" onclick="$('changelogModal').classList.remove('show')">✕</button></div>
+    <div class="modal-body"><div id="changelogList"></div></div>
   </div>
 </div>
 
@@ -952,7 +959,7 @@ function loadSettingsUI(){
   $('keyDeepSeek').value=state.apiKeys.deepseek||'';
   var plan=state.apiKeys.mimoPlan||'tokenPlan';
   switchPlanUI(plan);
-  applyTheme();renderChangelog();
+  applyTheme();
 }
 function saveSettings(){
   state.apiKeys.mimoTokenPlan=$('keyTP').value.trim();
@@ -990,6 +997,7 @@ function switchTab(pageId){
   var tab=document.querySelector('.nav-tab[data-page="'+pageId+'"]');if(tab)tab.classList.add('active');
 }
 function openSettings(){loadSettingsUI();$('settingsModal').classList.add('show');}
+function openChangelog(){renderChangelog();$('changelogModal').classList.add('show');}
 function toggleDarkMode(){state.theme=state.theme==='dark'?'light':'dark';saveState();applyTheme();}
 function doLogout(){state.loggedIn=false;saveState();$('appShell').classList.remove('show');$('loginPage').style.display='';}
 
