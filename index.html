@@ -761,7 +761,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
    ==================== Models Configuration ====================
    ================================================================ */
 
-var APP_VERSION = '1.5';
+var APP_VERSION = '1.6';
 var ADMIN_USER = '1234';
 var ADMIN_PASS = '1234';
 
@@ -955,6 +955,10 @@ var MODELS = [
    ================================================================ */
 
 var CHANGELOG = [
+  {version:'1.6',date:'2026-07-12',items:[
+    '修复模型选择器点击展开又缩回的bug',
+    '修复下拉菜单事件冒泡问题'
+  ]},
   {version:'1.5',date:'2026-07-12',items:[
     '底部导航新增画图和PPT入口（预留功能）',
     '暗色主题改为暖色调（参考ToxAI黑金风格）'
