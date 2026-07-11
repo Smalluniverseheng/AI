@@ -157,7 +157,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .model-picker-item img{width:14px;height:14px;border-radius:2px;}
 
 /* Voice Panels */
-.voice-panel{padding:12px;background:var(--bg-primary);border-top:1px solid var(--border-color);display:none;}
+.voice-panel{padding:12px;background:var(--bg-primary);border-top:1px solid var(--border-color);display:none;flex:1;overflow-y:auto;}
 .voice-panel-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
 .voice-panel textarea{width:100%;padding:10px;resize:none;min-height:60px;border-radius:var(--radius-sm);font-size:13px;line-height:1.5;}
 .voice-panel label{font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px;}
@@ -367,6 +367,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <!-- Input: TTS -->
       <div class="voice-panel" id="ttsPanel">
         <div class="voice-panel-inner">
+          <div style="text-align:center;padding:8px 0 4px"><span style="font-size:28px">🎙</span><div style="font-size:15px;font-weight:600;margin-top:6px">语音合成</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">输入文本，选择音色生成语音</div></div>
           <textarea id="ttsText" placeholder="输入要合成语音的文本..."></textarea>
           <div class="voice-controls">
             <div class="voice-control-group"><label>音色</label><select id="ttsVoice"><option value="female-tianmei">甜美女声</option><option value="female-roumei">柔美女声</option><option value="female-wenyi">文艺女声</option><option value="male-qinhe">亲和男声</option><option value="male-cangjing">沧桑男声</option><option value="male-dongci">磁性男声</option></select></div>
@@ -381,6 +382,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <!-- Input: Voice Clone -->
       <div class="voice-panel" id="vcPanel">
         <div class="voice-panel-inner">
+          <div style="text-align:center;padding:8px 0 4px"><span style="font-size:28px">🧬</span><div style="font-size:15px;font-weight:600;margin-top:6px">语音克隆</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">上传参考音频，克隆音色</div></div>
           <textarea id="vcText" placeholder="输入要克隆语音的文本..."></textarea>
           <div class="upload-area" id="vcUpload"><input type="file" id="vcFile" accept="audio/*"><div class="upload-icon">📁</div><div class="upload-text">点击上传参考音频（3-10秒）</div><div class="upload-filename" id="vcFname"></div></div>
           <button class="voice-gen-btn" id="vcGenBtn">🧬 克隆语音</button>
@@ -391,6 +393,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <!-- Input: Voice Design -->
       <div class="voice-panel" id="vdPanel">
         <div class="voice-panel-inner">
+          <div style="text-align:center;padding:8px 0 4px"><span style="font-size:28px">🎨</span><div style="font-size:15px;font-weight:600;margin-top:6px">音色设计</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">用文字描述你想要的音色</div></div>
           <textarea id="vdText" placeholder="输入要合成的文本..."></textarea>
           <input type="text" id="vdDesc" placeholder="描述你想要的音色，例如：温柔的年轻女性声音" style="width:100%;padding:8px 10px">
           <button class="voice-gen-btn" id="vdGenBtn">🎨 设计音色并合成</button>
@@ -401,6 +404,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <!-- Input: ASR -->
       <div class="voice-panel" id="asrPanel">
         <div class="voice-panel-inner">
+          <div style="text-align:center;padding:8px 0 4px"><span style="font-size:28px">🎤</span><div style="font-size:15px;font-weight:600;margin-top:6px">语音识别</div><div style="font-size:12px;color:var(--text-tertiary);margin-top:2px">上传音频文件，转为文字</div></div>
           <div class="upload-area" id="asrUpload"><input type="file" id="asrFile" accept="audio/*"><div class="upload-icon">🎤</div><div class="upload-text">点击上传音频文件进行识别</div><div class="upload-filename" id="asrFname"></div></div>
           <button class="voice-gen-btn" id="asrGenBtn">🔍 开始识别</button>
           <div id="asrResult"></div>
@@ -921,11 +925,15 @@ function updateModelName(){
 }
 function switchInputPanel(){
   var m=getModel(state.currentModelId),type=m?m.type:'chat';
-  $('chatInputArea').style.display=type==='chat'?'':'none';
-  $('ttsPanel').style.display=type==='tts'?'':'none';
-  $('vcPanel').style.display=type==='voiceclone'?'':'none';
-  $('vdPanel').style.display=type==='voicedesign'?'':'none';
-  $('asrPanel').style.display=type==='asr'?'':'none';
+  var isVoice=type!=='chat';
+  $('chatInputArea').style.display=isVoice?'none':'';
+  $('chatArea').style.display=isVoice?'none':'';
+  $('modeConfig').style.display=isVoice?'none':'';
+  document.querySelector('.ai-topbar .mode-btns').style.display=isVoice?'none':'';
+  $('ttsPanel').style.display=type==='tts'?'flex':'none';
+  $('vcPanel').style.display=type==='voiceclone'?'flex':'none';
+  $('vdPanel').style.display=type==='voicedesign'?'flex':'none';
+  $('asrPanel').style.display=type==='asr'?'flex':'none';
 }
 
 /* ==================== Chat Mode ==================== */
