@@ -462,8 +462,12 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
       <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:15px;font-weight:600;flex-shrink:0">我的</div>
       <div class="profile-page">
         <div class="profile-header">
-          <div class="profile-avatar">👤</div>
+          <div class="profile-avatar" id="profileAvatar" onclick="openAvatarPicker()" style="cursor:pointer;position:relative">
+            <span id="avatarEmoji">👤</span>
+            <span style="position:absolute;bottom:0;right:0;width:18px;height:18px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;border:2px solid var(--bg-primary)">📷</span>
+          </div>
           <div class="profile-name" id="profileName">用户</div>
+          <div style="font-size:11px;color:var(--text-tertiary);cursor:pointer" onclick="openAvatarPicker()">点击更换头像</div>
         </div>
         <div class="profile-menu">
           <div class="profile-menu-item" onclick="openSettings()"><span class="menu-icon">⚙</span><span>设置</span><span class="menu-arrow">›</span></div>
@@ -539,6 +543,27 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
   </div>
 </div>
 
+<!-- Avatar Picker Modal -->
+<div class="modal-overlay" id="avatarModal">
+  <div class="modal" style="width:360px">
+    <div class="modal-header"><h3>选择头像</h3><button class="modal-close" onclick="$('avatarModal').classList.remove('show')">✕</button></div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:16px">
+        <div id="avatarPreview" style="width:80px;height:80px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:36px">👤</div>
+      </div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:600">默认头像</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px" id="presetAvatars"></div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;font-weight:600">从相册选择</div>
+      <div style="text-align:center">
+        <div onclick="$('avatarFileInput').click()" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border:2px dashed var(--border-color);border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:var(--text-secondary);transition:all 0.15s">
+          <span style="font-size:20px">📁</span> 上传图片
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-c" id="toastC"></div>
 
@@ -555,28 +580,28 @@ var MIMO_PLANS = {
   payAsYouGo: { name:'按量付费', base:'https://api.xiaomimimo.com' }
 };
 
-var LOBE_BASE='https://unpkg.com/@lobehub/icons-static-svg@latest/files/icons/';
+var ICON_CDN='https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/';
 var PROVIDER_ICONS = {
-  '小米 MiMo':LOBE_BASE+'xiaomimimo.svg',
-  'OpenAI':LOBE_BASE+'openai.svg',
-  'Anthropic':LOBE_BASE+'anthropic.svg',
-  'Google':LOBE_BASE+'google-color.svg',
-  'DeepSeek':LOBE_BASE+'deepseek-color.svg',
-  '通义千问':LOBE_BASE+'qwen-color.svg',
-  '智谱AI':LOBE_BASE+'chatglm-color.svg',
-  'Kimi':LOBE_BASE+'kimi-color.svg',
-  '文心一言':LOBE_BASE+'baidu-color.svg',
-  '腾讯混元':LOBE_BASE+'tencent-color.svg',
-  'MiniMax':LOBE_BASE+'minimax-color.svg',
-  '零一万物':LOBE_BASE+'yi-color.svg',
-  '阶跃星辰':LOBE_BASE+'stepfun-color.svg',
-  '百川智能':LOBE_BASE+'baichuan-color.svg',
-  '火山引擎':LOBE_BASE+'volcengine-color.svg',
-  'Mistral':LOBE_BASE+'mistral-color.svg',
-  'Meta':LOBE_BASE+'meta-color.svg',
-  'Cohere':LOBE_BASE+'cohere-color.svg',
-  'xAI':LOBE_BASE+'grok.svg',
-  'Groq':LOBE_BASE+'groq.svg'
+  '小米 MiMo':ICON_CDN+'xiaomimimo.svg',
+  'OpenAI':ICON_CDN+'openai.svg',
+  'Anthropic':ICON_CDN+'anthropic.svg',
+  'Google':ICON_CDN+'google.svg',
+  'DeepSeek':ICON_CDN+'deepseek.svg',
+  '通义千问':ICON_CDN+'qwen.svg',
+  '智谱AI':ICON_CDN+'zhipu.svg',
+  'Kimi':ICON_CDN+'kimi.svg',
+  '文心一言':ICON_CDN+'baidu.svg',
+  '腾讯混元':ICON_CDN+'tencent.svg',
+  'MiniMax':ICON_CDN+'minimax.svg',
+  '零一万物':ICON_CDN+'yi.svg',
+  '阶跃星辰':ICON_CDN+'stepfun.svg',
+  '百川智能':ICON_CDN+'baichuan.svg',
+  '火山引擎':ICON_CDN+'volcengine.svg',
+  'Mistral':ICON_CDN+'mistral.svg',
+  'Meta':ICON_CDN+'meta.svg',
+  'Cohere':ICON_CDN+'cohere.svg',
+  'xAI':ICON_CDN+'grok.svg',
+  'Groq':ICON_CDN+'groq.svg'
 };
 // Fallback: colored circle with first letter for providers without icons
 var PROVIDER_COLORS={
@@ -1380,6 +1405,67 @@ function openChangelog(){renderChangelog();$('changelogModal').classList.add('sh
 function toggleDarkMode(){state.theme=state.theme==='dark'?'light':'dark';saveState();applyTheme();}
 function doLogout(){state.loggedIn=false;saveState();$('appShell').classList.remove('show');$('loginPage').style.display='';}
 
+/* ==================== Avatar ==================== */
+var PRESET_AVATARS=['😎','🤖','🐱','🦊','🎮','🚀','🎸','🌙','🔥','💎'];
+function openAvatarPicker(){
+  var modal=$('avatarModal');
+  var preview=$('avatarPreview');
+  var current=state.avatar||'👤';
+  preview.textContent=current;
+  // Render presets
+  var grid=$('presetAvatars');
+  var html='';
+  for(var i=0;i<PRESET_AVATARS.length;i++){
+    var a=PRESET_AVATARS[i];
+    var selected=a===current?'border:2px solid var(--accent)':'border:2px solid transparent';
+    html+='<div onclick="selectAvatar(\''+a+'\')" style="width:48px;height:48px;border-radius:50%;background:var(--bg-hover);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;transition:all 0.15s;'+selected+'">'+a+'</div>';
+  }
+  grid.innerHTML=html;
+  modal.classList.add('show');
+}
+function selectAvatar(emoji){
+  state.avatar=emoji;saveState();
+  $('avatarEmoji').textContent=emoji;
+  $('avatarPreview').textContent=emoji;
+  // Update preset selection
+  var grid=$('presetAvatars');
+  var divs=grid.children;
+  for(var i=0;i<divs.length;i++){
+    divs[i].style.border=PRESET_AVATARS[i]===emoji?'2px solid var(--accent)':'2px solid transparent';
+  }
+}
+window.openAvatarPicker=openAvatarPicker;
+window.selectAvatar=selectAvatar;
+// Avatar file upload
+(function(){
+  var input=document.getElementById('avatarFileInput');
+  if(input)input.addEventListener('change',function(){
+    if(!input.files.length)return;
+    var file=input.files[0];
+    if(file.size>2*1024*1024){showToast('图片不能超过2MB','error');return;}
+    var reader=new FileReader();
+    reader.onload=function(){
+      state.avatar=reader.result;saveState();
+      $('avatarEmoji').innerHTML='<img src="'+reader.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      $('avatarPreview').innerHTML='<img src="'+reader.result+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      $('avatarModal').classList.remove('show');
+      showToast('头像已更新','success');
+    };
+    reader.readAsDataURL(file);
+    input.value='';
+  });
+})();
+// Load avatar on init
+function loadAvatar(){
+  if(state.avatar){
+    if(state.avatar.indexOf('data:')===0){
+      $('avatarEmoji').innerHTML='<img src="'+state.avatar+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    }else{
+      $('avatarEmoji').textContent=state.avatar;
+    }
+  }
+}
+
 /* ==================== Auth ==================== */
 var selectedRegTag='';
 function switchAuthTab(tab){
@@ -1474,7 +1560,7 @@ function doRegister(){
 }
 function showApp(){
   $('loginPage').style.display='none';$('appShell').classList.add('show');
-  renderModelDD();updateModelName();switchInputPanel();applyTheme();
+  renderModelDD();updateModelName();switchInputPanel();applyTheme();loadAvatar();
   if(state.currentChatId)renderMessages();
 }
 
