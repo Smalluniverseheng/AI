@@ -456,9 +456,9 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
     <div class="modal-header"><h3>⚙ 设置</h3><button class="modal-close" id="settingsClose">✕</button></div>
     <div class="modal-body">
       <div class="modal-section">
-        <h4>API 配置</h4>
+        <h4>小米 MiMo</h4>
         <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div><div class="setting-label">小米 MiMo 计费方案</div><div class="setting-desc">不同方案使用不同的 Key 和接口</div></div>
+          <div><div class="setting-label">计费方案</div><div class="setting-desc">会员计划和按量付费使用不同的 Key 和接口</div></div>
           <div class="plan-btns">
             <button class="plan-btn active" id="planTP" onclick="switchPlan('tokenPlan')">🎫 会员计划</button>
             <button class="plan-btn" id="planPAY" onclick="switchPlan('payAsYouGo')">💰 按量付费</button>
@@ -466,15 +466,21 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
         </div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch" id="rowTP"><div><div class="setting-label">会员计划 Key (tp-)</div><div class="setting-desc">token-plan-cn.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyTP" placeholder="tp-xxxxx"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch;display:none" id="rowPAY"><div><div class="setting-label">按量付费 Key (sk-)</div><div class="setting-desc">api.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyPAY" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">OpenAI API Key</div><div class="setting-desc">GPT / o3 系列</div></div><input type="password" class="api-key-input" id="keyOpenAI" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude 系列</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 系列</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">DeepSeek API Key</div></div><input type="password" class="api-key-input" id="keyDeepSeek" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Kimi API Key</div><div class="setting-desc">moonshot-v1 系列</div></div><input type="password" class="api-key-input" id="keyKimi" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">通义千问 API Key</div></div><input type="password" class="api-key-input" id="keyQwen" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">智谱AI API Key</div></div><input type="password" class="api-key-input" id="keyGLM" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">文心一言 API Key</div></div><input type="password" class="api-key-input" id="keyErnie" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">豆包 API Key</div></div><input type="password" class="api-key-input" id="keyDoubao" placeholder="输入 Key"></div>
+      </div>
+      <div class="modal-section">
+        <h4>国内厂商</h4>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">DeepSeek API Key</div><div class="setting-desc">deepseek-chat / deepseek-reasoner</div></div><input type="password" class="api-key-input" id="keyDeepSeek" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Kimi API Key</div><div class="setting-desc">moonshot-v1 系列 · api.moonshot.cn</div></div><input type="password" class="api-key-input" id="keyKimi" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">通义千问 API Key</div><div class="setting-desc">qwen-max / qwen-plus · dashscope.aliyuncs.com</div></div><input type="password" class="api-key-input" id="keyQwen" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">智谱AI API Key</div><div class="setting-desc">GLM-4 系列 · open.bigmodel.cn</div></div><input type="password" class="api-key-input" id="keyGLM" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">文心一言 API Key</div><div class="setting-desc">ERNIE 系列</div></div><input type="password" class="api-key-input" id="keyErnie" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">豆包 API Key</div><div class="setting-desc">火山引擎 Doubao 系列</div></div><input type="password" class="api-key-input" id="keyDoubao" placeholder="输入 Key"></div>
+      </div>
+      <div class="modal-section">
+        <h4>国外厂商</h4>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">OpenAI API Key</div><div class="setting-desc">GPT-4o / o3 / o4 系列</div></div><input type="password" class="api-key-input" id="keyOpenAI" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude Opus / Sonnet / Haiku</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 2.5 Pro / Flash</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
       </div>
       <div class="modal-section">
         <h4>外观</h4>
@@ -512,27 +518,28 @@ var MIMO_PLANS = {
   payAsYouGo: { name:'按量付费', base:'https://api.xiaomimimo.com' }
 };
 
+var LOBE_BASE='https://unpkg.com/@lobehub/icons-static-svg@latest/files/icons/';
 var PROVIDER_ICONS = {
   '小米 MiMo':'https://cdn.simpleicons.org/xiaomi/FF6900',
-  '通义千问':'https://cdn.simpleicons.org/alibabacloud/FF6A00',
-  '智谱AI':'https://cdn.simpleicons.org/zhipuai/2B5CE6',
-  'Kimi':'https://cdn.simpleicons.org/moonshot/6236FF',
-  '文心一言':'https://cdn.simpleicons.org/baidu/2319DC',
-  '腾讯混元':'https://cdn.simpleicons.org/tencent/07C160',
-  'MiniMax':'https://cdn.simpleicons.org/minimax/000000',
-  '零一万物':'https://cdn.simpleicons.org/01ai/000000',
-  '阶跃星辰':'https://cdn.simpleicons.org/stepfun/4F46E5',
-  '百川智能':'https://cdn.simpleicons.org/baichuan/2B5CE6',
-  '火山引擎':'https://cdn.simpleicons.org/bytedance/3B7DF0',
-  'DeepSeek':'https://cdn.simpleicons.org/deepseek/0066FF',
-  'OpenAI':'https://cdn.simpleicons.org/openai/000000',
-  'Anthropic':'https://cdn.simpleicons.org/anthropic/D4A574',
-  'Google':'https://cdn.simpleicons.org/google/4285F4',
-  'Mistral':'https://cdn.simpleicons.org/mistral/FF7000',
-  'Meta':'https://cdn.simpleicons.org/meta/0668E1',
-  'Cohere':'https://cdn.simpleicons.org/cohere/39594D',
-  'xAI':'https://cdn.simpleicons.org/xai/FFFFFF',
-  'Groq':'https://cdn.simpleicons.org/groq/F55036'
+  'OpenAI':LOBE_BASE+'openai.svg',
+  'Anthropic':LOBE_BASE+'anthropic.svg',
+  'Google':LOBE_BASE+'google.svg',
+  'DeepSeek':LOBE_BASE+'deepseek.svg',
+  '通义千问':LOBE_BASE+'qwen.svg',
+  '智谱AI':LOBE_BASE+'zhipu.svg',
+  'Kimi':LOBE_BASE+'kimi.svg',
+  '文心一言':LOBE_BASE+'baidu.svg',
+  '腾讯混元':LOBE_BASE+'tencent.svg',
+  'MiniMax':LOBE_BASE+'minimax.svg',
+  '零一万物':LOBE_BASE+'yi.svg',
+  '阶跃星辰':LOBE_BASE+'stepfun.svg',
+  '百川智能':LOBE_BASE+'baichuan.svg',
+  '火山引擎':LOBE_BASE+'volcengine.svg',
+  'Mistral':LOBE_BASE+'mistral.svg',
+  'Meta':LOBE_BASE+'meta.svg',
+  'Cohere':LOBE_BASE+'cohere.svg',
+  'xAI':LOBE_BASE+'xai.svg',
+  'Groq':LOBE_BASE+'groq.svg'
 };
 // Fallback: colored circle with first letter for providers without icons
 var PROVIDER_COLORS={
@@ -631,30 +638,22 @@ var MODELS = [
 ];
 
 var CHANGELOG = [
-  {version:'7.0',date:'2026-07-11',major:true,items:['64个模型，20个厂商全覆盖','图片上传（支持视觉模型标记）','上下文关联对话','上下文长度限制管理（4K~1M）','20个厂商图标','辩论轮数自定义输入(1-50)']},
-  {version:'6.3',date:'2026-07-11',items:['更新日志独立弹窗，与设置分开']},
-  {version:'6.2',date:'2026-07-11',items:['辩论轮数改为自定义输入(1-50)']},
-  {version:'6.1',date:'2026-07-11',items:['思考动画（三个跳动圆点）','多模型名称标签','彩色头像区分不同模型']},
-  {version:'6.0',date:'2026-07-11',major:true,items:['底部导航栏5tab：聊天/AI/论坛/更多/我的','设置、日志移到"我的"页面','MiMo双计费方案切换（会员计划/按量付费）','修正全部模型ID','多模型/辩论模式UI']},
-  {version:'5.8',date:'2026-07-11',items:['支持MiMo双计费方案切换 (Token Plan / 按量付费)']},
-  {version:'5.7',date:'2026-07-11',items:['修复按钮点击无响应','暴露闭包内函数到全局作用域']},
-  {version:'5.6',date:'2026-07-11',items:['修正模型ID','添加厂商图标（Simple Icons CDN）']},
-  {version:'5.5',date:'2026-07-11',items:['辩论模式','修复页面卡死']},
-  {version:'5.4',date:'2026-07-11',items:['自动配置小米Token Plan API Key']},
-  {version:'5.3',date:'2026-07-11',items:['配置小米Token Plan API Key']},
-  {version:'5.2',date:'2026-07-11',items:['更新日志折叠展示','大小更新区分']},
-  {version:'5.1',date:'2026-07-11',items:['注册页面','模型详情展开']},
-  {version:'5.0',date:'2026-07-11',major:true,items:['Kimi风格侧边栏','15个厂商71个模型树状展示','语音模型专用界面','深色模式','流式输出']},
-  {version:'4.3',date:'2026-07-11',items:['修复致命bug - UPDATE_LOG重复声明导致JS崩溃']},
-  {version:'4.2',date:'2026-07-11',items:['修复callAI函数 - stream:false与流式读取器矛盾']},
-  {version:'4.1',date:'2026-07-11',items:['切换到非流式模式提高兼容性']},
-  {version:'4.0',date:'2026-07-11',items:['修复MiMo API','更新日志功能','端点修正']},
-  {version:'3.4',date:'2026-07-11',items:['强制刷新MiMo配置']},
-  {version:'3.1',date:'2026-07-11',items:['微信风格输入界面','语音/文字切换','+菜单']},
-  {version:'3.0',date:'2026-07-11',major:true,items:['管理员账号系统','注册功能','新UI设计']},
-  {version:'2.1',date:'2026-07-11',items:['全面更新所有厂商模型列表至2026最新版本']},
-  {version:'2.0',date:'2026-07-10',major:true,items:['重写UI，参考LobeChat/OpenWebUI设计','改进API Key设置','模型选择优化']},
-  {version:'1.0',date:'2026-07-10',major:true,items:['初始版本发布','基础聊天功能','AI模型调用']}
+  {version:'7.2',date:'2026-07-11',items:['图标全部修复（LobeHub CDN）','国际模型移至底部','API Key按厂商独立设置']},
+  {version:'7.1',date:'2026-07-11',items:['完整更新日志v1.0~v7.0']},
+  {version:'7.0',date:'2026-07-11',major:true,items:['64个模型，20个厂商全覆盖','图片上传（支持视觉模型）','上下文关联对话','上下文长度限制管理']},
+  {version:'6.3',date:'2026-07-11',items:['更新日志独立弹窗']},
+  {version:'6.2',date:'2026-07-11',items:['辩论轮数自定义输入(1-50)']},
+  {version:'6.1',date:'2026-07-11',items:['思考动画','多模型名称标签','彩色头像']},
+  {version:'6.0',date:'2026-07-11',major:true,items:['底部导航栏5tab','设置移到我的页面','MiMo双方案切换']},
+  {version:'5.5',date:'2026-07-10',items:['辩论模式','修复页面卡死']},
+  {version:'5.0',date:'2026-07-09',major:true,items:['Kimi风格侧边栏','15个厂商71个模型','语音模型界面','深色模式']},
+  {version:'4.3',date:'2026-07-08',items:['修复致命bug - UPDATE_LOG重复声明']},
+  {version:'4.0',date:'2026-07-07',items:['修复MiMo API','更新日志功能']},
+  {version:'3.1',date:'2026-07-05',items:['微信风格输入界面','语音/文字切换']},
+  {version:'3.0',date:'2026-07-01',major:true,items:['管理员账号系统','注册功能','新UI设计']},
+  {version:'2.1',date:'2026-06-25',items:['全面更新模型列表至最新版本']},
+  {version:'2.0',date:'2026-06-18',major:true,items:['重写UI，参考LobeChat设计','改进API Key设置']},
+  {version:'1.0',date:'2026-06-10',major:true,items:['初始版本发布','基础聊天功能','AI模型调用']}
 ];
 
 /* ==================== State ==================== */
