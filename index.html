@@ -735,10 +735,27 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
         <h4>API 配置</h4>
         <div class="setting-row" style="flex-direction:column;align-items:stretch">
           <div>
-            <div class="setting-label">MiMo API Key</div>
-            <div class="setting-desc">小米 MiMo 系列模型的 API 密钥</div>
+            <div class="setting-label">小米 MiMo 计费方案</div>
+            <div class="setting-desc">切换会员计划或按量付费（不同方案使用不同的 Key 和接口地址）</div>
           </div>
-          <input type="password" class="api-key-input" id="mimoApiKey" placeholder="输入 MiMo API Key">
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="planTokenPlan" onclick="switchMiMoPlan('tokenPlan')" style="flex:1;padding:8px 12px;border-radius:6px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">🎫 会员计划</button>
+            <button id="planPayAsYouGo" onclick="switchMiMoPlan('payAsYouGo')" style="flex:1;padding:8px 12px;border-radius:6px;border:1.5px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer">💰 按量付费</button>
+          </div>
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch" id="mimoTokenPlanRow">
+          <div>
+            <div class="setting-label">会员计划 Key (tp-)</div>
+            <div class="setting-desc">Base: token-plan-cn.xiaomimimo.com</div>
+          </div>
+          <input type="password" class="api-key-input" id="mimoTokenPlanKey" placeholder="tp-xxxxx">
+        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch;display:none" id="mimoPayAsYouGoRow">
+          <div>
+            <div class="setting-label">按量付费 Key (sk-)</div>
+            <div class="setting-desc">Base: api.xiaomimimo.com</div>
+          </div>
+          <input type="password" class="api-key-input" id="mimoPayAsYouGoKey" placeholder="sk-xxxxx">
         </div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch">
           <div>
@@ -823,6 +840,10 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 const APP_VERSION = '5.5';
 const ADMIN_USER = '1234';
 const ADMIN_PASS = '1234';
+const MIMO_PLANS = {
+  tokenPlan: { name: '会员计划 (Token Plan)', baseUrl: 'https://token-plan-cn.xiaomimimo.com', keyPrefix: 'tp-' },
+  payAsYouGo: { name: '按量付费', baseUrl: 'https://api.xiaomimimo.com', keyPrefix: 'sk-' },
+};
 const MIMO_BASE = 'https://api.xiaomimimo.com';
 
 // Provider icons via Simple Icons CDN (auto-updated, no manual assets needed)
@@ -931,8 +952,18 @@ function loadState() {
   if (!state.chats) state.chats = [];
   if (!state.apiKeys) state.apiKeys = {};
   // Auto-set MiMo Token Plan API key
-  if (!state.apiKeys.mimo) {
-    state.apiKeys.mimo = 'tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
+  if (!state.apiKeys.mimoTokenPlan) {
+    state.apiKeys.mimoTokenPlan = 'tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
+  }
+  if (!state.apiKeys.mimoPayAsYouGo) {
+    state.apiKeys.mimoPayAsYouGo = 'sk-c1m9z3z4w5hu6rqw31ngrmt5yssga636vkjjb8ktedxlepjl';
+  }
+  if (!state.apiKeys.mimoPlan) {
+    state.apiKeys.mimoPlan = 'tokenPlan'; // 'tokenPlan' or 'payAsYouGo'
+  }
+  // Backward compat: migrate old single key
+  if (state.apiKeys.mimo && !state.apiKeys.mimoTokenPlan) {
+    state.apiKeys.mimoTokenPlan = state.apiKeys.mimo;
   }
 }
 function saveState() {
@@ -1029,7 +1060,7 @@ async function callChatAPI(messages, modelId, onChunk) {
   // OpenAI-compatible (MiMo, OpenAI, DeepSeek, etc.)
   let baseUrl, headers, path;
   if (provider === '小米 MiMo') {
-    baseUrl = MIMO_BASE;
+    baseUrl = getMiMoBaseUrl();
     headers = { 'Content-Type':'application/json', 'api-key': apiKey };
     path = '/v1/chat/completions';
   } else if (provider === 'OpenAI') {
@@ -1235,12 +1266,20 @@ function streamGoogleSSE(resp, onChunk) {
 
 function getApiKeyForModel(model) {
   const k = state.apiKeys;
-  if (model.provider === '小米 MiMo') return k.mimo || '';
+  if (model.provider === '小米 MiMo') {
+    const plan = k.mimoPlan || 'tokenPlan';
+    return plan === 'tokenPlan' ? (k.mimoTokenPlan || '') : (k.mimoPayAsYouGo || '');
+  }
   if (model.provider === 'OpenAI') return k.openai || '';
   if (model.provider === 'Anthropic') return k.anthropic || '';
   if (model.provider === 'Google') return k.google || '';
   if (model.provider === 'DeepSeek') return k.deepseek || '';
   return k.general || '';
+}
+
+function getMiMoBaseUrl() {
+  const plan = state.apiKeys.mimoPlan || 'tokenPlan';
+  return MIMO_PLANS[plan].baseUrl;
 }
 
 /* ==================== UI Render ==================== */
@@ -1501,7 +1540,7 @@ async function generateTTS() {
     if (!apiKey) throw new Error('请先配置 MiMo API Key');
 
     // Simulated TTS call - replace with real endpoint
-    const resp = await fetch(MIMO_BASE + '/v1/audio/speech', {
+    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/speech', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'api-key': apiKey },
       body: JSON.stringify({
@@ -1552,7 +1591,7 @@ async function generateVoiceClone() {
     formData.append('input', text);
     formData.append('reference_audio', fileInput.files[0]);
 
-    const resp = await fetch(MIMO_BASE + '/v1/audio/voiceclone', {
+    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/voiceclone', {
       method: 'POST',
       headers: { 'api-key': apiKey },
       body: formData,
@@ -1592,7 +1631,7 @@ async function generateVoiceDesign() {
     const apiKey = state.apiKeys.mimo;
     if (!apiKey) throw new Error('请先配置 MiMo API Key');
 
-    const resp = await fetch(MIMO_BASE + '/v1/audio/voicedesign', {
+    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/voicedesign', {
       method: 'POST',
       headers: { 'Content-Type':'application/json', 'api-key': apiKey },
       body: JSON.stringify({
@@ -1638,7 +1677,7 @@ async function generateASR() {
     formData.append('model', 'mimo-v2.5-asr');
     formData.append('file', fileInput.files[0]);
 
-    const resp = await fetch(MIMO_BASE + '/v1/audio/transcriptions', {
+    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/transcriptions', {
       method: 'POST',
       headers: { 'api-key': apiKey },
       body: formData,
@@ -1682,12 +1721,16 @@ function renderChangelog() {
 }
 
 function loadSettingsUI() {
-  $('mimoApiKey').value = state.apiKeys.mimo || '';
+  $('mimoTokenPlanKey').value = state.apiKeys.mimoTokenPlan || '';
+  $('mimoPayAsYouGoKey').value = state.apiKeys.mimoPayAsYouGo || '';
   $('openaiApiKey').value = state.apiKeys.openai || '';
   $('anthropicApiKey').value = state.apiKeys.anthropic || '';
   $('googleApiKey').value = state.apiKeys.google || '';
   $('deepseekApiKey').value = state.apiKeys.deepseek || '';
   $('generalApiKey').value = state.apiKeys.general || '';
+  // Update plan selector
+  const plan = state.apiKeys.mimoPlan || 'tokenPlan';
+  switchMiMoPlan(plan);
   const toggle = $('darkModeToggle');
   if (state.theme === 'dark') toggle.classList.add('on');
   else toggle.classList.remove('on');
@@ -1695,16 +1738,46 @@ function loadSettingsUI() {
 }
 
 function saveSettings() {
-  state.apiKeys = {
-    mimo: $('mimoApiKey').value.trim(),
-    openai: $('openaiApiKey').value.trim(),
-    anthropic: $('anthropicApiKey').value.trim(),
-    google: $('googleApiKey').value.trim(),
-    deepseek: $('deepseekApiKey').value.trim(),
-    general: $('generalApiKey').value.trim(),
-  };
+  state.apiKeys.mimoTokenPlan = $('mimoTokenPlanKey').value.trim();
+  state.apiKeys.mimoPayAsYouGo = $('mimoPayAsYouGoKey').value.trim();
+  state.apiKeys.openai = $('openaiApiKey').value.trim();
+  state.apiKeys.anthropic = $('anthropicApiKey').value.trim();
+  state.apiKeys.google = $('googleApiKey').value.trim();
+  state.apiKeys.deepseek = $('deepseekApiKey').value.trim();
+  state.apiKeys.general = $('generalApiKey').value.trim();
   saveState();
 }
+
+function switchMiMoPlan(plan) {
+  state.apiKeys.mimoPlan = plan;
+  saveState();
+  // Update button styles
+  const tpBtn = document.getElementById('planTokenPlan');
+  const payBtn = document.getElementById('planPayAsYouGo');
+  if (tpBtn && payBtn) {
+    if (plan === 'tokenPlan') {
+      tpBtn.style.borderColor = 'var(--accent)';
+      tpBtn.style.background = 'var(--accent-light)';
+      tpBtn.style.color = 'var(--accent)';
+      payBtn.style.borderColor = 'var(--border-color)';
+      payBtn.style.background = 'transparent';
+      payBtn.style.color = 'var(--text-secondary)';
+    } else {
+      payBtn.style.borderColor = 'var(--accent)';
+      payBtn.style.background = 'var(--accent-light)';
+      payBtn.style.color = 'var(--accent)';
+      tpBtn.style.borderColor = 'var(--border-color)';
+      tpBtn.style.background = 'transparent';
+      tpBtn.style.color = 'var(--text-secondary)';
+    }
+  }
+  // Show/hide the corresponding key input
+  const tpRow = document.getElementById('mimoTokenPlanRow');
+  const payRow = document.getElementById('mimoPayAsYouGoRow');
+  if (tpRow) tpRow.style.display = plan === 'tokenPlan' ? '' : 'none';
+  if (payRow) payRow.style.display = plan === 'payAsYouGo' ? '' : 'none';
+}
+window.switchMiMoPlan = switchMiMoPlan;
 
 /* ==================== Theme ==================== */
 function applyTheme() {
