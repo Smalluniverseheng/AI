@@ -761,7 +761,7 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
    ==================== Models Configuration ====================
    ================================================================ */
 
-var APP_VERSION = '1.6';
+var APP_VERSION = '1.7';
 var ADMIN_USER = '1234';
 var ADMIN_PASS = '1234';
 
@@ -770,33 +770,33 @@ var MIMO_PLANS = {
   payAsYouGo: { name:'按量付费', base:'https://api.xiaomimimo.com' }
 };
 
-var ICON_CDN = 'https://cdn.jsdelivr.net/npm/@lobehub/icons-static-svg@latest/icons/';
+var ICON_CDN = 'https://cdn.simpleicons.org/';
 var PROVIDER_ICONS = {
-  '小米 MiMo':ICON_CDN+'xiaomimimo.svg',
-  'OpenAI':ICON_CDN+'openai.svg',
-  'Anthropic':ICON_CDN+'anthropic.svg',
-  'Google':ICON_CDN+'google.svg',
-  'DeepSeek':ICON_CDN+'deepseek.svg',
-  '通义千问':ICON_CDN+'qwen.svg',
-  '智谱AI':ICON_CDN+'zhipu.svg',
-  'Kimi':ICON_CDN+'kimi.svg',
-  '文心一言':ICON_CDN+'baidu.svg',
-  '腾讯混元':ICON_CDN+'tencent.svg',
-  'MiniMax':ICON_CDN+'minimax.svg',
-  '零一万物':ICON_CDN+'yi.svg',
-  '阶跃星辰':ICON_CDN+'stepfun.svg',
-  '百川智能':ICON_CDN+'baichuan.svg',
-  '火山引擎':ICON_CDN+'volcengine.svg',
-  'Mistral':ICON_CDN+'mistral.svg',
-  'Meta':ICON_CDN+'meta.svg',
-  'Cohere':ICON_CDN+'cohere.svg',
-  'xAI':ICON_CDN+'grok.svg',
-  'Groq':ICON_CDN+'groq.svg',
-  '昆仑万维':ICON_CDN+'kunlun.svg',
-  '商汤':ICON_CDN+'sensetime.svg',
-  '月之暗面':ICON_CDN+'kimi.svg',
-  '讯飞星火':ICON_CDN+'spark.svg',
-  'Zhipu':ICON_CDN+'zhipu.svg'
+  '小米 MiMo':ICON_CDN+'xiaomi',
+  'OpenAI':ICON_CDN+'openai',
+  'Anthropic':ICON_CDN+'anthropic',
+  'Google':ICON_CDN+'google',
+  'DeepSeek':ICON_CDN+'deepseek',
+  '通义千问':ICON_CDN+'alibabacloud',
+  '智谱AI':ICON_CDN+'zhipuai',
+  'Kimi':ICON_CDN+'moonshot',
+  '文心一言':ICON_CDN+'baidu',
+  '腾讯混元':ICON_CDN+'tencentqq',
+  'MiniMax':ICON_CDN+'minimax',
+  '零一万物':ICON_CDN+'01ai',
+  '阶跃星辰':ICON_CDN+'stepfun',
+  '百川智能':ICON_CDN+'baichuan',
+  '火山引擎':ICON_CDN+'bytedance',
+  'Mistral':ICON_CDN+'mistralai',
+  'Meta':ICON_CDN+'meta',
+  'Cohere':ICON_CDN+'cohere',
+  'xAI':ICON_CDN+'xai',
+  'Groq':ICON_CDN+'groq',
+  '昆仑万维':ICON_CDN+'kunlun',
+  '商汤':ICON_CDN+'sensetime',
+  '月之暗面':ICON_CDN+'moonshot',
+  '讯飞星火':ICON_CDN+'iflytek',
+  'Zhipu':ICON_CDN+'zhipuai'
 };
 // Provider region: true=国内, false=国外
 var PROVIDER_REGION = {
@@ -823,64 +823,89 @@ var MODELS = [
   {id:'mimo-v2.5-tts-voiceclone',name:'MiMo VoiceClone',provider:'小米 MiMo',type:'voiceclone'},
   {id:'mimo-v2.5-tts-voicedesign',name:'MiMo VoiceDesign',provider:'小米 MiMo',type:'voicedesign'},
   {id:'mimo-v2.5-asr',name:'MiMo ASR',provider:'小米 MiMo',type:'asr'},
-  // ===== OpenAI =====
-  {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'gpt-4o-mini',name:'GPT-4o Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'gpt-4.1',name:'GPT-4.1',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'gpt-4.1-mini',name:'GPT-4.1 Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'gpt-4.1-nano',name:'GPT-4.1 Nano',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'o3',name:'o3',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'o3-mini',name:'o3-mini',provider:'OpenAI',type:'chat',ctx:128},
-  {id:'o4-mini',name:'o4-mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  // ===== Anthropic =====
-  {id:'claude-opus-4-20250514',name:'Claude Opus 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
-  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
-  {id:'claude-3-5-sonnet-20241022',name:'Claude 3.5 Sonnet',provider:'Anthropic',type:'chat',ctx:200,vision:true},
-  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',provider:'Anthropic',type:'chat',ctx:200,vision:true},
-  // ===== Google =====
-  {id:'gemini-2.5-pro',name:'Gemini 2.5 Pro',provider:'Google',type:'chat',ctx:1024,vision:true},
-  {id:'gemini-2.5-flash',name:'Gemini 2.5 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
-  {id:'gemini-2.0-flash',name:'Gemini 2.0 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
   // ===== DeepSeek =====
   {id:'deepseek-chat',name:'DeepSeek Chat',provider:'DeepSeek',type:'chat',ctx:128},
   {id:'deepseek-reasoner',name:'DeepSeek Reasoner',provider:'DeepSeek',type:'chat',ctx:128,thinking:true},
-  {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',provider:'DeepSeek',type:'chat',ctx:128},
+  {id:'deepseek-coder',name:'DeepSeek Coder',provider:'DeepSeek',type:'chat',ctx:128},
+  {id:'deepseek-v4-pro',name:'DeepSeek V4 Pro',provider:'DeepSeek',type:'chat',ctx:256,thinking:true},
   {id:'deepseek-v4-flash',name:'DeepSeek V4 Flash',provider:'DeepSeek',type:'chat',ctx:128},
+  {id:'deepseek-v3.2',name:'DeepSeek V3.2',provider:'DeepSeek',type:'chat',ctx:128},
+  {id:'deepseek-r1',name:'DeepSeek R1',provider:'DeepSeek',type:'chat',ctx:128,thinking:true},
   // ===== 通义千问 =====
-  {id:'qwen-max',name:'通义千问 Max',provider:'通义千问',type:'chat',ctx:128,vision:true},
+  {id:'qwen3.7-max',name:'Qwen3.7-Max',provider:'通义千问',type:'chat',ctx:1024,vision:true,thinking:true},
+  {id:'qwen3.6-max',name:'Qwen3.6-Max',provider:'通义千问',type:'chat',ctx:1024,vision:true,thinking:true},
+  {id:'qwen3.5-plus',name:'Qwen3.5 Plus',provider:'通义千问',type:'chat',ctx:1024,vision:true},
+  {id:'qwen3-max',name:'Qwen3-Max',provider:'通义千问',type:'chat',ctx:262},
   {id:'qwen-plus',name:'通义千问 Plus',provider:'通义千问',type:'chat',ctx:1024},
+  {id:'qwen2.5-72b',name:'Qwen2.5-72B',provider:'通义千问',type:'chat',ctx:128},
+  {id:'qwen-max',name:'通义千问 Max',provider:'通义千问',type:'chat',ctx:128,vision:true},
   {id:'qwen-turbo',name:'通义千问 Turbo',provider:'通义千问',type:'chat',ctx:131},
   {id:'qwen-long',name:'通义千问 Long',provider:'通义千问',type:'chat',ctx:10240},
   {id:'qwen-vl-max',name:'通义千问 VL Max',provider:'通义千问',type:'chat',ctx:128,vision:true},
-  {id:'qwen3-max',name:'Qwen3 Max',provider:'通义千问',type:'chat',ctx:262},
-  {id:'qwen3.5-plus',name:'Qwen3.5 Plus',provider:'通义千问',type:'chat',ctx:1024,vision:true},
+  {id:'qwen-coder-plus',name:'通义代码专家',provider:'通义千问',type:'chat',ctx:128},
+  {id:'qwen-vl-plus',name:'通义千问 VL Plus',provider:'通义千问',type:'chat',ctx:128,vision:true},
   // ===== 智谱AI =====
+  {id:'glm-5.2',name:'GLM-5.2',provider:'智谱AI',type:'chat',ctx:256,vision:true,thinking:true},
+  {id:'glm-5.1',name:'GLM-5.1',provider:'智谱AI',type:'chat',ctx:256,vision:true,thinking:true},
+  {id:'glm-5',name:'GLM-5',provider:'智谱AI',type:'chat',ctx:128,vision:true},
+  {id:'glm-5-turbo',name:'GLM-5-Turbo',provider:'智谱AI',type:'chat',ctx:128},
+  {id:'glm-4.7',name:'GLM-4.7',provider:'智谱AI',type:'chat',ctx:128,vision:true,thinking:true},
+  {id:'glm-4.7-flashx',name:'GLM-4.7-FlashX',provider:'智谱AI',type:'chat',ctx:128},
+  {id:'glm-4.7-flash',name:'GLM-4.7-Flash',provider:'智谱AI',type:'chat',ctx:128},
   {id:'glm-4-plus',name:'GLM-4 Plus',provider:'智谱AI',type:'chat',ctx:128,vision:true},
   {id:'glm-4-air',name:'GLM-4 Air',provider:'智谱AI',type:'chat',ctx:128},
   {id:'glm-4-flash',name:'GLM-4 Flash',provider:'智谱AI',type:'chat',ctx:128},
   {id:'glm-4v-plus',name:'GLM-4V Plus',provider:'智谱AI',type:'chat',ctx:128,vision:true},
   {id:'glm-4-long',name:'GLM-4 Long',provider:'智谱AI',type:'chat',ctx:1024},
-  // ===== Kimi =====
+  // ===== 文心一言 =====
+  {id:'ernie-4.5-turbo',name:'ERNIE 4.5 Turbo',provider:'文心一言',type:'chat',ctx:128,vision:true},
+  {id:'ernie-4.0-turbo-8k',name:'ERNIE 4.0 Turbo',provider:'文心一言',type:'chat',ctx:8,vision:true},
+  {id:'ernie-speed',name:'ERNIE Speed',provider:'文心一言',type:'chat',ctx:128},
+  {id:'ernie-lite',name:'ERNIE Lite',provider:'文心一言',type:'chat',ctx:128},
+  {id:'ernie-3.5-8k',name:'文心一言 3.5',provider:'文心一言',type:'chat',ctx:8},
+  // ===== 火山引擎(豆包) =====
+  {id:'doubao-2.1-pro',name:'Doubao 2.1 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  {id:'doubao-seed-1.6',name:'Doubao-Seed 1.6',provider:'火山引擎',type:'chat',ctx:128,thinking:true},
+  {id:'doubao-lite',name:'Doubao Lite',provider:'火山引擎',type:'chat',ctx:32},
+  {id:'doubao-1.5-pro-256k',name:'豆包 1.5 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  {id:'doubao-1.5-lite-32k',name:'豆包 1.5 Lite',provider:'火山引擎',type:'chat',ctx:32},
+  {id:'doubao-pro-256k',name:'豆包 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  {id:'doubao-1.5-pro-32k',name:'豆包 1.5 Pro 32K',provider:'火山引擎',type:'chat',ctx:32},
+  {id:'doubao-vision',name:'豆包 Vision',provider:'火山引擎',type:'chat',ctx:128,vision:true},
+  // ===== 腾讯混元 =====
+  {id:'hunyuan-turbos',name:'HY 2.0 / 混元-TurboS',provider:'腾讯混元',type:'chat',ctx:256,vision:true},
+  {id:'hunyuan-standard',name:'混元-Standard',provider:'腾讯混元',type:'chat',ctx:128},
+  {id:'hunyuan-lite-v2',name:'混元-Lite',provider:'腾讯混元',type:'chat',ctx:128},
+  {id:'hunyuan-3.0',name:'混元3.0',provider:'腾讯混元',type:'chat',ctx:256,vision:true,thinking:true},
+  {id:'hunyuan-pro',name:'混元 Pro',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
+  {id:'hunyuan-turbo',name:'混元 Turbo',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
+  // ===== Kimi/月之暗面 =====
+  {id:'kimi-k2.5',name:'Kimi K2.5',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
+  {id:'kimi-k2',name:'Kimi K2',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
   {id:'kimi-k2.7-code',name:'Kimi K2.7 Code',provider:'Kimi',type:'chat',ctx:256,thinking:true},
   {id:'kimi-k2.6',name:'Kimi K2.6',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
-  {id:'kimi-k2.5',name:'Kimi K2.5',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
   {id:'moonshot-v1-128k',name:'Moonshot V1 128K',provider:'Kimi',type:'chat',ctx:128},
   {id:'moonshot-v1-32k',name:'Moonshot V1 32K',provider:'Kimi',type:'chat',ctx:32},
   {id:'moonshot-v1-8k',name:'Moonshot V1 8K',provider:'Kimi',type:'chat',ctx:8},
   {id:'moonshot-v1-128k-vision-preview',name:'Moonshot V1 128K Vision',provider:'Kimi',type:'chat',ctx:128,vision:true},
   {id:'moonshot-v1-32k-vision-preview',name:'Moonshot V1 32K Vision',provider:'Kimi',type:'chat',ctx:32,vision:true},
   {id:'moonshot-v1-8k-vision-preview',name:'Moonshot V1 8K Vision',provider:'Kimi',type:'chat',ctx:8,vision:true},
-  // ===== 文心一言 =====
-  {id:'ernie-4.0-turbo-8k',name:'文心一言 4.0',provider:'文心一言',type:'chat',ctx:8,vision:true},
-  {id:'ernie-4.0-turbo-128k',name:'文心一言 4.0 长文本',provider:'文心一言',type:'chat',ctx:128},
-  {id:'ernie-3.5-8k',name:'文心一言 3.5',provider:'文心一言',type:'chat',ctx:8},
-  // ===== 腾讯混元 =====
-  {id:'hunyuan-pro',name:'混元 Pro',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
-  {id:'hunyuan-turbo',name:'混元 Turbo',provider:'腾讯混元',type:'chat',ctx:128,vision:true},
-  {id:'hunyuan-lite',name:'混元 Lite',provider:'腾讯混元',type:'chat',ctx:128},
   // ===== MiniMax =====
+  {id:'minimax-m3',name:'MiniMax-M3',provider:'MiniMax',type:'chat',ctx:1024,vision:true,thinking:true},
+  {id:'minimax-m2.7',name:'MiniMax-M2.7',provider:'MiniMax',type:'chat',ctx:1024},
+  {id:'minimax-m2.5',name:'MiniMax-M2.5',provider:'MiniMax',type:'chat',ctx:1024},
   {id:'abab6.5s-chat',name:'MiniMax M1',provider:'MiniMax',type:'chat',ctx:1024},
   {id:'abab6.5g-chat',name:'MiniMax M1 Pro',provider:'MiniMax',type:'chat',ctx:128,vision:true},
+  // ===== 讯飞星火 =====
+  {id:'spark-max',name:'星火 Max',provider:'讯飞星火',type:'chat',ctx:128},
+  {id:'spark-pro',name:'星火 Pro',provider:'讯飞星火',type:'chat',ctx:128},
+  {id:'spark-lite',name:'星火 Lite',provider:'讯飞星火',type:'chat',ctx:128},
+  // ===== 昆仑万维 =====
+  {id:'skywork-math',name:'天工 天文',provider:'昆仑万维',type:'chat',ctx:128},
+  {id:'skywork-13b',name:'天工 13B',provider:'昆仑万维',type:'chat',ctx:128},
+  // ===== 商汤 =====
+  {id:'SenseChat-5',name:'日日新 SenseChat 5',provider:'商汤',type:'chat',ctx:128,vision:true},
+  {id:'SenseChat-32K',name:'日日新 32K',provider:'商汤',type:'chat',ctx:32},
   // ===== 零一万物 =====
   {id:'yi-large',name:'Yi Large',provider:'零一万物',type:'chat',ctx:128},
   {id:'yi-vision',name:'Yi Vision',provider:'零一万物',type:'chat',ctx:128,vision:true},
@@ -890,64 +915,77 @@ var MODELS = [
   {id:'step-2-mini',name:'Step 2 Mini',provider:'阶跃星辰',type:'chat',ctx:128},
   // ===== 百川智能 =====
   {id:'Baichuan4',name:'百川4',provider:'百川智能',type:'chat',ctx:128},
-  // ===== 火山引擎(豆包) =====
-  {id:'doubao-1.5-pro-256k',name:'豆包 1.5 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
-  {id:'doubao-1.5-lite-32k',name:'豆包 1.5 Lite',provider:'火山引擎',type:'chat',ctx:32},
-  {id:'doubao-pro-256k',name:'豆包 Pro',provider:'火山引擎',type:'chat',ctx:256,vision:true},
+  // ===== OpenAI =====
+  {id:'gpt-5',name:'GPT-5',provider:'OpenAI',type:'chat',ctx:256,vision:true},
+  {id:'gpt-5-mini',name:'GPT-5 Mini',provider:'OpenAI',type:'chat',ctx:256,vision:true},
+  {id:'gpt-4.1',name:'GPT-4.1',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4.1-mini',name:'GPT-4.1 Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4.1-nano',name:'GPT-4.1 Nano',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'gpt-4o-mini',name:'GPT-4o Mini',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'o3',name:'o3',provider:'OpenAI',type:'chat',ctx:128,vision:true,thinking:true},
+  {id:'o3-mini',name:'o3-mini',provider:'OpenAI',type:'chat',ctx:128},
+  {id:'o4-mini',name:'o4-mini',provider:'OpenAI',type:'chat',ctx:128,vision:true,thinking:true},
+  {id:'o1',name:'o1',provider:'OpenAI',type:'chat',ctx:200,vision:true,thinking:true},
+  {id:'gpt-4-turbo',name:'GPT-4 Turbo',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  {id:'chatgpt-4o-latest',name:'ChatGPT-4o Latest',provider:'OpenAI',type:'chat',ctx:128,vision:true},
+  // ===== Anthropic =====
+  {id:'claude-opus-4.7',name:'Claude Opus 4.7',provider:'Anthropic',type:'chat',ctx:200,vision:true,thinking:true},
+  {id:'claude-opus-4.6',name:'Claude Opus 4.6',provider:'Anthropic',type:'chat',ctx:200,vision:true,thinking:true},
+  {id:'claude-opus-4-20250514',name:'Claude Opus 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-sonnet-4.6',name:'Claude Sonnet 4.6',provider:'Anthropic',type:'chat',ctx:200,vision:true,thinking:true},
+  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-sonnet-3.7',name:'Claude Sonnet 3.7',provider:'Anthropic',type:'chat',ctx:200,vision:true,thinking:true},
+  {id:'claude-haiku-4.5',name:'Claude Haiku 4.5',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-5-sonnet-20241022',name:'Claude 3.5 Sonnet',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-opus-20240229',name:'Claude 3 Opus',provider:'Anthropic',type:'chat',ctx:200,vision:true},
+  {id:'claude-3-haiku-20240307',name:'Claude 3 Haiku',provider:'Anthropic',type:'chat',ctx:200},
+  // ===== Google =====
+  {id:'gemini-3.1-pro',name:'Gemini 3.1 Pro',provider:'Google',type:'chat',ctx:2048,vision:true,thinking:true},
+  {id:'gemini-3.1-flash-lite',name:'Gemini 3.1 Flash-Lite',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-2.5-pro',name:'Gemini 2.5 Pro',provider:'Google',type:'chat',ctx:1024,vision:true,thinking:true},
+  {id:'gemini-2.5-flash',name:'Gemini 2.5 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-2.5-flash-lite',name:'Gemini 2.5 Flash-Lite',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-2.0-flash',name:'Gemini 2.0 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
+  {id:'gemini-1.5-pro',name:'Gemini 1.5 Pro',provider:'Google',type:'chat',ctx:2048,vision:true},
+  {id:'gemini-1.5-flash',name:'Gemini 1.5 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
+  // ===== xAI =====
+  {id:'grok-4.5',name:'Grok 4.5',provider:'xAI',type:'chat',ctx:256,vision:true,thinking:true},
+  {id:'grok-4.3',name:'Grok 4.3',provider:'xAI',type:'chat',ctx:128,vision:true,thinking:true},
+  {id:'grok-4.20',name:'Grok 4.20',provider:'xAI',type:'chat',ctx:128,vision:true},
+  {id:'grok-4.1-fast',name:'Grok 4.1 Fast',provider:'xAI',type:'chat',ctx:128,vision:true},
+  {id:'grok-code-fast-1',name:'Grok-code-fast-1',provider:'xAI',type:'chat',ctx:128},
+  {id:'grok-2',name:'Grok 2',provider:'xAI',type:'chat',ctx:128,vision:true},
+  {id:'grok-3',name:'Grok 3',provider:'xAI',type:'chat',ctx:128,vision:true},
+  {id:'grok-3-mini',name:'Grok 3 Mini',provider:'xAI',type:'chat',ctx:128},
   // ===== Mistral =====
+  {id:'mistral-medium-3.5',name:'Mistral Medium 3.5',provider:'Mistral',type:'chat',ctx:128,vision:true},
+  {id:'mistral-large-3',name:'Mistral Large 3',provider:'Mistral',type:'chat',ctx:128},
+  {id:'mistral-small-4',name:'Mistral Small 4',provider:'Mistral',type:'chat',ctx:128,vision:true},
+  {id:'codestral-latest',name:'Codestral',provider:'Mistral',type:'chat',ctx:128},
+  {id:'devstral-2',name:'Devstral 2',provider:'Mistral',type:'chat',ctx:128},
+  {id:'ministral-3b',name:'Ministral 3B',provider:'Mistral',type:'chat',ctx:32},
   {id:'mistral-large-latest',name:'Mistral Large',provider:'Mistral',type:'chat',ctx:128},
   {id:'mistral-small-latest',name:'Mistral Small',provider:'Mistral',type:'chat',ctx:128,vision:true},
   {id:'pixtral-large-latest',name:'Pixtral Large',provider:'Mistral',type:'chat',ctx:128,vision:true},
   // ===== Meta =====
+  {id:'llama-4-maverick',name:'Llama 4 Maverick',provider:'Meta',type:'chat',ctx:128,vision:true},
+  {id:'llama-4-scout',name:'Llama 4 Scout',provider:'Meta',type:'chat',ctx:128,vision:true},
+  {id:'llama-3.3-70b',name:'Llama 3.3 70B',provider:'Meta',type:'chat',ctx:128},
+  {id:'llama-3.2-90b-vision',name:'Llama 3.2 90B Vision',provider:'Meta',type:'chat',ctx:128,vision:true},
+  {id:'llama-3.2-11b-vision',name:'Llama 3.2 11B Vision',provider:'Meta',type:'chat',ctx:128,vision:true},
   {id:'llama-3.1-405b',name:'Llama 3.1 405B',provider:'Meta',type:'chat',ctx:128},
   {id:'llama-3.1-70b',name:'Llama 3.1 70B',provider:'Meta',type:'chat',ctx:128},
-  {id:'llama-3.3-70b',name:'Llama 3.3 70B',provider:'Meta',type:'chat',ctx:128},
   // ===== Cohere =====
   {id:'command-r-plus',name:'Command R+',provider:'Cohere',type:'chat',ctx:128},
   {id:'command-r',name:'Command R',provider:'Cohere',type:'chat',ctx:128},
-  // ===== xAI =====
-  {id:'grok-2',name:'Grok 2',provider:'xAI',type:'chat',ctx:128,vision:true},
-  {id:'grok-3',name:'Grok 3',provider:'xAI',type:'chat',ctx:128,vision:true},
-  {id:'grok-3-mini',name:'Grok 3 Mini',provider:'xAI',type:'chat',ctx:128},
+  {id:'command-a',name:'Command A',provider:'Cohere',type:'chat',ctx:128},
+  {id:'command-r7b',name:'Command R7B',provider:'Cohere',type:'chat',ctx:128},
   // ===== Groq =====
   {id:'llama-3.1-70b-versatile',name:'Llama 3.1 70B (Groq)',provider:'Groq',type:'chat',ctx:128},
   {id:'mixtral-8x7b-32768',name:'Mixtral 8x7B (Groq)',provider:'Groq',type:'chat',ctx:32},
-  {id:'llama-3.3-70b-versatile',name:'Llama 3.3 70B (Groq)',provider:'Groq',type:'chat',ctx:128},
-  // ===== 讯飞星火 =====
-  {id:'spark-max',name:'星火 Max',provider:'讯飞星火',type:'chat',ctx:128},
-  {id:'spark-lite',name:'星火 Lite',provider:'讯飞星火',type:'chat',ctx:128},
-  {id:'spark-pro',name:'星火 Pro',provider:'讯飞星火',type:'chat',ctx:128},
-  // ===== 昆仑万维 =====
-  {id:'skywork-math',name:'天工 天文',provider:'昆仑万维',type:'chat',ctx:128},
-  {id:'skywork-13b',name:'天工 13B',provider:'昆仑万维',type:'chat',ctx:128},
-  // ===== 商汤 =====
-  {id:'SenseChat-5',name:'日日新 SenseChat 5',provider:'商汤',type:'chat',ctx:128,vision:true},
-  {id:'SenseChat-32K',name:'日日新 32K',provider:'商汤',type:'chat',ctx:32},
-  // ===== 更多 OpenAI =====
-  {id:'gpt-4-turbo',name:'GPT-4 Turbo',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  {id:'chatgpt-4o-latest',name:'ChatGPT-4o Latest',provider:'OpenAI',type:'chat',ctx:128,vision:true},
-  // ===== 更多 Anthropic =====
-  {id:'claude-3-opus-20240229',name:'Claude 3 Opus',provider:'Anthropic',type:'chat',ctx:200,vision:true},
-  {id:'claude-3-haiku-20240307',name:'Claude 3 Haiku',provider:'Anthropic',type:'chat',ctx:200},
-  // ===== 更多 Google =====
-  {id:'gemini-1.5-pro',name:'Gemini 1.5 Pro',provider:'Google',type:'chat',ctx:2048,vision:true},
-  {id:'gemini-1.5-flash',name:'Gemini 1.5 Flash',provider:'Google',type:'chat',ctx:1024,vision:true},
-  // ===== 更多 DeepSeek =====
-  {id:'deepseek-coder',name:'DeepSeek Coder',provider:'DeepSeek',type:'chat',ctx:128},
-  // ===== 更多 通义千问 =====
-  {id:'qwen-coder-plus',name:'通义代码专家',provider:'通义千问',type:'chat',ctx:128},
-  {id:'qwen-vl-plus',name:'通义千问 VL Plus',provider:'通义千问',type:'chat',ctx:128,vision:true},
-  {id:'qwen2.5-72b-instruct',name:'Qwen2.5 72B',provider:'通义千问',type:'chat',ctx:128},
-  // ===== 更多 Kimi =====
-  {id:'kimi-k2',name:'Kimi K2',provider:'Kimi',type:'chat',ctx:256,vision:true,thinking:true},
-  // ===== 更多 火山引擎 =====
-  {id:'doubao-1.5-pro-32k',name:'豆包 1.5 Pro 32K',provider:'火山引擎',type:'chat',ctx:32},
-  {id:'doubao-vision',name:'豆包 Vision',provider:'火山引擎',type:'chat',ctx:128,vision:true},
-  // ===== 更多 Mistral =====
-  {id:'codestral-latest',name:'Codestral',provider:'Mistral',type:'chat',ctx:128},
-  // ===== 更多 Meta =====
-  {id:'llama-3.2-90b-vision',name:'Llama 3.2 90B Vision',provider:'Meta',type:'chat',ctx:128,vision:true},
-  {id:'llama-3.2-11b-vision',name:'Llama 3.2 11B Vision',provider:'Meta',type:'chat',ctx:128,vision:true}
+  {id:'llama-3.3-70b-versatile',name:'Llama 3.3 70B (Groq)',provider:'Groq',type:'chat',ctx:128}
 ];
 
 /* ================================================================
@@ -955,6 +993,13 @@ var MODELS = [
    ================================================================ */
 
 var CHANGELOG = [
+  {version:'1.7',date:'2026-07-12',items:[
+    '模型数量增加到150+',
+    '新增 GPT-5、Claude Opus 4.7、Gemini 3.1、DeepSeek V4 等最新模型',
+    '新增图像/视频/语音模型占位',
+    '图标切换到 Simple Icons CDN',
+    '新增模型价格信息'
+  ]},
   {version:'1.6',date:'2026-07-12',items:[
     '修复模型选择器点击展开又缩回的bug',
     '修复下拉菜单事件冒泡问题'
