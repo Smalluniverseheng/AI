@@ -506,9 +506,67 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 .toast.info { border-left:4px solid var(--accent); }
 @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 
+/* ===== Bottom Tab Bar ===== */
+.bottom-nav {
+  display:flex; align-items:center; justify-content:space-around;
+  height:56px; background:var(--bg-secondary); border-top:1px solid var(--border-color);
+  position:fixed; bottom:0; left:0; right:0; z-index:300;
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.nav-tab {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; padding:6px 0; cursor:pointer; color:var(--text-tertiary);
+  transition:color 0.2s; -webkit-tap-highlight-color:transparent; user-select:none;
+}
+.nav-tab.active { color:var(--accent); }
+.nav-tab .nav-icon { font-size:20px; line-height:1; }
+.nav-tab .nav-label { font-size:10px; font-weight:500; line-height:1; }
+
+/* ===== Tab Pages ===== */
+.tab-page { display:none; flex-direction:column; height:100%; }
+.tab-page.active { display:flex; }
+.page-header {
+  height:var(--topbar-height); padding:0 16px;
+  display:flex; align-items:center; justify-content:center;
+  border-bottom:1px solid var(--border-color); background:var(--bg-secondary);
+  flex-shrink:0; font-size:16px; font-weight:600;
+}
+
+/* 我的 page */
+.profile-page { flex:1; overflow-y:auto; padding:16px; }
+.profile-header {
+  display:flex; flex-direction:column; align-items:center; padding:24px 0 16px; gap:8px;
+}
+.profile-avatar {
+  width:64px; height:64px; border-radius:50%; background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:28px;
+}
+.profile-name { font-size:18px; font-weight:600; }
+.profile-menu { margin-top:8px; }
+.profile-menu-item {
+  display:flex; align-items:center; gap:12px; padding:14px 16px;
+  border-radius:var(--radius-sm); cursor:pointer; font-size:14px;
+  transition:background var(--transition);
+}
+.profile-menu-item:hover { background:var(--bg-hover); }
+.profile-menu-item .menu-icon { font-size:18px; width:24px; text-align:center; }
+.profile-menu-item .menu-arrow { margin-left:auto; color:var(--text-tertiary); font-size:12px; }
+.profile-divider { height:1px; background:var(--border-color); margin:8px 0; }
+
+/* Placeholder pages */
+.placeholder-page {
+  flex:1; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:12px; color:var(--text-tertiary);
+}
+.placeholder-page .placeholder-icon { font-size:48px; }
+.placeholder-page .placeholder-text { font-size:14px; }
+
+/* Adjust app container for bottom nav */
+.app-container { padding-bottom:56px; }
+
 /* Stream cursor */
 .stream-cursor::after {
-  content:'▊'; animation:blink 0.8s infinite; color:var(--accent);
+  content:'\2588'; animation:blink 0.8s infinite; color:var(--accent);
   margin-left:2px;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
@@ -581,29 +639,18 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
 <!-- App -->
 <div id="appContainer" class="app-container" style="display:none">
 
-  <!-- Sidebar Overlay (mobile) -->
-  <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-  <!-- Sidebar -->
-  <aside id="sidebar" class="sidebar">
-    <div class="sidebar-header">
-      <span class="sidebar-logo">第三方科技</span>
-      <button class="sidebar-close" id="sidebarClose">✕</button>
+  <!-- Tab: 聊天 -->
+  <div class="tab-page" id="pageChat">
+    <div class="page-header">聊天</div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">💬</div>
+      <div class="placeholder-text">好友聊天即将上线</div>
     </div>
-    <button class="new-chat-btn" id="newChatBtn">
-      <span>＋</span> 新建对话
-    </button>
-    <div class="chat-list" id="chatList"></div>
-    <div class="sidebar-footer">
-      <button class="sidebar-footer-btn" id="settingsBtn">⚙ 设置</button>
-      <button class="sidebar-footer-btn" id="changelogBtn">📋 更新日志</button>
-    </div>
-  </aside>
+  </div>
 
-  <!-- Main Area -->
-  <div class="main-area">
+  <!-- Tab: AI -->
+  <div class="tab-page active" id="pageAI">
     <div class="top-bar">
-      <button class="menu-btn" id="menuBtn">☰</button>
       <div class="model-selector-wrap">
         <button class="model-selector-btn" id="modelSelectorBtn">
           <span class="model-name" id="currentModelName">选择模型</span>
@@ -720,9 +767,86 @@ input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shad
       </div>
     </div>
   </div>
+
+  <!-- Tab: 论坛 -->
+  <div class="tab-page" id="pageForum">
+    <div class="page-header">论坛</div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">📰</div>
+      <div class="placeholder-text">朋友圈/论坛即将上线</div>
+    </div>
+  </div>
+
+  <!-- Tab: (空) -->
+  <div class="tab-page" id="pageEmpty">
+    <div class="page-header">更多</div>
+    <div class="placeholder-page">
+      <div class="placeholder-icon">🔮</div>
+      <div class="placeholder-text">敬请期待</div>
+    </div>
+  </div>
+
+  <!-- Tab: 我的 -->
+  <div class="tab-page" id="pageProfile">
+    <div class="page-header">我的</div>
+    <div class="profile-page">
+      <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <div class="profile-name" id="profileName">用户</div>
+      </div>
+      <div class="profile-menu">
+        <div class="profile-menu-item" onclick="openSettings()">
+          <span class="menu-icon">⚙</span>
+          <span>设置</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="profile-menu-item" onclick="openChangelog()">
+          <span class="menu-icon">📋</span>
+          <span>更新日志</span>
+          <span class="menu-arrow">›</span>
+        </div>
+        <div class="profile-divider"></div>
+        <div class="profile-menu-item" onclick="toggleDarkMode()">
+          <span class="menu-icon">🌙</span>
+          <span>深色模式</span>
+          <span class="menu-arrow" id="darkModeStatus">关闭</span>
+        </div>
+        <div class="profile-divider"></div>
+        <div class="profile-menu-item" onclick="doLogout()" style="color:var(--danger)">
+          <span class="menu-icon">🚪</span>
+          <span>退出登录</span>
+          <span class="menu-arrow">›</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="nav-tab" data-page="pageChat" onclick="switchTab('pageChat')">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">聊天</span>
+    </div>
+    <div class="nav-tab active" data-page="pageAI" onclick="switchTab('pageAI')">
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">AI</span>
+    </div>
+    <div class="nav-tab" data-page="pageForum" onclick="switchTab('pageForum')">
+      <span class="nav-icon">📰</span>
+      <span class="nav-label">论坛</span>
+    </div>
+    <div class="nav-tab" data-page="pageEmpty" onclick="switchTab('pageEmpty')">
+      <span class="nav-icon">🔮</span>
+      <span class="nav-label">更多</span>
+    </div>
+    <div class="nav-tab" data-page="pageProfile" onclick="switchTab('pageProfile')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </div>
+  </nav>
 </div>
 
-<!-- Settings Modal -->
+<!-- Settings Modal (hidden, triggered from 我的) -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
     <div class="modal-header">
@@ -1802,22 +1926,22 @@ function init() {
   $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
   $('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginPass').focus(); });
 
-  // Sidebar
-  $('menuBtn').addEventListener('click', () => {
-    $('sidebar').classList.add('open');
-    $('sidebarOverlay').classList.add('show');
+  // Sidebar (elements may not exist in tab layout)
+  var menuBtn = $('menuBtn'); if (menuBtn) menuBtn.addEventListener('click', () => {
+    var sb = $('sidebar'); if (sb) sb.classList.add('open');
+    var so = $('sidebarOverlay'); if (so) so.classList.add('show');
   });
-  $('sidebarClose').addEventListener('click', closeSidebar);
-  $('sidebarOverlay').addEventListener('click', closeSidebar);
+  var sidebarClose = $('sidebarClose'); if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
+  var sidebarOverlay = $('sidebarOverlay'); if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
 
   // New chat
-  $('newChatBtn').addEventListener('click', () => {
+  var newChatBtn = $('newChatBtn'); if (newChatBtn) newChatBtn.addEventListener('click', () => {
     createNewChat();
     closeSidebar();
   });
 
   // Chat list click
-  $('chatList').addEventListener('click', e => {
+  var chatList = $('chatList'); if (chatList) chatList.addEventListener('click', e => {
     const delBtn = e.target.closest('.chat-item-delete');
     if (delBtn) {
       const id = delBtn.dataset.id;
@@ -1909,11 +2033,11 @@ function init() {
   });
 
   // Settings modal
-  $('settingsBtn').addEventListener('click', () => {
+  var settingsBtn = $('settingsBtn'); if (settingsBtn) settingsBtn.addEventListener('click', () => {
     loadSettingsUI();
     $('settingsModal').classList.add('show');
   });
-  $('changelogBtn').addEventListener('click', () => {
+  var changelogBtn = $('changelogBtn'); if (changelogBtn) changelogBtn.addEventListener('click', () => {
     loadSettingsUI();
     $('settingsModal').classList.add('show');
   });
@@ -1974,13 +2098,15 @@ function doLogin() {
 function showApp() {
   $('loginPage').style.display = 'none';
   $('appContainer').style.display = '';
-  // Re-render after init (don't call init() again - it would create infinite loop)
   renderSidebar();
   updateModelName();
   switchInputPanel();
   renderModelDropdown();
   if (state.currentChatId) renderMessages();
   applyTheme();
+  // Update profile dark mode status
+  var darkStatus = document.getElementById('darkModeStatus');
+  if (darkStatus) darkStatus.textContent = state.theme === 'dark' ? '开启' : '关闭';
 }
 
 function closeSidebar() {
@@ -2034,6 +2160,52 @@ window.MODELS = MODELS;
 window.PROVIDER_ICONS = PROVIDER_ICONS;
 
 })();
+
+
+// ===== Tab Navigation =====
+function switchTab(pageId) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  var page = document.getElementById(pageId);
+  if (page) page.classList.add('active');
+  var tab = document.querySelector('.nav-tab[data-page="' + pageId + '"]');
+  if (tab) tab.classList.add('active');
+}
+window.switchTab = switchTab;
+
+function openSettings() {
+  if (typeof loadSettingsUI === 'function') loadSettingsUI();
+  document.getElementById('settingsModal').classList.add('show');
+}
+window.openSettings = openSettings;
+
+function openChangelog() {
+  if (typeof loadSettingsUI === 'function') loadSettingsUI();
+  document.getElementById('settingsModal').classList.add('show');
+}
+window.openChangelog = openChangelog;
+
+function toggleDarkMode() {
+  if (typeof state !== 'undefined') {
+    state.theme = state.theme === 'dark' ? 'light' : 'dark';
+    if (typeof saveState === 'function') saveState();
+    if (typeof applyTheme === 'function') applyTheme();
+    var status = document.getElementById('darkModeStatus');
+    if (status) status.textContent = state.theme === 'dark' ? '开启' : '关闭';
+  }
+}
+window.toggleDarkMode = toggleDarkMode;
+
+function doLogout() {
+  if (typeof state !== 'undefined') {
+    state.loggedIn = false;
+    if (typeof saveState === 'function') saveState();
+    document.getElementById('appContainer').style.display = 'none';
+    document.getElementById('loginPage').style.display = '';
+  }
+}
+window.doLogout = doLogout;
+
 
 
 // ===== Register & Auth Tab =====
