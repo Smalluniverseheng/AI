@@ -2,2461 +2,1116 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>第三方科技 - AI 聊天平台</title>
 <style>
 :root {
-  --bg-primary: #FAFAFA;
-  --bg-secondary: #FFFFFF;
-  --bg-sidebar: #F5F5F5;
-  --bg-hover: #EBEBEB;
-  --bg-active: #E0E0E0;
-  --bg-input: #FFFFFF;
-  --bg-user-msg: #E8F0FE;
-  --bg-ai-msg: transparent;
-  --bg-modal: #FFFFFF;
-  --bg-overlay: rgba(0,0,0,0.4);
-  --text-primary: #1A1A1A;
-  --text-secondary: #666666;
-  --text-tertiary: #999999;
-  --text-inverse: #FFFFFF;
-  --border-color: #E5E5E5;
-  --accent: #4F46E5;
-  --accent-hover: #4338CA;
-  --accent-light: rgba(79,70,229,0.1);
-  --danger: #EF4444;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --sidebar-width: 260px;
-  --topbar-height: 56px;
-  --transition: 0.2s ease;
+  --bg-primary: #FAFAFA; --bg-secondary: #FFFFFF; --bg-hover: #EBEBEB; --bg-active: #E0E0E0;
+  --bg-input: #FFFFFF; --bg-user-msg: #E8F0FE; --bg-modal: #FFFFFF; --bg-overlay: rgba(0,0,0,0.4);
+  --text-primary: #1A1A1A; --text-secondary: #666666; --text-tertiary: #999999;
+  --border-color: #E5E5E5; --accent: #4F46E5; --accent-hover: #4338CA;
+  --accent-light: rgba(79,70,229,0.1); --danger: #EF4444; --success: #10B981;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.15); --radius: 12px; --radius-sm: 8px;
+  --topbar-height: 52px; --nav-height: 56px; --transition: 0.2s ease;
 }
 [data-theme="dark"] {
-  --bg-primary: #111827;
-  --bg-secondary: #1F2937;
-  --bg-sidebar: #0F172A;
-  --bg-hover: #374151;
-  --bg-active: #4B5563;
-  --bg-input: #1F2937;
-  --bg-user-msg: #1E3A5F;
-  --bg-ai-msg: transparent;
-  --bg-modal: #1F2937;
-  --bg-overlay: rgba(0,0,0,0.6);
-  --text-primary: #F3F4F6;
-  --text-secondary: #9CA3AF;
-  --text-tertiary: #6B7280;
-  --text-inverse: #FFFFFF;
-  --border-color: #374151;
-  --accent: #818CF8;
-  --accent-hover: #6366F1;
-  --accent-light: rgba(129,140,248,0.15);
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  --bg-primary: #111827; --bg-secondary: #1F2937; --bg-hover: #374151; --bg-active: #4B5563;
+  --bg-input: #1F2937; --bg-user-msg: #1E3A5F; --bg-modal: #1F2937; --bg-overlay: rgba(0,0,0,0.6);
+  --text-primary: #F3F4F6; --text-secondary: #9CA3AF; --text-tertiary: #6B7280;
+  --border-color: #374151; --accent: #818CF8; --accent-hover: #6366F1;
+  --accent-light: rgba(129,140,248,0.15); --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3); --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  height: 100vh;
-  overflow: hidden;
-}
-button { cursor:pointer; border:none; background:none; font-family:inherit; font-size:inherit; color:inherit; }
-input, textarea, select { font-family:inherit; font-size:inherit; color:var(--text-primary); background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-sm); outline:none; }
-input:focus, textarea:focus, select:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
-::-webkit-scrollbar { width:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border-color); border-radius:3px; }
-::-webkit-scrollbar-thumb:hover { background:var(--text-tertiary); }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);height:100vh;height:100dvh;overflow:hidden;}
+button{cursor:pointer;border:none;background:none;font-family:inherit;font-size:inherit;color:inherit;}
+input,textarea,select{font-family:inherit;font-size:inherit;color:var(--text-primary);background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius-sm);outline:none;}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:3px;}
 
-/* ===== Login Page ===== */
-.login-page {
-  display:flex; align-items:center; justify-content:center;
-  height:100vh; background:var(--bg-primary);
-}
-.login-card {
-  background:var(--bg-secondary); border-radius:var(--radius); padding:48px 40px;
-  width:380px; box-shadow:var(--shadow-lg); text-align:center;
-}
-.login-logo { font-size:28px; font-weight:700; color:var(--accent); margin-bottom:8px; }
-.login-subtitle { color:var(--text-secondary); margin-bottom:32px; font-size:14px; }
-.login-field { margin-bottom:16px; text-align:left; }
-.login-field label { display:block; font-size:13px; color:var(--text-secondary); margin-bottom:6px; font-weight:500; }
-.login-field input {
-  width:100%; padding:10px 14px; border-radius:var(--radius-sm); font-size:15px;
-}
-.login-btn {
-  width:100%; padding:12px; background:var(--accent); color:#fff;
-  border-radius:var(--radius-sm); font-size:15px; font-weight:600;
-  margin-top:8px; transition:background var(--transition);
-}
-.login-btn:hover { background:var(--accent-hover); }
-.login-error { color:var(--danger); font-size:13px; margin-top:12px; min-height:20px; }
+/* Login */
+.login-page{display:flex;align-items:center;justify-content:center;height:100vh;height:100dvh;background:var(--bg-primary);}
+.login-card{background:var(--bg-secondary);border-radius:var(--radius);padding:40px 32px;width:360px;max-width:90vw;box-shadow:var(--shadow-lg);text-align:center;}
+.login-logo{font-size:24px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.login-subtitle{color:var(--text-secondary);margin-bottom:24px;font-size:13px;}
+.login-field{margin-bottom:14px;text-align:left;}
+.login-field label{display:block;font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-weight:500;}
+.login-field input{width:100%;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;}
+.login-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-size:14px;font-weight:600;margin-top:6px;transition:background var(--transition);}
+.login-btn:hover{background:var(--accent-hover);}
+.login-error{color:var(--danger);font-size:12px;margin-top:10px;min-height:18px;}
+.login-tabs{display:flex;gap:3px;margin-bottom:16px;background:var(--bg-primary);border-radius:8px;padding:3px;}
+.login-tab{flex:1;padding:7px;border-radius:6px;font-size:13px;cursor:pointer;transition:all 0.15s;}
+.reg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;}
+.reg-tag{padding:7px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:11px;background:var(--bg-primary);transition:border-color 0.15s;}
+.reg-tag:hover{border-color:var(--accent);}
 
-/* ===== App Layout ===== */
-.app-container { display:flex; height:100vh; }
+/* App Shell */
+.app-shell{display:none;flex-direction:column;height:100vh;height:100dvh;}
+.app-shell.show{display:flex;}
 
-/* ===== Sidebar ===== */
-.sidebar {
-  width:var(--sidebar-width); min-width:var(--sidebar-width);
-  background:var(--bg-sidebar); border-right:1px solid var(--border-color);
-  display:flex; flex-direction:column; height:100vh; transition:transform 0.3s ease;
-  z-index:100;
-}
-.sidebar-header {
-  padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
-  border-bottom:1px solid var(--border-color);
-}
-.sidebar-logo { font-size:18px; font-weight:700; color:var(--accent); letter-spacing:1px; }
-.sidebar-close { display:none; font-size:22px; color:var(--text-secondary); padding:4px; }
+/* Tab Pages */
+.tab-content{flex:1;overflow:hidden;position:relative;}
+.tab-page{display:none;flex-direction:column;height:100%;overflow:hidden;}
+.tab-page.active{display:flex;}
 
-.new-chat-btn {
-  margin:12px 16px; padding:10px 16px; background:var(--accent); color:#fff;
-  border-radius:var(--radius-sm); font-size:14px; font-weight:500;
-  display:flex; align-items:center; gap:8px; justify-content:center;
-  transition:background var(--transition);
-}
-.new-chat-btn:hover { background:var(--accent-hover); }
+/* AI Page Top Bar */
+.ai-topbar{height:var(--topbar-height);padding:0 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);flex-shrink:0;}
+.model-sel{position:relative;}
+.model-sel-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:var(--radius-sm);background:var(--bg-hover);font-size:13px;font-weight:500;transition:background var(--transition);max-width:200px;}
+.model-sel-btn:hover{background:var(--bg-active);}
+.model-sel-btn .m-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.model-sel-btn .arrow{font-size:9px;color:var(--text-tertiary);}
+.model-dd{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg-modal);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:300px;max-height:400px;overflow-y:auto;display:none;z-index:200;padding:6px;}
+.model-dd.show{display:block;}
+.model-dd-group{font-size:10px;font-weight:600;color:var(--text-tertiary);padding:8px 10px 3px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;}
+.model-dd-item{padding:7px 10px;border-radius:6px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:6px;transition:background var(--transition);}
+.model-dd-item:hover{background:var(--bg-hover);}
+.model-dd-item.active{background:var(--accent-light);color:var(--accent);}
+.model-dd-item img{width:16px;height:16px;border-radius:3px;flex-shrink:0;}
+.mode-btns{display:flex;gap:3px;margin-left:6px;}
+.mode-btn{padding:4px 8px;border-radius:5px;border:1px solid var(--border-color);font-size:10px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.mode-btn.active{background:var(--bg-active);color:var(--text-primary);border-color:var(--accent);}
+.topbar-spacer{flex:1;}
+.topbar-icon{padding:5px;border-radius:var(--radius-sm);font-size:16px;color:var(--text-secondary);transition:background var(--transition);}
+.topbar-icon:hover{background:var(--bg-hover);}
 
-.chat-list {
-  flex:1; overflow-y:auto; padding:8px;
-}
-.chat-group-label {
-  font-size:11px; font-weight:600; color:var(--text-tertiary);
-  text-transform:uppercase; letter-spacing:0.5px;
-  padding:12px 12px 4px; user-select:none;
-}
-.chat-item {
-  padding:10px 12px; border-radius:var(--radius-sm); cursor:pointer;
-  display:flex; align-items:center; justify-content:space-between;
-  transition:background var(--transition); margin-bottom:2px;
-}
-.chat-item:hover { background:var(--bg-hover); }
-.chat-item.active { background:var(--bg-active); }
-.chat-item-title {
-  font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  flex:1; color:var(--text-primary);
-}
-.chat-item-delete {
-  opacity:0; color:var(--text-tertiary); font-size:16px; padding:2px 4px;
-  transition:opacity 0.15s; flex-shrink:0; margin-left:4px;
-}
-.chat-item:hover .chat-item-delete { opacity:1; }
-.chat-item-delete:hover { color:var(--danger); }
+/* Chat Area */
+.chat-area{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column;}
+.chat-msgs{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:14px;max-width:720px;width:100%;margin:0 auto;}
+.chat-welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:32px 16px;}
+.chat-welcome-icon{font-size:42px;}
+.chat-welcome h2{font-size:18px;font-weight:600;}
+.chat-welcome p{font-size:13px;color:var(--text-secondary);max-width:360px;line-height:1.5;}
+.msg-row{display:flex;gap:10px;max-width:100%;}
+.msg-row.user{justify-content:flex-end;}
+.msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;margin-top:2px;}
+.msg-row.ai .msg-avatar{background:var(--accent);color:#fff;}
+.msg-row.user .msg-avatar{background:var(--success);color:#fff;order:2;}
+.msg-bubble{padding:10px 14px;border-radius:var(--radius);font-size:13px;line-height:1.65;max-width:78%;word-break:break-word;}
+.msg-row.ai .msg-bubble{background:var(--bg-secondary);border:1px solid var(--border-color);}
+.msg-row.user .msg-bubble{background:var(--bg-user-msg);}
+.msg-bubble pre{background:var(--bg-primary);border:1px solid var(--border-color);border-radius:6px;padding:10px;margin:6px 0;overflow-x:auto;font-size:12px;font-family:'SF Mono','Fira Code',monospace;}
+.msg-bubble code{background:var(--bg-primary);padding:1px 4px;border-radius:3px;font-size:12px;font-family:'SF Mono','Fira Code',monospace;}
+.msg-bubble pre code{background:none;padding:0;}
+.msg-bubble p{margin:4px 0;}.msg-bubble p:first-child{margin-top:0;}.msg-bubble p:last-child{margin-bottom:0;}
+.msg-bubble ul,.msg-bubble ol{padding-left:18px;margin:4px 0;}
+.msg-bubble li{margin:2px 0;}.msg-bubble strong{font-weight:600;}
+.msg-bubble blockquote{border-left:3px solid var(--accent);padding-left:10px;color:var(--text-secondary);margin:6px 0;}
+.msg-time{font-size:10px;color:var(--text-tertiary);margin-top:3px;}
+.msg-row.user .msg-time{text-align:right;}
+.stream-cursor::after{content:'\2588';animation:blink 0.8s infinite;color:var(--accent);margin-left:1px;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.typing-dot{display:flex;gap:4px;padding:6px 0;}
+.typing-dot span{width:6px;height:6px;background:var(--text-tertiary);border-radius:50%;animation:typingB 1.4s infinite ease-in-out;}
+.typing-dot span:nth-child(2){animation-delay:0.2s;}.typing-dot span:nth-child(3){animation-delay:0.4s;}
+@keyframes typingB{0%,80%,100%{transform:translateY(0);opacity:0.4}40%{transform:translateY(-5px);opacity:1}}
 
-.sidebar-footer {
-  padding:12px 16px; border-top:1px solid var(--border-color);
-  display:flex; gap:8px;
-}
-.sidebar-footer-btn {
-  flex:1; padding:8px; border-radius:var(--radius-sm);
-  font-size:13px; color:var(--text-secondary); display:flex;
-  align-items:center; justify-content:center; gap:6px;
-  transition:background var(--transition);
-}
-.sidebar-footer-btn:hover { background:var(--bg-hover); color:var(--text-primary); }
+/* Input Area */
+.input-area{padding:10px 12px 14px;background:var(--bg-primary);border-top:1px solid var(--border-color);}
+.input-inner{max-width:720px;margin:0 auto;}
+.input-box{display:flex;align-items:flex-end;gap:6px;background:var(--bg-input);border:1px solid var(--border-color);border-radius:var(--radius);padding:6px 10px;transition:border-color var(--transition),box-shadow var(--transition);}
+.input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-light);}
+.input-box textarea{flex:1;border:none;background:none;resize:none;font-size:13px;line-height:1.5;padding:3px 0;max-height:120px;min-height:22px;box-shadow:none!important;}
+.input-box textarea:focus{box-shadow:none!important;border:none!important;}
+.send-btn{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background var(--transition),opacity var(--transition);}
+.send-btn:hover{background:var(--accent-hover);}
+.send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.input-hint{font-size:10px;color:var(--text-tertiary);text-align:center;margin-top:6px;}
 
-/* ===== Main Area ===== */
-.main-area {
-  flex:1; display:flex; flex-direction:column; min-width:0;
-  position:relative;
-}
+/* Multi-Model / Debate Config Bar */
+.mode-config{padding:8px 12px;background:var(--bg-secondary);border-bottom:1px solid var(--border-color);display:none;}
+.mode-config.show{display:block;}
+.mode-config-inner{max-width:720px;margin:0 auto;}
+.mode-config label{font-size:11px;color:var(--text-secondary);font-weight:500;margin-bottom:4px;display:block;}
+.model-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;}
+.model-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:500;border:1px solid var(--accent);}
+.model-chip .chip-x{cursor:pointer;font-size:12px;opacity:0.7;}.model-chip .chip-x:hover{opacity:1;}
+.add-model-btn{padding:3px 8px;border-radius:12px;border:1px dashed var(--border-color);font-size:11px;color:var(--text-tertiary);cursor:pointer;transition:all 0.15s;}
+.add-model-btn:hover{border-color:var(--accent);color:var(--accent);}
+.debate-rounds{display:flex;align-items:center;gap:8px;margin-top:6px;}
+.debate-rounds label{font-size:11px;color:var(--text-secondary);margin:0;}
+.debate-rounds select{padding:3px 8px;font-size:12px;border-radius:4px;}
 
-/* Top Bar */
-.top-bar {
-  height:var(--topbar-height); padding:0 20px;
-  display:flex; align-items:center; gap:12px;
-  border-bottom:1px solid var(--border-color); background:var(--bg-secondary);
-  flex-shrink:0;
-}
-.menu-btn {
-  display:none; font-size:22px; color:var(--text-secondary);
-  padding:4px; margin-right:4px;
-}
-.model-selector-wrap { position:relative; }
-.model-selector-btn {
-  display:flex; align-items:center; gap:6px;
-  padding:6px 12px; border-radius:var(--radius-sm);
-  background:var(--bg-hover); font-size:14px; font-weight:500;
-  transition:background var(--transition); max-width:280px;
-}
-.model-selector-btn:hover { background:var(--bg-active); }
-.model-selector-btn .model-name { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.model-selector-btn .arrow { font-size:10px; color:var(--text-tertiary); }
-.model-dropdown {
-  position:absolute; top:calc(100% + 4px); left:0;
-  background:var(--bg-modal); border:1px solid var(--border-color);
-  border-radius:var(--radius); box-shadow:var(--shadow-lg);
-  min-width:320px; max-height:420px; overflow-y:auto;
-  display:none; z-index:200; padding:8px;
-}
-.model-dropdown.show { display:block; }
-.model-group-label {
-  font-size:11px; font-weight:600; color:var(--text-tertiary);
-  padding:8px 12px 4px; text-transform:uppercase; letter-spacing:0.5px;
-}
-.model-option {
-  padding:8px 12px; border-radius:var(--radius-sm); cursor:pointer;
-  font-size:13px; display:flex; align-items:center; gap:8px;
-  transition:background var(--transition);
-}
-.model-option:hover { background:var(--bg-hover); }
-.model-option.active { background:var(--accent-light); color:var(--accent); }
-.model-option .model-type-badge {
-  font-size:10px; padding:2px 6px; border-radius:4px;
-  background:var(--bg-active); color:var(--text-tertiary);
-  text-transform:uppercase; margin-left:auto; flex-shrink:0;
-}
-.top-bar-spacer { flex:1; }
-.theme-toggle-btn {
-  padding:6px 10px; border-radius:var(--radius-sm); font-size:18px;
-  color:var(--text-secondary); transition:background var(--transition);
-}
-.theme-toggle-btn:hover { background:var(--bg-hover); }
+/* Model Picker Dropdown (for multi/debate) */
+.model-picker-dd{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg-modal);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:260px;max-height:320px;overflow-y:auto;display:none;z-index:250;padding:6px;}
+.model-picker-dd.show{display:block;}
+.model-picker-item{padding:6px 10px;border-radius:5px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;transition:background 0.15s;}
+.model-picker-item:hover{background:var(--bg-hover);}
+.model-picker-item img{width:14px;height:14px;border-radius:2px;}
 
-/* ===== Chat Area ===== */
-.chat-area {
-  flex:1; overflow-y:auto; padding:0;
-  display:flex; flex-direction:column;
-}
-.chat-messages {
-  flex:1; padding:24px 20px; display:flex; flex-direction:column; gap:20px;
-  max-width:820px; width:100%; margin:0 auto;
-}
-.chat-welcome {
-  flex:1; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; text-align:center; gap:12px; padding:40px 20px;
-}
-.chat-welcome-icon { font-size:48px; }
-.chat-welcome h2 { font-size:22px; font-weight:600; color:var(--text-primary); }
-.chat-welcome p { font-size:14px; color:var(--text-secondary); max-width:400px; line-height:1.6; }
+/* Voice Panels */
+.voice-panel{padding:12px;background:var(--bg-primary);border-top:1px solid var(--border-color);display:none;}
+.voice-panel-inner{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:10px;}
+.voice-panel textarea{width:100%;padding:10px;resize:none;min-height:60px;border-radius:var(--radius-sm);font-size:13px;line-height:1.5;}
+.voice-panel label{font-size:12px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:4px;}
+.voice-panel select,.voice-panel input[type="text"]{width:100%;padding:7px 10px;font-size:13px;}
+.voice-controls{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.voice-control-group{flex:1;min-width:150px;}
+.voice-control-group .slider-row{display:flex;align-items:center;gap:8px;}
+.voice-control-group input[type="range"]{flex:1;height:3px;-webkit-appearance:none;appearance:none;background:var(--border-color);border-radius:2px;border:none;outline:none;}
+.voice-control-group input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.slider-val{font-size:12px;color:var(--text-secondary);min-width:32px;text-align:center;}
+.voice-gen-btn{padding:8px 20px;background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:500;transition:background var(--transition);display:flex;align-items:center;gap:6px;}
+.voice-gen-btn:hover{background:var(--accent-hover);}
+.voice-gen-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.upload-area{border:2px dashed var(--border-color);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:border-color var(--transition),background var(--transition);}
+.upload-area:hover{border-color:var(--accent);background:var(--accent-light);}
+.upload-area.has-file{border-color:var(--success);background:rgba(16,185,129,0.08);}
+.upload-area input[type="file"]{display:none;}
+.upload-icon{font-size:28px;margin-bottom:6px;}
+.upload-text{font-size:12px;color:var(--text-secondary);}
+.upload-filename{font-size:12px;color:var(--success);font-weight:500;margin-top:3px;}
+.audio-player-wrap{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);}
+.audio-player-wrap audio{flex:1;height:32px;}
 
-.message-row { display:flex; gap:12px; max-width:100%; }
-.message-row.user { justify-content:flex-end; }
-.message-avatar {
-  width:32px; height:32px; border-radius:50%; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-  font-size:14px; font-weight:600; margin-top:2px;
-}
-.message-row.ai .message-avatar { background:var(--accent); color:#fff; }
-.message-row.user .message-avatar { background:var(--success); color:#fff; order:2; }
-.message-bubble {
-  padding:12px 16px; border-radius:var(--radius); font-size:14px;
-  line-height:1.7; max-width:75%; word-break:break-word;
-  position:relative;
-}
-.message-row.ai .message-bubble { background:var(--bg-secondary); border:1px solid var(--border-color); }
-.message-row.user .message-bubble { background:var(--bg-user-msg); }
-.message-bubble pre {
-  background:var(--bg-primary); border:1px solid var(--border-color);
-  border-radius:var(--radius-sm); padding:12px; margin:8px 0;
-  overflow-x:auto; font-size:13px; font-family:'SF Mono', 'Fira Code', monospace;
-}
-.message-bubble code {
-  background:var(--bg-primary); padding:2px 5px; border-radius:4px;
-  font-size:13px; font-family:'SF Mono', 'Fira Code', monospace;
-}
-.message-bubble pre code { background:none; padding:0; }
-.message-bubble p { margin:6px 0; }
-.message-bubble p:first-child { margin-top:0; }
-.message-bubble p:last-child { margin-bottom:0; }
-.message-bubble ul, .message-bubble ol { padding-left:20px; margin:6px 0; }
-.message-bubble li { margin:3px 0; }
-.message-bubble strong { font-weight:600; }
-.message-bubble em { font-style:italic; }
-.message-bubble blockquote {
-  border-left:3px solid var(--accent); padding-left:12px;
-  color:var(--text-secondary); margin:8px 0;
-}
-.message-time { font-size:11px; color:var(--text-tertiary); margin-top:4px; }
-.message-row.user .message-time { text-align:right; }
+/* Bottom Nav */
+.bottom-nav{display:flex;align-items:center;justify-content:space-around;height:var(--nav-height);background:var(--bg-secondary);border-top:1px solid var(--border-color);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 0;cursor:pointer;color:var(--text-tertiary);transition:color 0.2s;-webkit-tap-highlight-color:transparent;user-select:none;}
+.nav-tab.active{color:var(--accent);}
+.nav-tab .nav-icon{font-size:20px;line-height:1;}
+.nav-tab .nav-label{font-size:10px;font-weight:500;line-height:1;}
 
-.typing-indicator { display:flex; gap:4px; padding:8px 0; }
-.typing-indicator span {
-  width:7px; height:7px; background:var(--text-tertiary); border-radius:50%;
-  animation:typingBounce 1.4s infinite ease-in-out;
-}
-.typing-indicator span:nth-child(2) { animation-delay:0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay:0.4s; }
-@keyframes typingBounce {
-  0%,80%,100% { transform:translateY(0); opacity:0.4; }
-  40% { transform:translateY(-6px); opacity:1; }
-}
+/* Profile Page */
+.profile-page{flex:1;overflow-y:auto;padding:16px;background:var(--bg-primary);}
+.profile-header{display:flex;flex-direction:column;align-items:center;padding:20px 0 12px;gap:6px;}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.profile-name{font-size:16px;font-weight:600;}
+.profile-menu{margin-top:12px;}
+.profile-menu-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;transition:background var(--transition);}
+.profile-menu-item:hover{background:var(--bg-hover);}
+.profile-menu-item .menu-icon{font-size:17px;width:22px;text-align:center;}
+.profile-menu-item .menu-arrow{margin-left:auto;color:var(--text-tertiary);font-size:11px;}
+.profile-divider{height:1px;background:var(--border-color);margin:6px 0;}
 
-/* ===== Input Area ===== */
-.input-area {
-  padding:16px 20px 20px; background:var(--bg-primary);
-  border-top:1px solid var(--border-color);
-}
-.input-area-inner {
-  max-width:820px; margin:0 auto;
-}
-.input-box {
-  display:flex; align-items:flex-end; gap:8px;
-  background:var(--bg-input); border:1px solid var(--border-color);
-  border-radius:var(--radius); padding:8px 12px;
-  transition:border-color var(--transition), box-shadow var(--transition);
-}
-.input-box:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
-.input-box textarea {
-  flex:1; border:none; background:none; resize:none;
-  font-size:14px; line-height:1.5; padding:4px 0;
-  max-height:150px; min-height:24px; color:var(--text-primary);
-  box-shadow:none !important;
-}
-.input-box textarea:focus { box-shadow:none !important; border:none !important; }
-.send-btn {
-  width:36px; height:36px; border-radius:50%;
-  background:var(--accent); color:#fff; font-size:18px;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0; transition:background var(--transition), opacity var(--transition);
-}
-.send-btn:hover { background:var(--accent-hover); }
-.send-btn:disabled { opacity:0.4; cursor:not-allowed; }
-.input-hint {
-  font-size:11px; color:var(--text-tertiary); text-align:center; margin-top:8px;
-}
+/* Placeholder Pages */
+.placeholder-page{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-tertiary);background:var(--bg-primary);}
+.placeholder-page .ph-icon{font-size:42px;}
+.placeholder-page .ph-text{font-size:13px;}
 
-/* ===== TTS/Voice Input Panels ===== */
-.voice-panel {
-  padding:16px 20px 20px; background:var(--bg-primary);
-  border-top:1px solid var(--border-color);
-}
-.voice-panel-inner {
-  max-width:820px; margin:0 auto; display:flex; flex-direction:column; gap:14px;
-}
-.voice-panel textarea {
-  width:100%; padding:12px 14px; resize:none; min-height:80px;
-  border-radius:var(--radius-sm); font-size:14px; line-height:1.5;
-}
-.voice-panel label {
-  font-size:13px; font-weight:500; color:var(--text-secondary); display:block; margin-bottom:6px;
-}
-.voice-panel select, .voice-panel input[type="text"] {
-  width:100%; padding:8px 12px; font-size:14px;
-}
-.voice-controls {
-  display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;
-}
-.voice-control-group { flex:1; min-width:180px; }
-.voice-control-group .slider-row {
-  display:flex; align-items:center; gap:10px;
-}
-.voice-control-group input[type="range"] {
-  flex:1; height:4px; -webkit-appearance:none; appearance:none;
-  background:var(--border-color); border-radius:2px; border:none; outline:none;
-}
-.voice-control-group input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
-  background:var(--accent); cursor:pointer;
-}
-.slider-value {
-  font-size:13px; color:var(--text-secondary); min-width:36px; text-align:center;
-}
-.voice-gen-btn {
-  padding:10px 24px; background:var(--accent); color:#fff;
-  border-radius:var(--radius-sm); font-size:14px; font-weight:500;
-  transition:background var(--transition);
-  display:flex; align-items:center; gap:8px;
-}
-.voice-gen-btn:hover { background:var(--accent-hover); }
-.voice-gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
-
-.upload-area {
-  border:2px dashed var(--border-color); border-radius:var(--radius-sm);
-  padding:24px; text-align:center; cursor:pointer;
-  transition:border-color var(--transition), background var(--transition);
-}
-.upload-area:hover { border-color:var(--accent); background:var(--accent-light); }
-.upload-area.has-file { border-color:var(--success); background:rgba(16,185,129,0.08); }
-.upload-area input[type="file"] { display:none; }
-.upload-icon { font-size:32px; margin-bottom:8px; }
-.upload-text { font-size:13px; color:var(--text-secondary); }
-.upload-filename { font-size:13px; color:var(--success); font-weight:500; margin-top:4px; }
-
-.audio-player-wrap {
-  display:flex; align-items:center; gap:12px; padding:12px 16px;
-  background:var(--bg-secondary); border:1px solid var(--border-color);
-  border-radius:var(--radius-sm);
-}
-.audio-player-wrap audio { flex:1; height:36px; }
-.audio-player-wrap .audio-label { font-size:13px; color:var(--text-secondary); white-space:nowrap; }
-
-/* ===== Settings Modal ===== */
-.modal-overlay {
-  position:fixed; inset:0; background:var(--bg-overlay);
-  display:none; align-items:center; justify-content:center; z-index:500;
-}
-.modal-overlay.show { display:flex; }
-.modal {
-  background:var(--bg-modal); border-radius:var(--radius);
-  width:520px; max-width:90vw; max-height:80vh;
-  overflow:hidden; box-shadow:var(--shadow-lg);
-  display:flex; flex-direction:column;
-}
-.modal-header {
-  padding:20px 24px; border-bottom:1px solid var(--border-color);
-  display:flex; align-items:center; justify-content:space-between;
-}
-.modal-header h3 { font-size:18px; font-weight:600; }
-.modal-close { font-size:22px; color:var(--text-tertiary); padding:4px; }
-.modal-close:hover { color:var(--text-primary); }
-.modal-body { padding:24px; overflow-y:auto; flex:1; }
-.modal-section { margin-bottom:24px; }
-.modal-section:last-child { margin-bottom:0; }
-.modal-section h4 {
-  font-size:14px; font-weight:600; color:var(--text-primary);
-  margin-bottom:12px; display:flex; align-items:center; gap:8px;
-}
-.modal-section h4 .collapse-arrow {
-  font-size:10px; color:var(--text-tertiary); transition:transform 0.2s;
-}
-.modal-section h4 .collapse-arrow.collapsed { transform:rotate(-90deg); }
-.setting-row {
-  display:flex; align-items:center; justify-content:space-between;
-  padding:10px 0; border-bottom:1px solid var(--border-color);
-}
-.setting-row:last-child { border-bottom:none; }
-.setting-label { font-size:14px; color:var(--text-primary); }
-.setting-desc { font-size:12px; color:var(--text-tertiary); margin-top:2px; }
-.toggle-switch {
-  width:44px; height:24px; background:var(--border-color); border-radius:12px;
-  position:relative; cursor:pointer; transition:background 0.2s;
-  flex-shrink:0;
-}
-.toggle-switch.on { background:var(--accent); }
-.toggle-switch::after {
-  content:''; position:absolute; top:3px; left:3px;
-  width:18px; height:18px; border-radius:50%;
-  background:#fff; transition:transform 0.2s; box-shadow:var(--shadow-sm);
-}
-.toggle-switch.on::after { transform:translateX(20px); }
-.api-key-input {
-  width:100%; padding:8px 12px; font-size:13px; font-family:monospace;
-  margin-top:8px;
-}
-.danger-btn {
-  padding:8px 16px; background:var(--danger); color:#fff;
-  border-radius:var(--radius-sm); font-size:13px; font-weight:500;
-  transition:background var(--transition);
-}
-.danger-btn:hover { background:#DC2626; }
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:var(--bg-overlay);display:none;align-items:center;justify-content:center;z-index:500;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--bg-modal);border-radius:var(--radius);width:480px;max-width:92vw;max-height:80vh;overflow:hidden;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:600;}
+.modal-close{font-size:20px;color:var(--text-tertiary);padding:4px;}.modal-close:hover{color:var(--text-primary);}
+.modal-body{padding:20px;overflow-y:auto;flex:1;}
+.modal-section{margin-bottom:20px;}.modal-section:last-child{margin-bottom:0;}
+.modal-section h4{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color);}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-size:13px;}.setting-desc{font-size:11px;color:var(--text-tertiary);margin-top:1px;}
+.toggle-switch{width:40px;height:22px;background:var(--border-color);border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+.toggle-switch.on{background:var(--accent);}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform 0.2s;box-shadow:var(--shadow-sm);}
+.toggle-switch.on::after{transform:translateX(18px);}
+.api-key-input{width:100%;padding:7px 10px;font-size:12px;font-family:monospace;margin-top:6px;}
+.danger-btn{padding:7px 14px;background:var(--danger);color:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:500;transition:background var(--transition);}
+.danger-btn:hover{background:#DC2626;}
+.plan-btns{display:flex;gap:6px;margin-top:6px;}
+.plan-btn{flex:1;padding:7px 10px;border-radius:6px;border:1.5px solid var(--border-color);font-size:12px;cursor:pointer;transition:all 0.15s;text-align:center;}
+.plan-btn.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:600;}
 
 /* Changelog */
-.changelog-list { display:flex; flex-direction:column; gap:12px; }
-.changelog-item { padding:12px; background:var(--bg-primary); border-radius:var(--radius-sm); }
-.changelog-item .version-tag {
-  font-size:12px; font-weight:600; color:var(--accent);
-  background:var(--accent-light); padding:2px 8px; border-radius:4px;
-  display:inline-block; margin-bottom:6px;
-}
-.changelog-item .changelog-date { font-size:12px; color:var(--text-tertiary); margin-left:8px; }
-.changelog-item ul { padding-left:18px; margin-top:6px; }
-.changelog-item li { font-size:13px; color:var(--text-secondary); margin:3px 0; line-height:1.5; }
-.changelog-collapse-btn {
-  width:100%; padding:8px; text-align:left; font-size:13px;
-  color:var(--text-secondary); border-radius:var(--radius-sm);
-  display:flex; align-items:center; gap:6px;
-  transition:background var(--transition);
-}
-.changelog-collapse-btn:hover { background:var(--bg-hover); }
-.changelog-content { display:none; }
-.changelog-content.show { display:block; }
+.changelog-item{padding:10px;background:var(--bg-primary);border-radius:var(--radius-sm);margin-bottom:8px;}
+.changelog-item .ver-tag{font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:4px;}
+.changelog-item .cl-date{font-size:11px;color:var(--text-tertiary);margin-left:6px;}
+.changelog-item ul{padding-left:16px;margin-top:4px;}
+.changelog-item li{font-size:12px;color:var(--text-secondary);margin:2px 0;line-height:1.4;}
 
-/* ===== Mobile ===== */
-.sidebar-overlay {
-  display:none; position:fixed; inset:0; background:var(--bg-overlay); z-index:99;
-}
-@media (max-width:768px) {
-  .sidebar {
-    position:fixed; left:0; top:0; bottom:0;
-    transform:translateX(-100%); z-index:101;
-    box-shadow:var(--shadow-lg);
-  }
-  .sidebar.open { transform:translateX(0); }
-  .sidebar-overlay.show { display:block; }
-  .sidebar-close { display:block; }
-  .menu-btn { display:block; }
-  .model-dropdown { min-width:260px; left:-40px; }
-  .chat-messages { padding:16px 12px; }
-  .input-area, .voice-panel { padding:12px 12px 16px; }
-  .message-bubble { max-width:88%; }
-  .voice-controls { flex-direction:column; }
-}
-@media (max-width:480px) {
-  .modal { width:100vw; max-width:100vw; max-height:100vh; border-radius:0; }
-}
+/* Toast */
+.toast-c{position:fixed;top:16px;right:16px;z-index:600;display:flex;flex-direction:column;gap:6px;}
+.toast{padding:10px 16px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);font-size:13px;animation:toastIn 0.3s ease;max-width:300px;}
+.toast.error{border-left:4px solid var(--danger);}.toast.success{border-left:4px solid var(--success);}.toast.info{border-left:4px solid var(--accent);}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 
-/* ===== Toast ===== */
-.toast-container { position:fixed; top:20px; right:20px; z-index:600; display:flex; flex-direction:column; gap:8px; }
-.toast {
-  padding:12px 20px; background:var(--bg-secondary); border:1px solid var(--border-color);
-  border-radius:var(--radius-sm); box-shadow:var(--shadow-md);
-  font-size:14px; animation:toastIn 0.3s ease;
-  max-width:340px;
+/* Mobile */
+@media(max-width:768px){
+  .model-dd,.model-picker-dd{min-width:240px;left:-20px;}
+  .chat-msgs{padding:12px 8px;}
+  .input-area,.voice-panel{padding:8px 8px 12px;}
+  .msg-bubble{max-width:88%;}
+  .voice-controls{flex-direction:column;}
 }
-.toast.error { border-left:4px solid var(--danger); }
-.toast.success { border-left:4px solid var(--success); }
-.toast.info { border-left:4px solid var(--accent); }
-@keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-
-/* ===== Bottom Tab Bar ===== */
-.bottom-nav {
-  display:flex; align-items:center; justify-content:space-around;
-  height:56px; background:var(--bg-secondary); border-top:1px solid var(--border-color);
-  position:fixed; bottom:0; left:0; right:0; z-index:300;
-  padding-bottom:env(safe-area-inset-bottom,0);
-}
-.nav-tab {
-  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:2px; padding:6px 0; cursor:pointer; color:var(--text-tertiary);
-  transition:color 0.2s; -webkit-tap-highlight-color:transparent; user-select:none;
-}
-.nav-tab.active { color:var(--accent); }
-.nav-tab .nav-icon { font-size:20px; line-height:1; }
-.nav-tab .nav-label { font-size:10px; font-weight:500; line-height:1; }
-
-/* ===== Tab Pages ===== */
-.tab-page { display:none; flex-direction:column; height:100%; }
-.tab-page.active { display:flex; }
-.page-header {
-  height:var(--topbar-height); padding:0 16px;
-  display:flex; align-items:center; justify-content:center;
-  border-bottom:1px solid var(--border-color); background:var(--bg-secondary);
-  flex-shrink:0; font-size:16px; font-weight:600;
-}
-
-/* 我的 page */
-.profile-page { flex:1; overflow-y:auto; padding:16px; }
-.profile-header {
-  display:flex; flex-direction:column; align-items:center; padding:24px 0 16px; gap:8px;
-}
-.profile-avatar {
-  width:64px; height:64px; border-radius:50%; background:var(--accent); color:#fff;
-  display:flex; align-items:center; justify-content:center; font-size:28px;
-}
-.profile-name { font-size:18px; font-weight:600; }
-.profile-menu { margin-top:8px; }
-.profile-menu-item {
-  display:flex; align-items:center; gap:12px; padding:14px 16px;
-  border-radius:var(--radius-sm); cursor:pointer; font-size:14px;
-  transition:background var(--transition);
-}
-.profile-menu-item:hover { background:var(--bg-hover); }
-.profile-menu-item .menu-icon { font-size:18px; width:24px; text-align:center; }
-.profile-menu-item .menu-arrow { margin-left:auto; color:var(--text-tertiary); font-size:12px; }
-.profile-divider { height:1px; background:var(--border-color); margin:8px 0; }
-
-/* Placeholder pages */
-.placeholder-page {
-  flex:1; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; gap:12px; color:var(--text-tertiary);
-}
-.placeholder-page .placeholder-icon { font-size:48px; }
-.placeholder-page .placeholder-text { font-size:14px; }
-
-/* Adjust app container for bottom nav */
-.app-container { padding-bottom:56px; }
-
-/* Stream cursor */
-.stream-cursor::after {
-  content:'\2588'; animation:blink 0.8s infinite; color:var(--accent);
-  margin-left:2px;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 </style>
 </head>
 <body>
 
-<!-- Login Page -->
+<!-- ===== Login ===== -->
 <div id="loginPage" class="login-page">
   <div class="login-card">
     <div class="login-logo">第三方科技</div>
     <div class="login-subtitle">AI 智能聊天平台</div>
-    <div class="login-tabs" style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg-primary);border-radius:8px;padding:3px">
-      <button class="login-tab active" id="tabLogin" onclick="switchAuthTab('login')" style="flex:1;padding:8px;border-radius:6px;border:none;background:var(--bg-secondary);color:var(--text-primary);font-size:14px;cursor:pointer;font-weight:600">登录</button>
-      <button class="login-tab" id="tabRegister" onclick="switchAuthTab('register')" style="flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text-secondary);font-size:14px;cursor:pointer">注册</button>
+    <div class="login-tabs">
+      <button class="login-tab active" id="tabLogin" onclick="switchAuthTab('login')" style="background:var(--bg-secondary);color:var(--text-primary);font-weight:600">登录</button>
+      <button class="login-tab" id="tabRegister" onclick="switchAuthTab('register')" style="background:transparent;color:var(--text-secondary)">注册</button>
     </div>
     <div id="loginFormSection">
-      <div class="login-field">
-        <label>账号</label>
-        <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>密码</label>
-        <input type="password" id="loginPass" placeholder="请输入密码" autocomplete="off">
-      </div>
+      <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off"></div>
+      <div class="login-field"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="off"></div>
       <button class="login-btn" id="loginBtn">登 录</button>
     </div>
     <div id="registerFormSection" style="display:none">
-      <div class="login-field">
-        <label>选择身份</label>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">
-          <div class="reg-tag" data-tag="同学" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">🎓</span>同学</div>
-          <div class="reg-tag" data-tag="亲人" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">👨‍👩‍👧</span>亲人</div>
-          <div class="reg-tag" data-tag="朋友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">👬</span>朋友</div>
-          <div class="reg-tag" data-tag="网友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">🌐</span>网友</div>
-          <div class="reg-tag" data-tag="摄友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">📷</span>摄友</div>
-          <div class="reg-tag" data-tag="码友" onclick="selectRegTag(this)" style="padding:8px 4px;border-radius:8px;border:1.5px solid var(--border-color);text-align:center;cursor:pointer;font-size:12px;background:var(--bg-primary)"><span style="display:block;font-size:20px;margin-bottom:2px">💻</span>码友</div>
+      <div class="login-field"><label>选择身份</label>
+        <div class="reg-grid">
+          <div class="reg-tag" data-tag="同学" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">🎓</span>同学</div>
+          <div class="reg-tag" data-tag="亲人" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">👨‍👩‍👧</span>亲人</div>
+          <div class="reg-tag" data-tag="朋友" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">👬</span>朋友</div>
+          <div class="reg-tag" data-tag="网友" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">🌐</span>网友</div>
+          <div class="reg-tag" data-tag="摄友" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">📷</span>摄友</div>
+          <div class="reg-tag" data-tag="码友" onclick="selectRegTag(this)"><span style="display:block;font-size:18px;margin-bottom:1px">💻</span>码友</div>
         </div>
       </div>
-      <div class="login-field">
-        <label>真实姓名</label>
-        <input type="text" id="regName" placeholder="你的真实姓名" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>邮箱</label>
-        <input type="email" id="regEmail" placeholder="your@email.com" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>手机号</label>
-        <input type="tel" id="regPhone" placeholder="你的手机号" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>密码</label>
-        <input type="password" id="regPass" placeholder="8位以上，含大小写+数字" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>确认密码</label>
-        <input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>备注（可选）</label>
-        <input type="text" id="regRemark" placeholder="例如：海口中学3班" autocomplete="off">
-      </div>
+      <div class="login-field"><label>真实姓名</label><input type="text" id="regName" placeholder="你的真实姓名" autocomplete="off"></div>
+      <div class="login-field"><label>邮箱</label><input type="email" id="regEmail" placeholder="your@email.com" autocomplete="off"></div>
+      <div class="login-field"><label>手机号</label><input type="tel" id="regPhone" placeholder="你的手机号" autocomplete="off"></div>
+      <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="8位以上，含大小写+数字" autocomplete="off"></div>
+      <div class="login-field"><label>确认密码</label><input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="off"></div>
+      <div class="login-field"><label>备注（可选）</label><input type="text" id="regRemark" placeholder="例如：海口中学3班" autocomplete="off"></div>
       <button class="login-btn" id="registerBtn" style="background:#22C55E">提交注册</button>
     </div>
     <div class="login-error" id="loginError"></div>
   </div>
 </div>
 
-<!-- App -->
-<div id="appContainer" class="app-container" style="display:none">
+<!-- ===== App Shell ===== -->
+<div id="appShell" class="app-shell">
 
-  <!-- Tab: 聊天 -->
-  <div class="tab-page" id="pageChat">
-    <div class="page-header">聊天</div>
-    <div class="placeholder-page">
-      <div class="placeholder-icon">💬</div>
-      <div class="placeholder-text">好友聊天即将上线</div>
-    </div>
-  </div>
+  <!-- Tab Content -->
+  <div class="tab-content">
 
-  <!-- Tab: AI -->
-  <div class="tab-page active" id="pageAI">
-    <div class="top-bar">
-      <div class="model-selector-wrap">
-        <button class="model-selector-btn" id="modelSelectorBtn">
-          <span class="model-name" id="currentModelName">选择模型</span>
-          <span class="arrow">▼</span>
-        </button>
-        <div class="model-dropdown" id="modelDropdown"></div>
-      </div>
-      <div style="display:flex;gap:4px;margin-left:8px">
-        <button class="mode-btn active" id="modeSingle" onclick="setChatMode('single')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-active);color:var(--text-primary);font-size:11px;cursor:pointer">💬 单模型</button>
-        <button class="mode-btn" id="modeMulti" onclick="setChatMode('multi')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:11px;cursor:pointer">📋 多模型</button>
-        <button class="mode-btn" id="modeDebate" onclick="setChatMode('debate')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:11px;cursor:pointer">⚔️ 辩论</button>
-      </div>
-      <div class="top-bar-spacer"></div>
-      <button class="theme-toggle-btn" id="themeToggleBtn">🌙</button>
+    <!-- 聊天 Tab -->
+    <div class="tab-page" id="pageChat">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:15px;font-weight:600;flex-shrink:0">聊天</div>
+      <div class="placeholder-page"><div class="ph-icon">💬</div><div class="ph-text">好友聊天即将上线</div></div>
     </div>
 
-    <!-- Chat Messages -->
-    <div class="chat-area" id="chatArea">
-      <div class="chat-messages" id="chatMessages">
-        <div class="chat-welcome" id="chatWelcome">
-          <div class="chat-welcome-icon">🤖</div>
-          <h2>你好，欢迎使用第三方科技</h2>
-          <p>选择一个模型开始对话，支持文字聊天、语音合成、语音克隆等多种能力</p>
+    <!-- AI Tab -->
+    <div class="tab-page active" id="pageAI">
+      <div class="ai-topbar">
+        <div class="model-sel" id="modelSelWrap">
+          <button class="model-sel-btn" id="modelSelBtn">
+            <span class="m-name" id="curModelName">选择模型</span>
+            <span class="arrow">▼</span>
+          </button>
+          <div class="model-dd" id="modelDD"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- Input Area: Chat -->
-    <div class="input-area" id="chatInputArea">
-      <div class="input-area-inner">
-        <div class="input-box">
-          <textarea id="chatInput" rows="1" placeholder="输入消息..."></textarea>
-          <button class="send-btn" id="sendBtn">➤</button>
+        <div class="mode-btns">
+          <button class="mode-btn active" data-mode="single" onclick="setChatMode('single')">💬单</button>
+          <button class="mode-btn" data-mode="multi" onclick="setChatMode('multi')">📋多</button>
+          <button class="mode-btn" data-mode="debate" onclick="setChatMode('debate')">⚔辩</button>
         </div>
-        <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+        <div class="topbar-spacer"></div>
+        <button class="topbar-icon" id="themeBtn">🌙</button>
       </div>
-    </div>
 
-    <!-- Input Area: TTS -->
-    <div class="voice-panel" id="ttsPanel" style="display:none">
-      <div class="voice-panel-inner">
-        <textarea id="ttsText" placeholder="输入要合成语音的文本..."></textarea>
-        <div class="voice-controls">
-          <div class="voice-control-group">
-            <label>音色选择</label>
-            <select id="ttsVoice">
-              <option value="female-tianmei">甜美女声</option>
-              <option value="female-roumei">柔美女声</option>
-              <option value="female-wenyi">文艺女声</option>
-              <option value="male-qinhe">亲和男声</option>
-              <option value="male-cangjing">沧桑男声</option>
-              <option value="male-dongci">磁性男声</option>
-            </select>
+      <!-- Multi/Debate Config Bar -->
+      <div class="mode-config" id="modeConfig">
+        <div class="mode-config-inner">
+          <label id="modeConfigLabel">选择模型</label>
+          <div class="model-chips" id="modelChips"></div>
+          <div style="position:relative;display:inline-block">
+            <button class="add-model-btn" id="addModelBtn">＋ 添加模型</button>
+            <div class="model-picker-dd" id="modelPickerDD"></div>
           </div>
-          <div class="voice-control-group">
-            <label>语速</label>
-            <div class="slider-row">
-              <input type="range" id="ttsSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
-              <span class="slider-value" id="ttsSpeedVal">1.0x</span>
-            </div>
-          </div>
-          <div class="voice-control-group">
-            <label>情绪</label>
-            <select id="ttsEmotion">
-              <option value="neutral">平静</option>
-              <option value="happy">开心</option>
-              <option value="sad">悲伤</option>
-              <option value="angry">生气</option>
-              <option value="gentle">温柔</option>
-            </select>
+          <div class="debate-rounds" id="debateRoundsWrap" style="display:none">
+            <label>讨论轮数：</label>
+            <select id="debateRounds"><option value="2">2轮</option><option value="3" selected>3轮</option><option value="5">5轮</option></select>
           </div>
         </div>
-        <button class="voice-gen-btn" id="ttsGenBtn">🎙 生成语音</button>
-        <div id="ttsResult"></div>
       </div>
-    </div>
 
-    <!-- Input Area: Voice Clone -->
-    <div class="voice-panel" id="voiceClonePanel" style="display:none">
-      <div class="voice-panel-inner">
-        <textarea id="vcText" placeholder="输入要克隆语音的文本..."></textarea>
-        <div class="upload-area" id="vcUploadArea">
-          <input type="file" id="vcFileInput" accept="audio/*">
-          <div class="upload-icon">📁</div>
-          <div class="upload-text">点击上传参考音频（3-10秒）</div>
-          <div class="upload-filename" id="vcFilename"></div>
+      <!-- Chat Messages -->
+      <div class="chat-area" id="chatArea">
+        <div class="chat-msgs" id="chatMsgs">
+          <div class="chat-welcome" id="chatWelcome">
+            <div class="chat-welcome-icon">🤖</div>
+            <h2>你好，欢迎使用第三方科技</h2>
+            <p>选择一个模型开始对话，支持文字聊天、语音合成、语音克隆等多种能力</p>
+          </div>
         </div>
-        <button class="voice-gen-btn" id="vcGenBtn">🧬 克隆语音</button>
-        <div id="vcResult"></div>
       </div>
-    </div>
 
-    <!-- Input Area: Voice Design -->
-    <div class="voice-panel" id="voiceDesignPanel" style="display:none">
-      <div class="voice-panel-inner">
-        <textarea id="vdText" placeholder="输入要合成的文本..."></textarea>
-        <input type="text" id="vdDesc" placeholder="描述你想要的音色，例如：温柔的年轻女性声音，语速稍慢" style="width:100%;padding:10px 14px;margin-bottom:4px">
-        <button class="voice-gen-btn" id="vdGenBtn">🎨 设计音色并合成</button>
-        <div id="vdResult"></div>
-      </div>
-    </div>
-
-    <!-- Input Area: ASR -->
-    <div class="voice-panel" id="asrPanel" style="display:none">
-      <div class="voice-panel-inner">
-        <div class="upload-area" id="asrUploadArea">
-          <input type="file" id="asrFileInput" accept="audio/*">
-          <div class="upload-icon">🎤</div>
-          <div class="upload-text">点击上传音频文件进行识别</div>
-          <div class="upload-filename" id="asrFilename"></div>
+      <!-- Input: Chat -->
+      <div class="input-area" id="chatInputArea">
+        <div class="input-inner">
+          <div class="input-box">
+            <textarea id="chatInput" rows="1" placeholder="输入消息..."></textarea>
+            <button class="send-btn" id="sendBtn">➤</button>
+          </div>
+          <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
         </div>
-        <button class="voice-gen-btn" id="asrGenBtn">🔍 开始识别</button>
-        <div id="asrResult"></div>
+      </div>
+
+      <!-- Input: TTS -->
+      <div class="voice-panel" id="ttsPanel">
+        <div class="voice-panel-inner">
+          <textarea id="ttsText" placeholder="输入要合成语音的文本..."></textarea>
+          <div class="voice-controls">
+            <div class="voice-control-group"><label>音色</label><select id="ttsVoice"><option value="female-tianmei">甜美女声</option><option value="female-roumei">柔美女声</option><option value="female-wenyi">文艺女声</option><option value="male-qinhe">亲和男声</option><option value="male-cangjing">沧桑男声</option><option value="male-dongci">磁性男声</option></select></div>
+            <div class="voice-control-group"><label>语速</label><div class="slider-row"><input type="range" id="ttsSpeed" min="0.5" max="2.0" step="0.1" value="1.0"><span class="slider-val" id="ttsSpeedVal">1.0x</span></div></div>
+            <div class="voice-control-group"><label>情绪</label><select id="ttsEmotion"><option value="neutral">平静</option><option value="happy">开心</option><option value="sad">悲伤</option><option value="angry">生气</option><option value="gentle">温柔</option></select></div>
+          </div>
+          <button class="voice-gen-btn" id="ttsGenBtn">🎙 生成语音</button>
+          <div id="ttsResult"></div>
+        </div>
+      </div>
+
+      <!-- Input: Voice Clone -->
+      <div class="voice-panel" id="vcPanel">
+        <div class="voice-panel-inner">
+          <textarea id="vcText" placeholder="输入要克隆语音的文本..."></textarea>
+          <div class="upload-area" id="vcUpload"><input type="file" id="vcFile" accept="audio/*"><div class="upload-icon">📁</div><div class="upload-text">点击上传参考音频（3-10秒）</div><div class="upload-filename" id="vcFname"></div></div>
+          <button class="voice-gen-btn" id="vcGenBtn">🧬 克隆语音</button>
+          <div id="vcResult"></div>
+        </div>
+      </div>
+
+      <!-- Input: Voice Design -->
+      <div class="voice-panel" id="vdPanel">
+        <div class="voice-panel-inner">
+          <textarea id="vdText" placeholder="输入要合成的文本..."></textarea>
+          <input type="text" id="vdDesc" placeholder="描述你想要的音色，例如：温柔的年轻女性声音" style="width:100%;padding:8px 10px">
+          <button class="voice-gen-btn" id="vdGenBtn">🎨 设计音色并合成</button>
+          <div id="vdResult"></div>
+        </div>
+      </div>
+
+      <!-- Input: ASR -->
+      <div class="voice-panel" id="asrPanel">
+        <div class="voice-panel-inner">
+          <div class="upload-area" id="asrUpload"><input type="file" id="asrFile" accept="audio/*"><div class="upload-icon">🎤</div><div class="upload-text">点击上传音频文件进行识别</div><div class="upload-filename" id="asrFname"></div></div>
+          <button class="voice-gen-btn" id="asrGenBtn">🔍 开始识别</button>
+          <div id="asrResult"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 论坛 Tab -->
+    <div class="tab-page" id="pageForum">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:15px;font-weight:600;flex-shrink:0">论坛</div>
+      <div class="placeholder-page"><div class="ph-icon">📰</div><div class="ph-text">朋友圈/论坛即将上线</div></div>
+    </div>
+
+    <!-- 更多 Tab -->
+    <div class="tab-page" id="pageMore">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:15px;font-weight:600;flex-shrink:0">更多</div>
+      <div class="placeholder-page"><div class="ph-icon">🔮</div><div class="ph-text">敬请期待</div></div>
+    </div>
+
+    <!-- 我的 Tab -->
+    <div class="tab-page" id="pageProfile">
+      <div style="height:var(--topbar-height);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border-color);background:var(--bg-secondary);font-size:15px;font-weight:600;flex-shrink:0">我的</div>
+      <div class="profile-page">
+        <div class="profile-header">
+          <div class="profile-avatar">👤</div>
+          <div class="profile-name" id="profileName">用户</div>
+        </div>
+        <div class="profile-menu">
+          <div class="profile-menu-item" onclick="openSettings()"><span class="menu-icon">⚙</span><span>设置</span><span class="menu-arrow">›</span></div>
+          <div class="profile-menu-item" onclick="openSettings()"><span class="menu-icon">📋</span><span>更新日志</span><span class="menu-arrow">›</span></div>
+          <div class="profile-divider"></div>
+          <div class="profile-menu-item" onclick="toggleDarkMode()"><span class="menu-icon">🌙</span><span>深色模式</span><span class="menu-arrow" id="darkStatus">关闭</span></div>
+          <div class="profile-divider"></div>
+          <div class="profile-menu-item" onclick="doLogout()" style="color:var(--danger)"><span class="menu-icon">🚪</span><span>退出登录</span><span class="menu-arrow">›</span></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Tab: 论坛 -->
-  <div class="tab-page" id="pageForum">
-    <div class="page-header">论坛</div>
-    <div class="placeholder-page">
-      <div class="placeholder-icon">📰</div>
-      <div class="placeholder-text">朋友圈/论坛即将上线</div>
-    </div>
-  </div>
-
-  <!-- Tab: (空) -->
-  <div class="tab-page" id="pageEmpty">
-    <div class="page-header">更多</div>
-    <div class="placeholder-page">
-      <div class="placeholder-icon">🔮</div>
-      <div class="placeholder-text">敬请期待</div>
-    </div>
-  </div>
-
-  <!-- Tab: 我的 -->
-  <div class="tab-page" id="pageProfile">
-    <div class="page-header">我的</div>
-    <div class="profile-page">
-      <div class="profile-header">
-        <div class="profile-avatar">👤</div>
-        <div class="profile-name" id="profileName">用户</div>
-      </div>
-      <div class="profile-menu">
-        <div class="profile-menu-item" onclick="openSettings()">
-          <span class="menu-icon">⚙</span>
-          <span>设置</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="profile-menu-item" onclick="openChangelog()">
-          <span class="menu-icon">📋</span>
-          <span>更新日志</span>
-          <span class="menu-arrow">›</span>
-        </div>
-        <div class="profile-divider"></div>
-        <div class="profile-menu-item" onclick="toggleDarkMode()">
-          <span class="menu-icon">🌙</span>
-          <span>深色模式</span>
-          <span class="menu-arrow" id="darkModeStatus">关闭</span>
-        </div>
-        <div class="profile-divider"></div>
-        <div class="profile-menu-item" onclick="doLogout()" style="color:var(--danger)">
-          <span class="menu-icon">🚪</span>
-          <span>退出登录</span>
-          <span class="menu-arrow">›</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom Navigation -->
-  <nav class="bottom-nav" id="bottomNav">
-    <div class="nav-tab" data-page="pageChat" onclick="switchTab('pageChat')">
-      <span class="nav-icon">💬</span>
-      <span class="nav-label">聊天</span>
-    </div>
-    <div class="nav-tab active" data-page="pageAI" onclick="switchTab('pageAI')">
-      <span class="nav-icon">🤖</span>
-      <span class="nav-label">AI</span>
-    </div>
-    <div class="nav-tab" data-page="pageForum" onclick="switchTab('pageForum')">
-      <span class="nav-icon">📰</span>
-      <span class="nav-label">论坛</span>
-    </div>
-    <div class="nav-tab" data-page="pageEmpty" onclick="switchTab('pageEmpty')">
-      <span class="nav-icon">🔮</span>
-      <span class="nav-label">更多</span>
-    </div>
-    <div class="nav-tab" data-page="pageProfile" onclick="switchTab('pageProfile')">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">我的</span>
-    </div>
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <div class="nav-tab" data-page="pageChat" onclick="switchTab('pageChat')"><span class="nav-icon">💬</span><span class="nav-label">聊天</span></div>
+    <div class="nav-tab active" data-page="pageAI" onclick="switchTab('pageAI')"><span class="nav-icon">🤖</span><span class="nav-label">AI</span></div>
+    <div class="nav-tab" data-page="pageForum" onclick="switchTab('pageForum')"><span class="nav-icon">📰</span><span class="nav-label">论坛</span></div>
+    <div class="nav-tab" data-page="pageMore" onclick="switchTab('pageMore')"><span class="nav-icon">🔮</span><span class="nav-label">更多</span></div>
+    <div class="nav-tab" data-page="pageProfile" onclick="switchTab('pageProfile')"><span class="nav-icon">👤</span><span class="nav-label">我的</span></div>
   </nav>
 </div>
 
-<!-- Settings Modal (hidden, triggered from 我的) -->
+<!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
-    <div class="modal-header">
-      <h3>⚙ 设置</h3>
-      <button class="modal-close" id="settingsClose">✕</button>
-    </div>
+    <div class="modal-header"><h3>⚙ 设置</h3><button class="modal-close" id="settingsClose">✕</button></div>
     <div class="modal-body">
-      <!-- API Key -->
       <div class="modal-section">
         <h4>API 配置</h4>
         <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">小米 MiMo 计费方案</div>
-            <div class="setting-desc">切换会员计划或按量付费（不同方案使用不同的 Key 和接口地址）</div>
-          </div>
-          <div style="display:flex;gap:8px;margin-top:8px">
-            <button id="planTokenPlan" onclick="switchMiMoPlan('tokenPlan')" style="flex:1;padding:8px 12px;border-radius:6px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">🎫 会员计划</button>
-            <button id="planPayAsYouGo" onclick="switchMiMoPlan('payAsYouGo')" style="flex:1;padding:8px 12px;border-radius:6px;border:1.5px solid var(--border-color);background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer">💰 按量付费</button>
+          <div><div class="setting-label">小米 MiMo 计费方案</div><div class="setting-desc">不同方案使用不同的 Key 和接口</div></div>
+          <div class="plan-btns">
+            <button class="plan-btn active" id="planTP" onclick="switchPlan('tokenPlan')">🎫 会员计划</button>
+            <button class="plan-btn" id="planPAY" onclick="switchPlan('payAsYouGo')">💰 按量付费</button>
           </div>
         </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch" id="mimoTokenPlanRow">
-          <div>
-            <div class="setting-label">会员计划 Key (tp-)</div>
-            <div class="setting-desc">Base: token-plan-cn.xiaomimimo.com</div>
-          </div>
-          <input type="password" class="api-key-input" id="mimoTokenPlanKey" placeholder="tp-xxxxx">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch;display:none" id="mimoPayAsYouGoRow">
-          <div>
-            <div class="setting-label">按量付费 Key (sk-)</div>
-            <div class="setting-desc">Base: api.xiaomimimo.com</div>
-          </div>
-          <input type="password" class="api-key-input" id="mimoPayAsYouGoKey" placeholder="sk-xxxxx">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">OpenAI API Key</div>
-            <div class="setting-desc">GPT / o3 系列模型的 API 密钥</div>
-          </div>
-          <input type="password" class="api-key-input" id="openaiApiKey" placeholder="输入 OpenAI API Key">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">Anthropic API Key</div>
-            <div class="setting-desc">Claude 系列模型的 API 密钥</div>
-          </div>
-          <input type="password" class="api-key-input" id="anthropicApiKey" placeholder="输入 Anthropic API Key">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">Google API Key</div>
-            <div class="setting-desc">Gemini 系列模型的 API 密钥</div>
-          </div>
-          <input type="password" class="api-key-input" id="googleApiKey" placeholder="输入 Google API Key">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">DeepSeek API Key</div>
-            <div class="setting-desc">DeepSeek 系列模型的 API 密钥</div>
-          </div>
-          <input type="password" class="api-key-input" id="deepseekApiKey" placeholder="输入 DeepSeek API Key">
-        </div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch">
-          <div>
-            <div class="setting-label">通用 API Key</div>
-            <div class="setting-desc">通义千问、智谱、Kimi、文心等其他模型共用</div>
-          </div>
-          <input type="password" class="api-key-input" id="generalApiKey" placeholder="输入通用 API Key">
-        </div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch" id="rowTP"><div><div class="setting-label">会员计划 Key (tp-)</div><div class="setting-desc">token-plan-cn.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyTP" placeholder="tp-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch;display:none" id="rowPAY"><div><div class="setting-label">按量付费 Key (sk-)</div><div class="setting-desc">api.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyPAY" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">OpenAI API Key</div><div class="setting-desc">GPT / o3 系列</div></div><input type="password" class="api-key-input" id="keyOpenAI" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude 系列</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 系列</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">DeepSeek API Key</div></div><input type="password" class="api-key-input" id="keyDeepSeek" placeholder="输入 Key"></div>
       </div>
-
-      <!-- Theme -->
       <div class="modal-section">
         <h4>外观</h4>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">深色模式</div>
-            <div class="setting-desc">切换深色/浅色主题</div>
-          </div>
-          <div class="toggle-switch" id="darkModeToggle"></div>
-        </div>
+        <div class="setting-row"><div><div class="setting-label">深色模式</div></div><div class="toggle-switch" id="darkToggle"></div></div>
       </div>
-
-      <!-- Data -->
       <div class="modal-section">
         <h4>数据管理</h4>
-        <div class="setting-row">
-          <div>
-            <div class="setting-label">清除所有数据</div>
-            <div class="setting-desc">删除所有聊天记录和设置</div>
-          </div>
-          <button class="danger-btn" id="clearDataBtn">清除</button>
-        </div>
+        <div class="setting-row"><div><div class="setting-label">清除所有数据</div><div class="setting-desc">删除所有聊天记录和设置</div></div><button class="danger-btn" id="clearBtn">清除</button></div>
       </div>
-
-      <!-- Changelog -->
-      <div class="modal-section">
-        <h4>
-          <span>更新日志</span>
-        </h4>
-        <div class="changelog-list" id="changelogList"></div>
-      </div>
+      <div class="modal-section"><h4>更新日志</h4><div id="changelogList"></div></div>
     </div>
   </div>
 </div>
 
-<!-- Toast Container -->
-<div class="toast-container" id="toastContainer"></div>
+<!-- Toast -->
+<div class="toast-c" id="toastC"></div>
 
 <script>
-(function(){
 'use strict';
 
 /* ==================== Constants ==================== */
-const APP_VERSION = '5.5';
-const ADMIN_USER = '1234';
-const ADMIN_PASS = '1234';
-const MIMO_PLANS = {
-  tokenPlan: { name: '会员计划 (Token Plan)', baseUrl: 'https://token-plan-cn.xiaomimimo.com', keyPrefix: 'tp-' },
-  payAsYouGo: { name: '按量付费', baseUrl: 'https://api.xiaomimimo.com', keyPrefix: 'sk-' },
-};
-const MIMO_BASE = 'https://api.xiaomimimo.com';
+var APP_VERSION = '6.0';
+var ADMIN_USER = '1234';
+var ADMIN_PASS = '1234';
 
-// Provider icons via Simple Icons CDN (auto-updated, no manual assets needed)
-const PROVIDER_ICONS = {
-  '小米 MiMo':    'https://cdn.simpleicons.org/xiaomi/FF6900',
-  'OpenAI':       'https://cdn.simpleicons.org/openai/000000',
-  'Anthropic':    'https://cdn.simpleicons.org/anthropic/D4A574',
-  'Google':       'https://cdn.simpleicons.org/google/4285F4',
-  'DeepSeek':     'https://cdn.simpleicons.org/deepseek/0066FF',
-  '通义千问':      'https://cdn.simpleicons.org/alibabacloud/FF6A00',
-  '智谱AI':       'https://cdn.simpleicons.org/zhipuai/2B5CE6',
-  'Kimi':         'https://cdn.simpleicons.org/moonshot/6236FF',
-  '文心一言':      'https://cdn.simpleicons.org/baidu/2319DC',
-  '腾讯混元':      'https://cdn.simpleicons.org/tencent/07C160',
-  'MiniMax':      'https://cdn.simpleicons.org/minimax/000000',
-  '零一万物':      'https://cdn.simpleicons.org/01ai/000000',
-  '阶跃星辰':      'https://cdn.simpleicons.org/stepfun/4F46E5',
-  '百川智能':      'https://cdn.simpleicons.org/baichuan/2B5CE6',
+var MIMO_PLANS = {
+  tokenPlan: { name:'会员计划', base:'https://token-plan-cn.xiaomimimo.com' },
+  payAsYouGo: { name:'按量付费', base:'https://api.xiaomimimo.com' }
 };
 
-const MODELS = [
-  // MiMo
-  { id:'mimo-v2.5-pro', name:'MiMo v2.5 Pro', provider:'小米 MiMo', type:'chat' },
-  { id:'mimo-v2.5', name:'MiMo v2.5', provider:'小米 MiMo', type:'chat' },
-  { id:'mimo-v2.5-tts', name:'MiMo v2.5 TTS', provider:'小米 MiMo', type:'tts' },
-  { id:'mimo-v2.5-tts-voiceclone', name:'MiMo v2.5 VoiceClone', provider:'小米 MiMo', type:'voiceclone' },
-  { id:'mimo-v2.5-tts-voicedesign', name:'MiMo v2.5 VoiceDesign', provider:'小米 MiMo', type:'voicedesign' },
-  { id:'mimo-v2.5-asr', name:'MiMo v2.5 ASR', provider:'小米 MiMo', type:'asr' },
-  // OpenAI
-  { id:'gpt-4o', name:'GPT-4o', provider:'OpenAI', type:'chat' },
-  { id:'gpt-4o-mini', name:'GPT-4o Mini', provider:'OpenAI', type:'chat' },
-  { id:'o3', name:'o3', provider:'OpenAI', type:'chat' },
-  { id:'o4-mini', name:'o4-mini', provider:'OpenAI', type:'chat' },
-  // Anthropic
-  { id:'claude-opus-4-20250514', name:'Claude Opus 4', provider:'Anthropic', type:'chat' },
-  { id:'claude-sonnet-4-20250514', name:'Claude Sonnet 4', provider:'Anthropic', type:'chat' },
-  { id:'claude-3-5-haiku-20241022', name:'Claude 3.5 Haiku', provider:'Anthropic', type:'chat' },
-  // Google
-  { id:'gemini-2.5-pro', name:'Gemini 2.5 Pro', provider:'Google', type:'chat' },
-  { id:'gemini-2.5-flash', name:'Gemini 2.5 Flash', provider:'Google', type:'chat' },
-  // DeepSeek
-  { id:'deepseek-chat', name:'DeepSeek V3', provider:'DeepSeek', type:'chat' },
-  { id:'deepseek-reasoner', name:'DeepSeek R1', provider:'DeepSeek', type:'chat' },
-  // Others
-  { id:'qwen-max', name:'通义千问 Max', provider:'通义千问', type:'chat' },
-  { id:'qwen-vl-max', name:'通义千问 VL Max', provider:'通义千问', type:'chat' },
-  { id:'glm-4-plus', name:'GLM-4 Plus', provider:'智谱AI', type:'chat' },
-  { id:'moonshot-v1-128k', name:'Kimi 128K', provider:'Kimi', type:'chat' },
-  { id:'ernie-4.0-turbo-8k', name:'文心一言 4.0', provider:'文心一言', type:'chat' },
-  { id:'hunyuan-pro', name:'混元 Pro', provider:'腾讯混元', type:'chat' },
-  { id:'abab6.5s-chat', name:'MiniMax M1', provider:'MiniMax', type:'chat' },
-  { id:'yi-large', name:'Yi Large', provider:'零一万物', type:'chat' },
-  { id:'step-2-16k', name:'Step 2 16K', provider:'阶跃星辰', type:'chat' },
-  { id:'Baichuan4', name:'百川4', provider:'百川智能', type:'chat' },
+var PROVIDER_ICONS = {
+  '小米 MiMo':'https://cdn.simpleicons.org/xiaomi/FF6900',
+  'OpenAI':'https://cdn.simpleicons.org/openai/000000',
+  'Anthropic':'https://cdn.simpleicons.org/anthropic/D4A574',
+  'Google':'https://cdn.simpleicons.org/google/4285F4',
+  'DeepSeek':'https://cdn.simpleicons.org/deepseek/0066FF',
+  '通义千问':'https://cdn.simpleicons.org/alibabacloud/FF6A00',
+  '智谱AI':'https://cdn.simpleicons.org/zhipuai/2B5CE6',
+  'Kimi':'https://cdn.simpleicons.org/moonshot/6236FF',
+  '文心一言':'https://cdn.simpleicons.org/baidu/2319DC',
+  '腾讯混元':'https://cdn.simpleicons.org/tencent/07C160',
+  'MiniMax':'https://cdn.simpleicons.org/minimax/000000',
+  '零一万物':'https://cdn.simpleicons.org/01ai/000000',
+  '阶跃星辰':'https://cdn.simpleicons.org/stepfun/4F46E5',
+  '百川智能':'https://cdn.simpleicons.org/baichuan/2B5CE6'
+};
+
+var MODELS = [
+  {id:'mimo-v2.5-pro',name:'MiMo v2.5 Pro',provider:'小米 MiMo',type:'chat'},
+  {id:'mimo-v2.5',name:'MiMo v2.5',provider:'小米 MiMo',type:'chat'},
+  {id:'mimo-v2.5-tts',name:'MiMo v2.5 TTS',provider:'小米 MiMo',type:'tts'},
+  {id:'mimo-v2.5-tts-voiceclone',name:'MiMo VoiceClone',provider:'小米 MiMo',type:'voiceclone'},
+  {id:'mimo-v2.5-tts-voicedesign',name:'MiMo VoiceDesign',provider:'小米 MiMo',type:'voicedesign'},
+  {id:'mimo-v2.5-asr',name:'MiMo ASR',provider:'小米 MiMo',type:'asr'},
+  {id:'gpt-4o',name:'GPT-4o',provider:'OpenAI',type:'chat'},
+  {id:'gpt-4o-mini',name:'GPT-4o Mini',provider:'OpenAI',type:'chat'},
+  {id:'o3',name:'o3',provider:'OpenAI',type:'chat'},
+  {id:'o4-mini',name:'o4-mini',provider:'OpenAI',type:'chat'},
+  {id:'claude-opus-4-20250514',name:'Claude Opus 4',provider:'Anthropic',type:'chat'},
+  {id:'claude-sonnet-4-20250514',name:'Claude Sonnet 4',provider:'Anthropic',type:'chat'},
+  {id:'claude-3-5-haiku-20241022',name:'Claude 3.5 Haiku',provider:'Anthropic',type:'chat'},
+  {id:'gemini-2.5-pro',name:'Gemini 2.5 Pro',provider:'Google',type:'chat'},
+  {id:'gemini-2.5-flash',name:'Gemini 2.5 Flash',provider:'Google',type:'chat'},
+  {id:'deepseek-chat',name:'DeepSeek V3',provider:'DeepSeek',type:'chat'},
+  {id:'deepseek-reasoner',name:'DeepSeek R1',provider:'DeepSeek',type:'chat'},
+  {id:'qwen-max',name:'通义千问 Max',provider:'通义千问',type:'chat'},
+  {id:'qwen-vl-max',name:'通义千问 VL Max',provider:'通义千问',type:'chat'},
+  {id:'glm-4-plus',name:'GLM-4 Plus',provider:'智谱AI',type:'chat'},
+  {id:'moonshot-v1-128k',name:'Kimi 128K',provider:'Kimi',type:'chat'},
+  {id:'ernie-4.0-turbo-8k',name:'文心一言 4.0',provider:'文心一言',type:'chat'},
+  {id:'hunyuan-pro',name:'混元 Pro',provider:'腾讯混元',type:'chat'},
+  {id:'abab6.5s-chat',name:'MiniMax M1',provider:'MiniMax',type:'chat'},
+  {id:'yi-large',name:'Yi Large',provider:'零一万物',type:'chat'},
+  {id:'step-2-16k',name:'Step 2 16K',provider:'阶跃星辰',type:'chat'},
+  {id:'Baichuan4',name:'百川4',provider:'百川智能',type:'chat'}
 ];
 
-const CHANGELOG = [
-  { version:'5.1', date:'2026-07-11 02:00', major:false, items:[
-    '登录页添加注册功能（身份选择/姓名/邮箱/手机号/密码）',
-    '模型选择器添加详情展开箭头，可查看模型ID、类型、功能标签',
-  ]},
-  { version:'5.0', date:'2026-07-11 01:45', major:true, items:[
-    '全面重写UI，仿Kimi左侧边栏布局',
-    '15个厂商27个模型树状分组展示',
-    '语音合成TTS：文本+音色+语速+情绪→音频播放',
-    '语音克隆：上传参考音频+文本→克隆音色播放',
-    '语音设计：文字描述音色→生成播放',
-    '语音识别ASR：上传音频→转文字',
-    '深色/浅色主题切换',
-    '移动端响应式适配',
-    '流式输出支持',
-    '模型分组选择器',
-    '会话按时间分组显示',
-    '管理员登录系统',
-    '更新日志折叠展示',
-  ]},
-  { version:'4.0', date:'2026-06-15', items:[
-    '新增多模型支持',
-    '优化聊天界面体验',
-    '修复已知问题',
-  ]},
-  { version:'3.0', date:'2026-05-01', items:[
-    '初始版本发布',
-    '基础聊天功能',
-  ]},
+var CHANGELOG = [
+  {version:'6.0',date:'2026-07-11',major:true,items:['底部导航栏5tab：聊天/AI/论坛/更多/我的','设置、日志移到"我的"页面','MiMo双计费方案切换（会员计划/按量付费）','修正全部模型ID','多模型/辩论模式UI']},
+  {version:'5.5',date:'2026-07-11',items:['辩论模式','修复页面卡死']},
+  {version:'5.0',date:'2026-07-11',items:['全面重写UI','27个模型','语音合成/克隆/设计/识别','深色模式']}
 ];
 
 /* ==================== State ==================== */
-let state = {
-  loggedIn: false,
-  currentChatId: null,
-  currentModelId: 'mimo-v2.5-pro',
-  chats: [], // {id, title, modelId, messages:[{role,content,time}], createdAt}
-  theme: 'light',
-  apiKeys: {},
-};
+var state = { loggedIn:false, currentChatId:null, currentModelId:'mimo-v2.5-pro', chats:[], theme:'light', apiKeys:{}, multiModels:[], debateModels:[] };
 
 function loadState() {
-  try {
-    const s = localStorage.getItem('ai_chat_state');
-    if (s) {
-      const saved = JSON.parse(s);
-      state = { ...state, ...saved };
-    }
-  } catch(e) {}
-  if (!state.chats) state.chats = [];
-  if (!state.apiKeys) state.apiKeys = {};
-  // Auto-set MiMo Token Plan API key
-  if (!state.apiKeys.mimoTokenPlan) {
-    state.apiKeys.mimoTokenPlan = 'tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
-  }
-  if (!state.apiKeys.mimoPayAsYouGo) {
-    state.apiKeys.mimoPayAsYouGo = 'sk-c1m9z3z4w5hu6rqw31ngrmt5yssga636vkjjb8ktedxlepjl';
-  }
-  if (!state.apiKeys.mimoPlan) {
-    state.apiKeys.mimoPlan = 'tokenPlan'; // 'tokenPlan' or 'payAsYouGo'
-  }
-  // Backward compat: migrate old single key
-  if (state.apiKeys.mimo && !state.apiKeys.mimoTokenPlan) {
-    state.apiKeys.mimoTokenPlan = state.apiKeys.mimo;
-  }
+  try { var s=localStorage.getItem('ai_chat_state'); if(s) state={...state,...JSON.parse(s)}; } catch(e){}
+  if(!state.chats) state.chats=[];
+  if(!state.apiKeys) state.apiKeys={};
+  if(!state.multiModels) state.multiModels=[];
+  if(!state.debateModels) state.debateModels=[];
+  if(!state.apiKeys.mimoTokenPlan) state.apiKeys.mimoTokenPlan='tp-cxtuk740lcm3vbbc5rf0ujiy3noaz36qtw0ha92mb7lhpooe';
+  if(!state.apiKeys.mimoPayAsYouGo) state.apiKeys.mimoPayAsYouGo='';
+  if(!state.apiKeys.mimoPlan) state.apiKeys.mimoPlan='tokenPlan';
 }
-function saveState() {
-  try { localStorage.setItem('ai_chat_state', JSON.stringify(state)); } catch(e) {}
-}
+function saveState() { try{localStorage.setItem('ai_chat_state',JSON.stringify(state));}catch(e){} }
 
 /* ==================== Utils ==================== */
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
-
-function showToast(msg, type='info') {
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = 'toast ' + type;
-  t.textContent = msg;
-  c.appendChild(t);
-  setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+function $(id){return document.getElementById(id);}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showToast(msg,type){
+  var c=$('toastC'),t=document.createElement('div');t.className='toast '+(type||'info');t.textContent=msg;c.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove();},300);},3000);
 }
-
-function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function renderMarkdown(text){
+  var h=escapeHtml(text);
+  h=h.replace(/```(\w*)\n([\s\S]*?)```/g,'<pre><code>$2</code></pre>');
+  h=h.replace(/`([^`]+)`/g,'<code>$1</code>');
+  h=h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  h=h.replace(/^&gt; (.+)$/gm,'<blockquote>$1</blockquote>');
+  h=h.replace(/\n/g,'<br>');
+  return h;
 }
-
-function renderMarkdown(text) {
-  // Simple markdown rendering
-  let html = escapeHtml(text);
-  // Code blocks
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Italic
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // Blockquote
-  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-  // Line breaks
-  html = html.replace(/\n/g, '<br>');
-  return html;
-}
-
-function formatDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', {hour:'2-digit',minute:'2-digit'});
-}
-
-function groupChatsByDate(chats) {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const yesterday = today - 86400000;
-  const groups = { today:[], yesterday:[], earlier:[] };
-  const sorted = [...chats].sort((a,b) => {
-    const aTime = a.messages.length ? a.messages[a.messages.length-1].time : a.createdAt;
-    const bTime = b.messages.length ? b.messages[b.messages.length-1].time : b.createdAt;
-    return bTime - aTime;
-  });
-  sorted.forEach(c => {
-    const t = c.createdAt;
-    if (t >= today) groups.today.push(c);
-    else if (t >= yesterday) groups.yesterday.push(c);
-    else groups.earlier.push(c);
-  });
-  return groups;
-}
+function formatDate(ts){var d=new Date(ts);return d.toLocaleDateString('zh-CN')+' '+d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});}
 
 /* ==================== Model Helpers ==================== */
-function getModel(id) { return MODELS.find(m => m.id === id); }
-function getModelType(id) { const m = getModel(id); return m ? m.type : 'chat'; }
-function getProviderModels(provider) { return MODELS.filter(m => m.provider === provider); }
-function getProviders() {
-  const seen = new Set();
-  return MODELS.reduce((acc, m) => {
-    if (!seen.has(m.provider)) { seen.add(m.provider); acc.push(m.provider); }
-    return acc;
-  }, []);
+function getModel(id){for(var i=0;i<MODELS.length;i++){if(MODELS[i].id===id)return MODELS[i];}return null;}
+function getProviders(){var seen={},acc=[];for(var i=0;i<MODELS.length;i++){if(!seen[MODELS[i].provider]){seen[MODELS[i].provider]=1;acc.push(MODELS[i].provider);}}return acc;}
+function getProviderModels(p){return MODELS.filter(function(m){return m.provider===p;});}
+function getMiMoBase(){return MIMO_PLANS[state.apiKeys.mimoPlan||'tokenPlan'].base;}
+function getKeyForModel(m){
+  var k=state.apiKeys;
+  if(m.provider==='小米 MiMo'){var plan=k.mimoPlan||'tokenPlan';return plan==='tokenPlan'?(k.mimoTokenPlan||''):(k.mimoPayAsYouGo||'');}
+  if(m.provider==='OpenAI') return k.openai||'';
+  if(m.provider==='Anthropic') return k.anthropic||'';
+  if(m.provider==='Google') return k.google||'';
+  if(m.provider==='DeepSeek') return k.deepseek||'';
+  return k.general||'';
 }
 
 /* ==================== API Calls ==================== */
-async function callChatAPI(messages, modelId, onChunk) {
-  const model = getModel(modelId);
-  if (!model) throw new Error('模型不存在');
-
-  const apiKey = getApiKeyForModel(model);
-  if (!apiKey) throw new Error('请先在设置中配置 API Key');
-
-  const provider = model.provider;
-
-  if (provider === 'Anthropic') {
-    return callAnthropicAPI(messages, modelId, apiKey, onChunk);
-  }
-  if (provider === 'Google') {
-    return callGoogleAPI(messages, modelId, apiKey, onChunk);
-  }
-
-  // OpenAI-compatible (MiMo, OpenAI, DeepSeek, etc.)
-  let baseUrl, headers, path;
-  if (provider === '小米 MiMo') {
-    baseUrl = getMiMoBaseUrl();
-    headers = { 'Content-Type':'application/json', 'api-key': apiKey };
-    path = '/v1/chat/completions';
-  } else if (provider === 'OpenAI') {
-    baseUrl = 'https://api.openai.com';
-    headers = { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + apiKey };
-    path = '/v1/chat/completions';
-  } else if (provider === 'DeepSeek') {
-    baseUrl = 'https://api.deepseek.com';
-    headers = { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + apiKey };
-    path = '/v1/chat/completions';
-  } else {
-    // Generic OpenAI-compatible
-    baseUrl = 'https://api.openai.com';
-    headers = { 'Content-Type':'application/json', 'Authorization': 'Bearer ' + apiKey };
-    path = '/v1/chat/completions';
-  }
-
-  const body = {
-    model: modelId,
-    messages: messages.map(m => ({ role: m.role, content: m.content })),
-    stream: !!onChunk,
-  };
-
-  const resp = await fetch(baseUrl + path, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
+function callChatAPI(messages,modelId,onChunk){
+  var model=getModel(modelId);if(!model)throw new Error('模型不存在');
+  var key=getKeyForModel(model);if(!key)throw new Error('请先在设置中配置 API Key');
+  if(model.provider==='Anthropic') return callAnthropic(messages,modelId,key,onChunk);
+  if(model.provider==='Google') return callGoogle(messages,modelId,key,onChunk);
+  var base,headers;
+  if(model.provider==='小米 MiMo'){base=getMiMoBase();headers={'Content-Type':'application/json','api-key':key};}
+  else if(model.provider==='OpenAI'){base='https://api.openai.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else if(model.provider==='DeepSeek'){base='https://api.deepseek.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  else{base='https://api.openai.com';headers={'Content-Type':'application/json','Authorization':'Bearer '+key};}
+  var body={model:modelId,messages:messages.map(function(m){return{role:m.role,content:m.content};}),stream:!!onChunk};
+  return fetch(base+'/v1/chat/completions',{method:'POST',headers:headers,body:JSON.stringify(body)}).then(function(resp){
+    if(!resp.ok)return resp.text().then(function(t){throw new Error('API错误('+resp.status+'): '+t.slice(0,200));});
+    if(onChunk)return streamSSE(resp,onChunk);
+    return resp.json().then(function(d){return(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)||'';});
   });
-
-  if (!resp.ok) {
-    const errText = await resp.text().catch(() => '');
-    throw new Error(`API 错误 (${resp.status}): ${errText.slice(0,200)}`);
-  }
-
-  if (onChunk) {
-    return streamSSE(resp, onChunk);
-  } else {
-    const data = await resp.json();
-    return data.choices?.[0]?.message?.content || '';
-  }
 }
-
-async function callAnthropicAPI(messages, modelId, apiKey, onChunk) {
-  const systemMsg = messages.find(m => m.role === 'system');
-  const chatMsgs = messages.filter(m => m.role !== 'system').map(m => ({
-    role: m.role === 'assistant' ? 'assistant' : 'user',
-    content: m.content,
-  }));
-
-  const body = {
-    model: modelId,
-    max_tokens: 4096,
-    messages: chatMsgs,
-    stream: !!onChunk,
-  };
-  if (systemMsg) body.system = systemMsg.content;
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify(body),
+function callAnthropic(messages,modelId,key,onChunk){
+  var sys=messages.find(function(m){return m.role==='system';});
+  var msgs=messages.filter(function(m){return m.role!=='system';}).map(function(m){return{role:m.role==='assistant'?'assistant':'user',content:m.content};});
+  var body={model:modelId,max_tokens:4096,messages:msgs,stream:!!onChunk};
+  if(sys)body.system=sys.content;
+  return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)}).then(function(resp){
+    if(!resp.ok)return resp.text().then(function(t){throw new Error('Anthropic错误('+resp.status+'): '+t.slice(0,200));});
+    if(onChunk)return streamAnthropicSSE(resp,onChunk);
+    return resp.json().then(function(d){return(d.content&&d.content[0]&&d.content[0].text)||'';});
   });
-
-  if (!resp.ok) {
-    const errText = await resp.text().catch(() => '');
-    throw new Error(`Anthropic API 错误 (${resp.status}): ${errText.slice(0,200)}`);
-  }
-
-  if (onChunk) {
-    return streamAnthropicSSE(resp, onChunk);
-  } else {
-    const data = await resp.json();
-    return data.content?.[0]?.text || '';
-  }
 }
-
-async function callGoogleAPI(messages, modelId, apiKey, onChunk) {
-  const contents = messages.filter(m => m.role !== 'system').map(m => ({
-    role: m.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: m.content }],
-  }));
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:streamGenerateContent?key=${apiKey}&alt=sse`;
-
-  const body = { contents };
-  const sys = messages.find(m => m.role === 'system');
-  if (sys) body.systemInstruction = { parts: [{ text: sys.content }] };
-
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+function callGoogle(messages,modelId,key,onChunk){
+  var contents=messages.filter(function(m){return m.role!=='system';}).map(function(m){return{role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]};});
+  var url='https://generativelanguage.googleapis.com/v1beta/models/'+modelId+':streamGenerateContent?key='+key+'&alt=sse';
+  var body={contents:contents};
+  var sys=messages.find(function(m){return m.role==='system';});
+  if(sys)body.systemInstruction={parts:[{text:sys.content}]};
+  return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(resp){
+    if(!resp.ok)return resp.text().then(function(t){throw new Error('Google错误('+resp.status+'): '+t.slice(0,200));});
+    if(onChunk)return streamGoogleSSE(resp,onChunk);
+    return resp.json().then(function(d){return(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts&&d.candidates[0].content.parts[0]&&d.candidates[0].content.parts[0].text)||'';});
   });
-
-  if (!resp.ok) {
-    const errText = await resp.text().catch(() => '');
-    throw new Error(`Google API 错误 (${resp.status}): ${errText.slice(0,200)}`);
-  }
-
-  if (onChunk) {
-    return streamGoogleSSE(resp, onChunk);
-  } else {
-    const data = await resp.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  }
 }
-
-function streamSSE(resp, onChunk) {
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let fullText = '';
-
-  return new Promise((resolve, reject) => {
-    function pump() {
-      reader.read().then(({ done, value }) => {
-        if (done) { resolve(fullText); return; }
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim();
-            if (data === '[DONE]') { resolve(fullText); return; }
-            try {
-              const json = JSON.parse(data);
-              const delta = json.choices?.[0]?.delta?.content || '';
-              if (delta) { fullText += delta; onChunk(delta, fullText); }
-            } catch(e) {}
-          }
+function streamSSE(resp,onChunk){
+  var reader=resp.body.getReader(),decoder=new TextDecoder(),buffer='',full='';
+  return new Promise(function(resolve,reject){
+    function pump(){reader.read().then(function(r){
+      if(r.done){resolve(full);return;}
+      buffer+=decoder.decode(r.value,{stream:true});
+      var lines=buffer.split('\n');buffer=lines.pop();
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].indexOf('data: ')===0){
+          var d=lines[i].slice(6).trim();
+          if(d==='[DONE]'){resolve(full);return;}
+          try{var j=JSON.parse(d);var delta=j.choices&&j.choices[0]&&j.choices[0].delta&&j.choices[0].delta.content||'';if(delta){full+=delta;onChunk(delta,full);}}catch(e){}
         }
-        pump();
-      }).catch(reject);
-    }
+      }
+      pump();
+    }).catch(reject);}
     pump();
   });
 }
-
-function streamAnthropicSSE(resp, onChunk) {
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let fullText = '';
-
-  return new Promise((resolve, reject) => {
-    function pump() {
-      reader.read().then(({ done, value }) => {
-        if (done) { resolve(fullText); return; }
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const json = JSON.parse(line.slice(6));
-              if (json.type === 'content_block_delta') {
-                const delta = json.delta?.text || '';
-                if (delta) { fullText += delta; onChunk(delta, fullText); }
-              }
-              if (json.type === 'message_stop') { resolve(fullText); return; }
-            } catch(e) {}
-          }
+function streamAnthropicSSE(resp,onChunk){
+  var reader=resp.body.getReader(),decoder=new TextDecoder(),buffer='',full='';
+  return new Promise(function(resolve,reject){
+    function pump(){reader.read().then(function(r){
+      if(r.done){resolve(full);return;}
+      buffer+=decoder.decode(r.value,{stream:true});
+      var lines=buffer.split('\n');buffer=lines.pop();
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].indexOf('data: ')===0){
+          try{var j=JSON.parse(lines[i].slice(6));
+            if(j.type==='content_block_delta'){var t=j.delta&&j.delta.text||'';if(t){full+=t;onChunk(t,full);}}
+            if(j.type==='message_stop'){resolve(full);return;}
+          }catch(e){}
         }
-        pump();
-      }).catch(reject);
-    }
+      }
+      pump();
+    }).catch(reject);}
     pump();
   });
 }
-
-function streamGoogleSSE(resp, onChunk) {
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let fullText = '';
-
-  return new Promise((resolve, reject) => {
-    function pump() {
-      reader.read().then(({ done, value }) => {
-        if (done) { resolve(fullText); return; }
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const json = JSON.parse(line.slice(6));
-              const delta = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              if (delta) { fullText += delta; onChunk(delta, fullText); }
-            } catch(e) {}
-          }
+function streamGoogleSSE(resp,onChunk){
+  var reader=resp.body.getReader(),decoder=new TextDecoder(),buffer='',full='';
+  return new Promise(function(resolve,reject){
+    function pump(){reader.read().then(function(r){
+      if(r.done){resolve(full);return;}
+      buffer+=decoder.decode(r.value,{stream:true});
+      var lines=buffer.split('\n');buffer=lines.pop();
+      for(var i=0;i<lines.length;i++){
+        if(lines[i].indexOf('data: ')===0){
+          try{var j=JSON.parse(lines[i].slice(6));var t=j.candidates&&j.candidates[0]&&j.candidates[0].content&&j.candidates[0].content.parts&&j.candidates[0].content.parts[0]&&j.candidates[0].content.parts[0].text||'';if(t){full+=t;onChunk(t,full);}}catch(e){}
         }
-        pump();
-      }).catch(reject);
-    }
+      }
+      pump();
+    }).catch(reject);}
     pump();
   });
-}
-
-function getApiKeyForModel(model) {
-  const k = state.apiKeys;
-  if (model.provider === '小米 MiMo') {
-    const plan = k.mimoPlan || 'tokenPlan';
-    return plan === 'tokenPlan' ? (k.mimoTokenPlan || '') : (k.mimoPayAsYouGo || '');
-  }
-  if (model.provider === 'OpenAI') return k.openai || '';
-  if (model.provider === 'Anthropic') return k.anthropic || '';
-  if (model.provider === 'Google') return k.google || '';
-  if (model.provider === 'DeepSeek') return k.deepseek || '';
-  return k.general || '';
-}
-
-function getMiMoBaseUrl() {
-  const plan = state.apiKeys.mimoPlan || 'tokenPlan';
-  return MIMO_PLANS[plan].baseUrl;
 }
 
 /* ==================== UI Render ==================== */
-const $ = id => document.getElementById(id);
-
-function renderSidebar() {
-  const list = $('chatList');
-  const groups = groupChatsByDate(state.chats);
-  let html = '';
-
-  function renderGroup(label, items) {
-    if (!items.length) return '';
-    let h = `<div class="chat-group-label">${label}</div>`;
-    items.forEach(c => {
-      const active = c.id === state.currentChatId ? ' active' : '';
-      const title = escapeHtml(c.title || '新对话');
-      h += `<div class="chat-item${active}" data-id="${c.id}">
-        <span class="chat-item-title">${title}</span>
-        <button class="chat-item-delete" data-id="${c.id}">✕</button>
-      </div>`;
-    });
-    return h;
+function renderModelDD(){
+  var dd=$('modelDD'),html='';
+  var provs=getProviders();
+  for(var p=0;p<provs.length;p++){
+    var prov=provs[p],icon=PROVIDER_ICONS[prov]||'';
+    var iconHtml=icon?'<img src="'+icon+'" width="13" height="13" style="border-radius:2px;vertical-align:middle" onerror="this.style.display=\'none\'"> ':'';
+    html+='<div class="model-dd-group">'+iconHtml+escapeHtml(prov)+'</div>';
+    var models=getProviderModels(prov);
+    for(var m=0;m<models.length;m++){
+      var mod=models[m],active=mod.id===state.currentModelId?' active':'';
+      var mIcon=icon?'<img src="'+icon+'" width="16" height="16" style="border-radius:3px" onerror="this.style.display=\'none\'">':'';
+      html+='<div class="model-dd-item'+active+'" onclick="selectModel(\''+mod.id+'\')">'+mIcon+'<span>'+escapeHtml(mod.name)+'</span></div>';
+    }
   }
-
-  html += renderGroup('今天', groups.today);
-  html += renderGroup('昨天', groups.yesterday);
-  html += renderGroup('更早', groups.earlier);
-
-  if (!state.chats.length) {
-    html = '<div style="padding:20px;text-align:center;color:var(--text-tertiary);font-size:13px">暂无会话</div>';
-  }
-
-  list.innerHTML = html;
+  dd.innerHTML=html;
+}
+function selectModel(id){
+  state.currentModelId=id;saveState();updateModelName();switchInputPanel();renderModelDD();
+  $('modelDD').classList.remove('show');
+}
+function updateModelName(){
+  var m=getModel(state.currentModelId),el=$('curModelName');
+  if(m){var icon=PROVIDER_ICONS[m.provider]||'';el.innerHTML=(icon?'<img src="'+icon+'" width="16" height="16" style="border-radius:3px;vertical-align:middle;margin-right:4px" onerror="this.style.display=\'none\'">':'')+escapeHtml(m.name);}
+  else el.textContent='选择模型';
+}
+function switchInputPanel(){
+  var m=getModel(state.currentModelId),type=m?m.type:'chat';
+  $('chatInputArea').style.display=type==='chat'?'':'none';
+  $('ttsPanel').style.display=type==='tts'?'':'none';
+  $('vcPanel').style.display=type==='voiceclone'?'':'none';
+  $('vdPanel').style.display=type==='voicedesign'?'':'none';
+  $('asrPanel').style.display=type==='asr'?'':'none';
 }
 
-function renderModelDropdown() {
-  const dd = $('modelDropdown');
-  let html = '';
-  const providers = getProviders();
-  providers.forEach(prov => {
-    const iconUrl = PROVIDER_ICONS[prov] || '';
-    const iconHtml = iconUrl ? `<img src="${iconUrl}" width="14" height="14" style="border-radius:2px;vertical-align:middle" onerror="this.style.display='none'" /> ` : '';
-    html += `<div class="model-group-label">${iconHtml}${escapeHtml(prov)}</div>`;
-    getProviderModels(prov).forEach(m => {
-      const active = m.id === state.currentModelId ? ' active' : '';
-      const typeLabel = m.type === 'chat' ? '' : m.type.toUpperCase();
-      const modelIcon = iconUrl ? `<img src="${iconUrl}" width="16" height="16" style="border-radius:3px;flex-shrink:0" onerror="this.style.display='none'" />` : '';
-      const typeDesc = {chat:'文本对话',tts:'语音合成',voiceclone:'语音克隆',voicedesign:'音色设计',asr:'语音识别'}[m.type]||'';
-      html += `<div class="model-option${active}" data-id="${m.id}" style="flex-direction:column;align-items:stretch;padding:8px 12px">
-        <div style="display:flex;align-items:center;gap:6px;cursor:pointer" onclick="event.stopPropagation();selectAndClose('${m.id}')">
-          ${modelIcon}
-          <span style="flex:1;font-weight:500">${escapeHtml(m.name)}</span>
-          ${typeLabel ? `<span class="model-type-badge">${typeLabel}</span>` : ''}
-          <span id="arrow-${m.id}" style="font-size:10px;color:var(--text-tertiary);cursor:pointer;transition:transform 0.2s;transform:rotate(0deg)" onclick="event.stopPropagation();toggleModelDetail('${m.id}')">▶</span>
-        </div>
-        <div id="detail-${m.id}" style="display:none;margin-top:6px;padding:8px;background:var(--bg-primary);border-radius:6px;font-size:12px;color:var(--text-secondary);line-height:1.6">
-          <div><b>类型：</b>${typeDesc}</div>
-          <div><b>模型ID：</b><code style="font-size:11px;background:var(--bg-secondary);padding:1px 4px;border-radius:3px">${m.id}</code></div>
-          <div><b>提供商：</b>${escapeHtml(m.provider)}</div>
-        </div>
-      </div>`;
-    });
+/* ==================== Chat Mode ==================== */
+var chatMode='single';
+function setChatMode(mode){
+  chatMode=mode;
+  document.querySelectorAll('.mode-btn').forEach(function(b){
+    b.classList.toggle('active',b.dataset.mode===mode);
   });
-  dd.innerHTML = html;
-}
-
-function selectAndClose(id) {
-  state.currentModelId = id;
-  saveState();
-  updateModelName();
-  switchInputPanel();
-  $('modelDropdown').classList.remove('show');
-  renderModelDropdown();
-}
-
-function updateModelName() {
-  const m = getModel(state.currentModelId);
-  const nameEl = $('currentModelName');
-  if (m) {
-    const iconUrl = PROVIDER_ICONS[m.provider] || '';
-    const iconHtml = iconUrl ? `<img src="${iconUrl}" width="16" height="16" style="border-radius:3px;vertical-align:middle;margin-right:4px" onerror="this.style.display='none'" />` : '';
-    nameEl.innerHTML = iconHtml + escapeHtml(m.name);
-  } else {
-    nameEl.textContent = '选择模型';
+  var config=$('modeConfig');
+  if(mode==='single'){config.classList.remove('show');}
+  else{
+    config.classList.add('show');
+    $('modeConfigLabel').textContent=mode==='multi'?'选择多个模型同时对话':'选择辩论模型';
+    $('debateRoundsWrap').style.display=mode==='debate'?'':'none';
+    renderModelChips();
   }
 }
 
-function switchInputPanel() {
-  const type = getModelType(state.currentModelId);
-  $('chatInputArea').style.display = type === 'chat' ? '' : 'none';
-  $('ttsPanel').style.display = type === 'tts' ? '' : 'none';
-  $('voiceClonePanel').style.display = type === 'voiceclone' ? '' : 'none';
-  $('voiceDesignPanel').style.display = type === 'voicedesign' ? '' : 'none';
-  $('asrPanel').style.display = type === 'asr' ? '' : 'none';
-}
-
-function renderMessages() {
-  const chat = state.chats.find(c => c.id === state.currentChatId);
-  const container = $('chatMessages');
-
-  if (!chat || !chat.messages.length) {
-    container.innerHTML = `<div class="chat-welcome" id="chatWelcome">
-      <div class="chat-welcome-icon">🤖</div>
-      <h2>你好，欢迎使用第三方科技</h2>
-      <p>选择一个模型开始对话，支持文字聊天、语音合成、语音克隆等多种能力</p>
-    </div>`;
-    return;
+function renderModelChips(){
+  var chips=chatMode==='multi'?state.multiModels:state.debateModels;
+  var container=$('modelChips'),html='';
+  for(var i=0;i<chips.length;i++){
+    var m=getModel(chips[i]);
+    html+='<span class="model-chip">'+(m?escapeHtml(m.name):chips[i])+'<span class="chip-x" onclick="removeChip('+i+')">✕</span></span>';
   }
-
-  let html = '';
-  chat.messages.forEach(msg => {
-    const isUser = msg.role === 'user';
-    const cls = isUser ? 'user' : 'ai';
-    const avatar = isUser ? '你' : 'AI';
-    const content = isUser ? escapeHtml(msg.content) : renderMarkdown(msg.content);
-    const time = formatDate(msg.time);
-    html += `<div class="message-row ${cls}">
-      <div class="message-avatar">${avatar}</div>
-      <div>
-        <div class="message-bubble">${content}</div>
-        <div class="message-time">${time}</div>
-      </div>
-    </div>`;
-  });
-
-  container.innerHTML = html;
-  container.scrollTop = container.scrollHeight;
+  container.innerHTML=html;
+  renderPickerDD();
+}
+function addChip(id){
+  if(chatMode==='multi')state.multiModels.push(id);
+  else state.debateModels.push(id);
+  saveState();renderModelChips();
+}
+function removeChip(idx){
+  if(chatMode==='multi')state.multiModels.splice(idx,1);
+  else state.debateModels.splice(idx,1);
+  saveState();renderModelChips();
+}
+function renderPickerDD(){
+  var dd=$('modelPickerDD'),html='';
+  var provs=getProviders();
+  for(var p=0;p<provs.length;p++){
+    var models=getProviderModels(provs[p]);
+    for(var m=0;m<models.length;m++){
+      var mod=models[m];if(mod.type!=='chat')continue;
+      var icon=PROVIDER_ICONS[mod.provider]||'';
+      html+='<div class="model-picker-item" onclick="addChip(\''+mod.id+'\')">'+(icon?'<img src="'+icon+'" width="14" height="14" style="border-radius:2px" onerror="this.style.display=\'none\'">':'')+'<span>'+escapeHtml(mod.name)+'</span></div>';
+    }
+  }
+  dd.innerHTML=html;
 }
 
-function scrollToBottom() {
-  const area = $('chatArea');
-  setTimeout(() => { area.scrollTop = area.scrollHeight; }, 50);
+/* ==================== Messages ==================== */
+function renderMessages(){
+  var chat=getCurrentChat(),container=$('chatMsgs');
+  if(!chat||!chat.messages.length){
+    container.innerHTML='<div class="chat-welcome"><div class="chat-welcome-icon">🤖</div><h2>你好，欢迎使用第三方科技</h2><p>选择一个模型开始对话</p></div>';return;
+  }
+  var html='';
+  for(var i=0;i<chat.messages.length;i++){
+    var msg=chat.messages[i],isUser=msg.role==='user';
+    var cls=isUser?'user':'ai';
+    var content=isUser?escapeHtml(msg.content):renderMarkdown(msg.content);
+    html+='<div class="msg-row '+cls+'"><div class="msg-avatar">'+(isUser?'你':'AI')+'</div><div><div class="msg-bubble">'+content+'</div><div class="msg-time">'+formatDate(msg.time)+'</div></div></div>';
+  }
+  container.innerHTML=html;
+  var area=$('chatArea');area.scrollTop=area.scrollHeight;
 }
-
-/* ==================== Chat Logic ==================== */
-function getCurrentChat() {
-  return state.chats.find(c => c.id === state.currentChatId);
-}
-
-function ensureChat() {
-  if (!state.currentChatId || !getCurrentChat()) {
-    createNewChat();
+function getCurrentChat(){for(var i=0;i<state.chats.length;i++){if(state.chats[i].id===state.currentChatId)return state.chats[i];}return null;}
+function ensureChat(){
+  if(!state.currentChatId||!getCurrentChat()){
+    var id=genId();var chat={id:id,title:'新对话',modelId:state.currentModelId,messages:[],createdAt:Date.now()};
+    state.chats.unshift(chat);state.currentChatId=id;saveState();
   }
   return getCurrentChat();
 }
 
-function createNewChat() {
-  const id = genId();
-  const chat = { id, title:'新对话', modelId: state.currentModelId, messages:[], createdAt: Date.now() };
-  state.chats.unshift(chat);
-  state.currentChatId = id;
-  saveState();
-  renderSidebar();
-  renderMessages();
-}
+/* ==================== Send Message ==================== */
+var isGenerating=false,abortCtrl=null;
+function sendMsg(content){
+  if(!content.trim()||isGenerating)return;
+  if(chatMode==='multi') return sendMulti(content);
+  if(chatMode==='debate') return sendDebate(content);
+  var chat=ensureChat();
+  chat.messages.push({role:'user',content:content.trim(),time:Date.now()});
+  if(chat.messages.length===1)chat.title=content.slice(0,30)+(content.length>30?'...':'');
+  saveState();renderMessages();
 
-function updateChatTitle(chat) {
-  if (chat.messages.length === 1 && chat.title === '新对话') {
-    const first = chat.messages[0].content.slice(0, 30);
-    chat.title = first + (chat.messages[0].content.length > 30 ? '...' : '');
-  }
-}
-
-/* ==================== Streaming Chat ==================== */
-let isGenerating = false;
-let abortController = null;
-
-async function sendChatMessage(content) {
-  if (!content.trim() || isGenerating) return;
-  const chat = ensureChat();
-  const userMsg = { role:'user', content: content.trim(), time: Date.now() };
-  chat.messages.push(userMsg);
-  updateChatTitle(chat);
-  saveState();
-  renderMessages();
-  renderSidebar();
-  scrollToBottom();
-
-  isGenerating = true;
-  updateSendBtn();
-
-  // Add AI placeholder
-  const aiMsg = { role:'assistant', content:'', time: Date.now() };
-  chat.messages.push(aiMsg);
-
-  // Render with streaming cursor
-  const container = $('chatMessages');
-  const row = document.createElement('div');
-  row.className = 'message-row ai';
-  row.innerHTML = `<div class="message-avatar">AI</div><div>
-    <div class="message-bubble stream-cursor" id="streamBubble"></div>
-    <div class="message-time">${formatDate(Date.now())}</div>
-  </div>`;
+  isGenerating=true;updateSendBtn();
+  var aiMsg={role:'assistant',content:'',time:Date.now()};chat.messages.push(aiMsg);
+  var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
+  row.innerHTML='<div class="msg-avatar">AI</div><div><div class="msg-bubble stream-cursor" id="streamBubble"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
   container.appendChild(row);
-  scrollToBottom();
+  var area=$('chatArea');area.scrollTop=area.scrollHeight;
+  var bubble=$('streamBubble');
 
-  const bubble = $('streamBubble');
+  callChatAPI(chat.messages.slice(0,-1).map(function(m){return{role:m.role,content:m.content};}),state.currentModelId,function(chunk,full){
+    aiMsg.content=full;bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
+  }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);aiMsg.time=Date.now();})
+  .catch(function(e){if(!aiMsg.content){chat.messages.pop();row.remove();}else{bubble.classList.remove('stream-cursor');}showToast(e.message,'error');})
+  .finally(function(){isGenerating=false;abortCtrl=null;updateSendBtn();saveState();});
+}
 
-  try {
-    abortController = new AbortController();
-    const apiMessages = chat.messages.slice(0, -1).map(m => ({ role: m.role, content: m.content }));
+function sendMulti(content){
+  var chat=ensureChat();
+  chat.messages.push({role:'user',content:content.trim(),time:Date.now()});
+  if(chat.messages.length===1)chat.title=content.slice(0,30);
+  saveState();renderMessages();
+  var models=state.multiModels.length?state.multiModels:[state.currentModelId];
+  isGenerating=true;updateSendBtn();
+  var promises=[];
+  for(var i=0;i<models.length;i++){
+    (function(modelId){
+      var m=getModel(modelId);
+      var aiMsg={role:'assistant',content:'',time:Date.now(),modelId:modelId};chat.messages.push(aiMsg);
+      var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
+      row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,2):'AI')+'</div><div><div class="msg-bubble stream-cursor" id="stream-'+i+'"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+      container.appendChild(row);
+      var bubble=document.getElementById('stream-'+i);
+      var area=$('chatArea');area.scrollTop=area.scrollHeight;
+      promises.push(callChatAPI([{role:'user',content:content.trim()}],modelId,function(chunk,full){
+        aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
+      }).then(function(r){if(r&&!aiMsg.content)aiMsg.content=r;if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}})
+      .catch(function(e){if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}}));
+    })(models[i]);
+  }
+  Promise.all(promises).finally(function(){isGenerating=false;updateSendBtn();saveState();});
+}
 
-    const result = await callChatAPI(apiMessages, state.currentModelId, (chunk, full) => {
-      aiMsg.content = full;
-      bubble.innerHTML = renderMarkdown(full);
-      scrollToBottom();
+function sendDebate(content){
+  var models=state.debateModels.length?state.debateModels:[state.currentModelId];
+  if(models.length<2){showToast('辩论至少需要2个模型','error');return;}
+  var rounds=parseInt($('debateRounds').value)||3;
+  var chat=ensureChat();
+  chat.messages.push({role:'user',content:'辩论主题: '+content.trim(),time:Date.now()});
+  saveState();renderMessages();
+  isGenerating=true;updateSendBtn();
+  var context=content;
+  var round=0;
+  function doRound(){
+    if(round>=rounds){doSummary();return;}
+    var modelId=models[round%models.length];
+    var m=getModel(modelId);
+    var prompt=round===0?'辩论主题: '+content+'\n\n请发表你的观点。':'辩论主题: '+content+'\n\n其他观点:\n'+context+'\n\n请发表第'+(round+1)+'轮回应。';
+    var aiMsg={role:'assistant',content:'',time:Date.now(),modelId:modelId};chat.messages.push(aiMsg);
+    var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
+    row.innerHTML='<div class="msg-avatar">'+(m?m.name.slice(0,2):'AI')+' R'+(round+1)+'</div><div><div class="msg-bubble stream-cursor" id="debate-'+round+'"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+    container.appendChild(row);
+    var bubble=document.getElementById('debate-'+round);
+    var area=$('chatArea');area.scrollTop=area.scrollHeight;
+    callChatAPI([{role:'user',content:prompt}],modelId,function(chunk,full){
+      aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);area.scrollTop=area.scrollHeight;
+    }).then(function(r){
+      if(r&&!aiMsg.content)aiMsg.content=r;
+      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}
+      context+='\n\n【'+(m?m.name:modelId)+'】: '+aiMsg.content;
+      round++;doRound();
+    }).catch(function(e){
+      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}
+      round++;doRound();
     });
-
-    if (result && !aiMsg.content) aiMsg.content = result;
-    bubble.classList.remove('stream-cursor');
-    bubble.innerHTML = renderMarkdown(aiMsg.content);
-    aiMsg.time = Date.now();
-  } catch(e) {
-    // Remove placeholder if empty
-    if (!aiMsg.content) {
-      chat.messages.pop();
-      row.remove();
-    } else {
-      bubble.classList.remove('stream-cursor');
-    }
-    showToast(e.message, 'error');
   }
-
-  isGenerating = false;
-  abortController = null;
-  updateSendBtn();
-  saveState();
-}
-
-function stopGeneration() {
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
+  function doSummary(){
+    var prompt='辩论内容:\n'+context+'\n\n请作为裁判总结各方观点。';
+    var aiMsg={role:'assistant',content:'',time:Date.now()};chat.messages.push(aiMsg);
+    var container=$('chatMsgs'),row=document.createElement('div');row.className='msg-row ai';
+    row.innerHTML='<div class="msg-avatar">裁判</div><div><div class="msg-bubble stream-cursor" id="summary"></div><div class="msg-time">'+formatDate(Date.now())+'</div></div>';
+    container.appendChild(row);
+    var bubble=$('summary');
+    callChatAPI([{role:'user',content:prompt}],models[0],function(chunk,full){
+      aiMsg.content=full;if(bubble)bubble.innerHTML=renderMarkdown(full);
+    }).then(function(r){
+      if(r&&!aiMsg.content)aiMsg.content=r;
+      if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML=renderMarkdown(aiMsg.content);}
+    }).catch(function(e){if(bubble){bubble.classList.remove('stream-cursor');bubble.innerHTML='❌ '+e.message;}})
+    .finally(function(){isGenerating=false;updateSendBtn();saveState();});
   }
-  isGenerating = false;
-  updateSendBtn();
+  doRound();
 }
 
-function updateSendBtn() {
-  const btn = $('sendBtn');
-  btn.textContent = isGenerating ? '■' : '➤';
-  btn.disabled = false;
-}
+function updateSendBtn(){var btn=$('sendBtn');btn.textContent=isGenerating?'■':'➤';btn.disabled=false;}
 
 /* ==================== Voice Features ==================== */
-function showToastMsg(msg, type) { showToast(msg, type); }
-
-// TTS
-async function generateTTS() {
-  const text = $('ttsText').value.trim();
-  if (!text) { showToast('请输入要合成的文本', 'error'); return; }
-  const btn = $('ttsGenBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ 生成中...';
-  const result = $('ttsResult');
-
-  try {
-    const apiKey = state.apiKeys.mimo;
-    if (!apiKey) throw new Error('请先配置 MiMo API Key');
-
-    // Simulated TTS call - replace with real endpoint
-    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/speech', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'api-key': apiKey },
-      body: JSON.stringify({
-        model: 'mimo-v2.5-tts',
-        input: text,
-        voice: $('ttsVoice').value,
-        speed: parseFloat($('ttsSpeed').value),
-        emotion: $('ttsEmotion').value,
-      }),
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => '');
-      throw new Error(`TTS 错误 (${resp.status}): ${errText.slice(0,200)}`);
-    }
-
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    result.innerHTML = `<div class="audio-player-wrap">
-      <span class="audio-label">合成结果</span>
-      <audio controls src="${url}" style="flex:1"></audio>
-    </div>`;
-    showToast('语音合成成功', 'success');
-  } catch(e) {
-    showToast(e.message, 'error');
-    result.innerHTML = '';
-  }
-  btn.disabled = false; btn.innerHTML = '🎙 生成语音';
-}
-
-// Voice Clone
-async function generateVoiceClone() {
-  const text = $('vcText').value.trim();
-  const fileInput = $('vcFileInput');
-  if (!text) { showToast('请输入文本', 'error'); return; }
-  if (!fileInput.files.length) { showToast('请上传参考音频', 'error'); return; }
-
-  const btn = $('vcGenBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ 克隆中...';
-  const result = $('vcResult');
-
-  try {
-    const apiKey = state.apiKeys.mimo;
-    if (!apiKey) throw new Error('请先配置 MiMo API Key');
-
-    const formData = new FormData();
-    formData.append('model', 'mimo-v2.5-tts-voiceclone');
-    formData.append('input', text);
-    formData.append('reference_audio', fileInput.files[0]);
-
-    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/voiceclone', {
-      method: 'POST',
-      headers: { 'api-key': apiKey },
-      body: formData,
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => '');
-      throw new Error(`VoiceClone 错误 (${resp.status}): ${errText.slice(0,200)}`);
-    }
-
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    result.innerHTML = `<div class="audio-player-wrap">
-      <span class="audio-label">克隆结果</span>
-      <audio controls src="${url}" style="flex:1"></audio>
-    </div>`;
-    showToast('语音克隆成功', 'success');
-  } catch(e) {
-    showToast(e.message, 'error');
-    result.innerHTML = '';
-  }
-  btn.disabled = false; btn.innerHTML = '🧬 克隆语音';
-}
-
-// Voice Design
-async function generateVoiceDesign() {
-  const text = $('vdText').value.trim();
-  const desc = $('vdDesc').value.trim();
-  if (!text) { showToast('请输入文本', 'error'); return; }
-  if (!desc) { showToast('请输入音色描述', 'error'); return; }
-
-  const btn = $('vdGenBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ 设计中...';
-  const result = $('vdResult');
-
-  try {
-    const apiKey = state.apiKeys.mimo;
-    if (!apiKey) throw new Error('请先配置 MiMo API Key');
-
-    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/voicedesign', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'api-key': apiKey },
-      body: JSON.stringify({
-        model: 'mimo-v2.5-tts-voicedesign',
-        input: text,
-        voice_description: desc,
-      }),
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => '');
-      throw new Error(`VoiceDesign 错误 (${resp.status}): ${errText.slice(0,200)}`);
-    }
-
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    result.innerHTML = `<div class="audio-player-wrap">
-      <span class="audio-label">设计结果</span>
-      <audio controls src="${url}" style="flex:1"></audio>
-    </div>`;
-    showToast('语音设计成功', 'success');
-  } catch(e) {
-    showToast(e.message, 'error');
-    result.innerHTML = '';
-  }
-  btn.disabled = false; btn.innerHTML = '🎨 设计音色并合成';
-}
-
-// ASR
-async function generateASR() {
-  const fileInput = $('asrFileInput');
-  if (!fileInput.files.length) { showToast('请上传音频文件', 'error'); return; }
-
-  const btn = $('asrGenBtn');
-  btn.disabled = true; btn.innerHTML = '⏳ 识别中...';
-  const result = $('asrResult');
-
-  try {
-    const apiKey = state.apiKeys.mimo;
-    if (!apiKey) throw new Error('请先配置 MiMo API Key');
-
-    const formData = new FormData();
-    formData.append('model', 'mimo-v2.5-asr');
-    formData.append('file', fileInput.files[0]);
-
-    const resp = await fetch(getMiMoBaseUrl() + '/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: { 'api-key': apiKey },
-      body: formData,
-    });
-
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => '');
-      throw new Error(`ASR 错误 (${resp.status}): ${errText.slice(0,200)}`);
-    }
-
-    const data = await resp.json();
-    const text = data.text || data.result || JSON.stringify(data);
-    result.innerHTML = `<div style="padding:16px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-sm);font-size:14px;line-height:1.7">
-      <strong>识别结果：</strong><br>${escapeHtml(text)}
-    </div>`;
-    showToast('语音识别成功', 'success');
-  } catch(e) {
-    showToast(e.message, 'error');
-    result.innerHTML = '';
-  }
-  btn.disabled = false; btn.innerHTML = '🔍 开始识别';
-}
-
-/* ==================== Settings Modal ==================== */
-function renderChangelog() {
-  const list = $('changelogList');
-  let html = '';
-  CHANGELOG.forEach((log, i) => {
-    const isMajor = log.major !== false;
-    const majorLabel = isMajor ? ' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--accent);color:#fff;margin-left:4px">大更新</span>' : ' <span style="font-size:10px;padding:1px 6px;border-radius:10px;background:var(--bg-hover);color:var(--text-tertiary);margin-left:4px">小更新</span>';
-    html += `<div class="changelog-item">
-      <div style="display:flex;align-items:center;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-        <span class="version-tag">v${log.version}</span>${majorLabel}
-        <span class="changelog-date">${log.date}</span>
-        <span style="margin-left:auto;font-size:10px;color:var(--text-tertiary)">${isMajor?'▼':'▶'}</span>
-      </div>
-      <ul style="${isMajor?'':'display:none'}">${log.items.map(it => `<li>${escapeHtml(it)}</li>`).join('')}</ul>
-    </div>`;
+function setupUpload(areaId,inputId,fnameId){
+  var area=$(areaId),input=$(inputId),fname=$(fnameId);
+  area.addEventListener('click',function(){input.click();});
+  input.addEventListener('change',function(){
+    if(input.files.length){fname.textContent='已选择：'+input.files[0].name;area.classList.add('has-file');}
+    else{fname.textContent='';area.classList.remove('has-file');}
   });
-  list.innerHTML = html;
 }
-
-function loadSettingsUI() {
-  $('mimoTokenPlanKey').value = state.apiKeys.mimoTokenPlan || '';
-  $('mimoPayAsYouGoKey').value = state.apiKeys.mimoPayAsYouGo || '';
-  $('openaiApiKey').value = state.apiKeys.openai || '';
-  $('anthropicApiKey').value = state.apiKeys.anthropic || '';
-  $('googleApiKey').value = state.apiKeys.google || '';
-  $('deepseekApiKey').value = state.apiKeys.deepseek || '';
-  $('generalApiKey').value = state.apiKeys.general || '';
-  // Update plan selector
-  const plan = state.apiKeys.mimoPlan || 'tokenPlan';
-  switchMiMoPlan(plan);
-  const toggle = $('darkModeToggle');
-  if (state.theme === 'dark') toggle.classList.add('on');
-  else toggle.classList.remove('on');
-  renderChangelog();
-}
-
-function saveSettings() {
-  state.apiKeys.mimoTokenPlan = $('mimoTokenPlanKey').value.trim();
-  state.apiKeys.mimoPayAsYouGo = $('mimoPayAsYouGoKey').value.trim();
-  state.apiKeys.openai = $('openaiApiKey').value.trim();
-  state.apiKeys.anthropic = $('anthropicApiKey').value.trim();
-  state.apiKeys.google = $('googleApiKey').value.trim();
-  state.apiKeys.deepseek = $('deepseekApiKey').value.trim();
-  state.apiKeys.general = $('generalApiKey').value.trim();
-  saveState();
-}
-
-function switchMiMoPlan(plan) {
-  state.apiKeys.mimoPlan = plan;
-  saveState();
-  // Update button styles
-  const tpBtn = document.getElementById('planTokenPlan');
-  const payBtn = document.getElementById('planPayAsYouGo');
-  if (tpBtn && payBtn) {
-    if (plan === 'tokenPlan') {
-      tpBtn.style.borderColor = 'var(--accent)';
-      tpBtn.style.background = 'var(--accent-light)';
-      tpBtn.style.color = 'var(--accent)';
-      payBtn.style.borderColor = 'var(--border-color)';
-      payBtn.style.background = 'transparent';
-      payBtn.style.color = 'var(--text-secondary)';
-    } else {
-      payBtn.style.borderColor = 'var(--accent)';
-      payBtn.style.background = 'var(--accent-light)';
-      payBtn.style.color = 'var(--accent)';
-      tpBtn.style.borderColor = 'var(--border-color)';
-      tpBtn.style.background = 'transparent';
-      tpBtn.style.color = 'var(--text-secondary)';
-    }
-  }
-  // Show/hide the corresponding key input
-  const tpRow = document.getElementById('mimoTokenPlanRow');
-  const payRow = document.getElementById('mimoPayAsYouGoRow');
-  if (tpRow) tpRow.style.display = plan === 'tokenPlan' ? '' : 'none';
-  if (payRow) payRow.style.display = plan === 'payAsYouGo' ? '' : 'none';
-}
-window.switchMiMoPlan = switchMiMoPlan;
 
 /* ==================== Theme ==================== */
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', state.theme);
-  $('themeToggleBtn').textContent = state.theme === 'dark' ? '☀' : '🌙';
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',state.theme);
+  $('themeBtn').textContent=state.theme==='dark'?'☀':'🌙';
+  var ds=$('darkStatus');if(ds)ds.textContent=state.theme==='dark'?'开启':'关闭';
+  var dt=$('darkToggle');if(dt){if(state.theme==='dark')dt.classList.add('on');else dt.classList.remove('on');}
 }
 
-/* ==================== Event Bindings ==================== */
-function init() {
-  loadState();
-
-  // Check login
-  if (state.loggedIn) {
-    showApp();
-  } else {
-    $('loginPage').style.display = '';
-    $('appContainer').style.display = 'none';
+/* ==================== Settings ==================== */
+function loadSettingsUI(){
+  $('keyTP').value=state.apiKeys.mimoTokenPlan||'';
+  $('keyPAY').value=state.apiKeys.mimoPayAsYouGo||'';
+  $('keyOpenAI').value=state.apiKeys.openai||'';
+  $('keyAnthropic').value=state.apiKeys.anthropic||'';
+  $('keyGoogle').value=state.apiKeys.google||'';
+  $('keyDeepSeek').value=state.apiKeys.deepseek||'';
+  var plan=state.apiKeys.mimoPlan||'tokenPlan';
+  switchPlanUI(plan);
+  applyTheme();renderChangelog();
+}
+function saveSettings(){
+  state.apiKeys.mimoTokenPlan=$('keyTP').value.trim();
+  state.apiKeys.mimoPayAsYouGo=$('keyPAY').value.trim();
+  state.apiKeys.openai=$('keyOpenAI').value.trim();
+  state.apiKeys.anthropic=$('keyAnthropic').value.trim();
+  state.apiKeys.google=$('keyGoogle').value.trim();
+  state.apiKeys.deepseek=$('keyDeepSeek').value.trim();
+  saveState();
+}
+function switchPlan(plan){state.apiKeys.mimoPlan=plan;saveState();switchPlanUI(plan);}
+function switchPlanUI(plan){
+  var tp=$('planTP'),pay=$('planPAY');
+  if(plan==='tokenPlan'){tp.classList.add('active');pay.classList.remove('active');}
+  else{pay.classList.add('active');tp.classList.remove('active');}
+  $('rowTP').style.display=plan==='tokenPlan'?'':'none';
+  $('rowPAY').style.display=plan==='payAsYouGo'?'':'none';
+}
+function renderChangelog(){
+  var el=$('changelogList'),html='';
+  for(var i=0;i<CHANGELOG.length;i++){
+    var c=CHANGELOG[i];
+    html+='<div class="changelog-item"><span class="ver-tag">v'+c.version+'</span><span class="cl-date">'+c.date+'</span><ul>';
+    for(var j=0;j<c.items.length;j++)html+='<li>'+c.items[j]+'</li>';
+    html+='</ul></div>';
   }
+  el.innerHTML=html;
+}
+
+/* ==================== Global Functions ==================== */
+function switchTab(pageId){
+  document.querySelectorAll('.tab-page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
+  var page=$(pageId);if(page)page.classList.add('active');
+  var tab=document.querySelector('.nav-tab[data-page="'+pageId+'"]');if(tab)tab.classList.add('active');
+}
+function openSettings(){loadSettingsUI();$('settingsModal').classList.add('show');}
+function toggleDarkMode(){state.theme=state.theme==='dark'?'light':'dark';saveState();applyTheme();}
+function doLogout(){state.loggedIn=false;saveState();$('appShell').classList.remove('show');$('loginPage').style.display='';}
+
+/* ==================== Auth ==================== */
+var selectedRegTag='';
+function switchAuthTab(tab){
+  $('loginFormSection').style.display=tab==='login'?'':'none';
+  $('registerFormSection').style.display=tab==='register'?'':'none';
+  var tl=$('tabLogin'),tr=$('tabRegister');
+  if(tab==='login'){tl.style.background='var(--bg-secondary)';tl.style.color='var(--text-primary)';tl.style.fontWeight='600';tr.style.background='transparent';tr.style.color='var(--text-secondary)';tr.style.fontWeight='400';}
+  else{tr.style.background='var(--bg-secondary)';tr.style.color='var(--text-primary)';tr.style.fontWeight='600';tl.style.background='transparent';tl.style.color='var(--text-secondary)';tl.style.fontWeight='400';}
+  $('loginError').textContent='';
+}
+function selectRegTag(el){
+  document.querySelectorAll('.reg-tag').forEach(function(t){t.style.borderColor='var(--border-color)';t.style.background='var(--bg-primary)';});
+  el.style.borderColor='var(--accent)';el.style.background='rgba(59,130,246,0.1)';
+  selectedRegTag=el.dataset.tag;
+}
+
+/* ==================== Init ==================== */
+function init(){
+  loadState();
+  if(state.loggedIn){showApp();}else{$('loginPage').style.display='';$('appShell').classList.remove('show');}
 
   // Login
-  $('loginBtn').addEventListener('click', doLogin);
-  $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-  $('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginPass').focus(); });
-
-  // Sidebar (elements may not exist in tab layout)
-  var menuBtn = $('menuBtn'); if (menuBtn) menuBtn.addEventListener('click', () => {
-    var sb = $('sidebar'); if (sb) sb.classList.add('open');
-    var so = $('sidebarOverlay'); if (so) so.classList.add('show');
-  });
-  var sidebarClose = $('sidebarClose'); if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
-  var sidebarOverlay = $('sidebarOverlay'); if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeSidebar);
-
-  // New chat
-  var newChatBtn = $('newChatBtn'); if (newChatBtn) newChatBtn.addEventListener('click', () => {
-    createNewChat();
-    closeSidebar();
-  });
-
-  // Chat list click
-  var chatList = $('chatList'); if (chatList) chatList.addEventListener('click', e => {
-    const delBtn = e.target.closest('.chat-item-delete');
-    if (delBtn) {
-      const id = delBtn.dataset.id;
-      state.chats = state.chats.filter(c => c.id !== id);
-      if (state.currentChatId === id) {
-        state.currentChatId = state.chats.length ? state.chats[0].id : null;
-      }
-      saveState();
-      renderSidebar();
-      renderMessages();
-      return;
-    }
-    const item = e.target.closest('.chat-item');
-    if (item) {
-      state.currentChatId = item.dataset.id;
-      saveState();
-      renderSidebar();
-      renderMessages();
-      closeSidebar();
-    }
-  });
+  $('loginBtn').addEventListener('click',doLogin);
+  $('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+  $('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')$('loginPass').focus();});
+  $('registerBtn')&&$('registerBtn').addEventListener('click',doRegister);
 
   // Model selector
-  $('modelSelectorBtn').addEventListener('click', e => {
-    e.stopPropagation();
-    $('modelDropdown').classList.toggle('show');
+  $('modelSelBtn').addEventListener('click',function(e){e.stopPropagation();$('modelDD').classList.toggle('show');});
+  $('modelDD').addEventListener('click',function(e){e.stopPropagation();});
+  document.addEventListener('click',function(){$('modelDD').classList.remove('show');$('modelPickerDD').classList.remove('show');});
+
+  // Add model picker
+  $('addModelBtn').addEventListener('click',function(e){e.stopPropagation();$('modelPickerDD').classList.toggle('show');});
+  $('modelPickerDD').addEventListener('click',function(e){e.stopPropagation();});
+
+  // Send
+  $('sendBtn').addEventListener('click',function(){
+    if(isGenerating){isGenerating=false;updateSendBtn();return;}
+    var input=$('chatInput');sendMsg(input.value);input.value='';input.style.height='auto';
   });
-  $('modelDropdown').addEventListener('click', e => {
-    const opt = e.target.closest('.model-option');
-    if (opt) {
-      state.currentModelId = opt.dataset.id;
-      saveState();
-      updateModelName();
-      switchInputPanel();
-      renderModelDropdown();
-      $('modelDropdown').classList.remove('show');
+  $('chatInput').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();
+      if(isGenerating){isGenerating=false;updateSendBtn();return;}
+      var input=$('chatInput');sendMsg(input.value);input.value='';input.style.height='auto';
     }
   });
-  document.addEventListener('click', () => {
-    $('modelDropdown').classList.remove('show');
-  });
+  $('chatInput').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';});
 
-  // Send message
-  $('sendBtn').addEventListener('click', () => {
-    if (isGenerating) { stopGeneration(); return; }
-    const input = $('chatInput');
-    sendChatMessage(input.value);
-    input.value = '';
-    input.style.height = 'auto';
-  });
+  // Theme
+  $('themeBtn').addEventListener('click',toggleDarkMode);
+  $('darkToggle').addEventListener('click',toggleDarkMode);
 
-  $('chatInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (isGenerating) { stopGeneration(); return; }
-      const input = $('chatInput');
-      sendChatMessage(input.value);
-      input.value = '';
-      input.style.height = 'auto';
-    }
-  });
+  // Settings
+  $('settingsClose').addEventListener('click',function(){saveSettings();$('settingsModal').classList.remove('show');});
+  $('settingsModal').addEventListener('click',function(e){if(e.target===$('settingsModal')){saveSettings();$('settingsModal').classList.remove('show');}});
+  $('clearBtn').addEventListener('click',function(){if(confirm('确定清除所有数据？')){localStorage.clear();location.reload();}});
 
-  // Auto-resize textarea
-  $('chatInput').addEventListener('input', function() {
-    this.style.height = 'auto';
-    this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-  });
-
-  // TTS speed slider
-  $('ttsSpeed').addEventListener('input', function() {
-    $('ttsSpeedVal').textContent = parseFloat(this.value).toFixed(1) + 'x';
-  });
+  // TTS slider
+  $('ttsSpeed').addEventListener('input',function(){$('ttsSpeedVal').textContent=this.value+'x';});
 
   // Voice buttons
-  $('ttsGenBtn').addEventListener('click', generateTTS);
-  $('vcGenBtn').addEventListener('click', generateVoiceClone);
-  $('vdGenBtn').addEventListener('click', generateVoiceDesign);
-  $('asrGenBtn').addEventListener('click', generateASR);
+  $('ttsGenBtn').addEventListener('click',generateTTS);
+  $('vcGenBtn').addEventListener('click',generateVC);
+  $('vdGenBtn').addEventListener('click',generateVD);
+  $('asrGenBtn').addEventListener('click',generateASR);
 
-  // File upload areas
-  setupUploadArea('vcUploadArea', 'vcFileInput', 'vcFilename');
-  setupUploadArea('asrUploadArea', 'asrFileInput', 'asrFilename');
+  // Upload areas
+  setupUpload('vcUpload','vcFile','vcFname');
+  setupUpload('asrUpload','asrFile','asrFname');
 
-  // Theme toggle
-  $('themeToggleBtn').addEventListener('click', () => {
-    state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    saveState();
-    applyTheme();
-  });
-
-  // Settings modal
-  var settingsBtn = $('settingsBtn'); if (settingsBtn) settingsBtn.addEventListener('click', () => {
-    loadSettingsUI();
-    $('settingsModal').classList.add('show');
-  });
-  var changelogBtn = $('changelogBtn'); if (changelogBtn) changelogBtn.addEventListener('click', () => {
-    loadSettingsUI();
-    $('settingsModal').classList.add('show');
-  });
-  $('settingsClose').addEventListener('click', () => {
-    saveSettings();
-    $('settingsModal').classList.remove('show');
-  });
-  $('settingsModal').addEventListener('click', e => {
-    if (e.target === $('settingsModal')) {
-      saveSettings();
-      $('settingsModal').classList.remove('show');
-    }
-  });
-
-  // Dark mode toggle in settings
-  $('darkModeToggle').addEventListener('click', function() {
-    this.classList.toggle('on');
-    state.theme = this.classList.contains('on') ? 'dark' : 'light';
-    saveState();
-    applyTheme();
-  });
-
-  // Clear data
-  $('clearDataBtn').addEventListener('click', () => {
-    if (confirm('确定要清除所有数据吗？此操作不可恢复。')) {
-      localStorage.removeItem('ai_chat_state');
-      state.chats = [];
-      state.currentChatId = null;
-      state.apiKeys = {};
-      saveState();
-      renderSidebar();
-      renderMessages();
-      showToast('数据已清除', 'success');
-    }
-  });
-
-  // Initial render
-  applyTheme();
-  updateModelName();
-  switchInputPanel();
-  renderModelDropdown();
-  renderSidebar();
-  if (state.currentChatId) renderMessages();
+  // Render
+  renderModelDD();updateModelName();switchInputPanel();applyTheme();
 }
 
-function doLogin() {
-  const user = $('loginUser').value.trim();
-  const pass = $('loginPass').value.trim();
-  if (user === ADMIN_USER && pass === ADMIN_PASS) {
-    state.loggedIn = true;
-    saveState();
-    showApp();
-  } else {
-    $('loginError').textContent = '账号或密码错误';
-  }
+function doLogin(){
+  var user=$('loginUser').value.trim(),pass=$('loginPass').value.trim();
+  if(user===ADMIN_USER&&pass===ADMIN_PASS){state.loggedIn=true;saveState();showApp();}
+  else $('loginError').textContent='账号或密码错误';
+}
+function doRegister(){
+  var err=$('loginError');
+  var name=$('regName').value.trim(),email=$('regEmail').value.trim(),phone=$('regPhone').value.trim(),pass=$('regPass').value,pass2=$('regPass2').value;
+  if(!selectedRegTag){err.textContent='请选择身份';return;}
+  if(!name){err.textContent='请输入姓名';return;}
+  if(!email){err.textContent='请输入邮箱';return;}
+  if(pass.length<8){err.textContent='密码至少8位';return;}
+  if(pass!==pass2){err.textContent='两次密码不一致';return;}
+  err.style.color='#22C55E';err.textContent='注册成功！请登录';
+  setTimeout(function(){switchAuthTab('login');$('loginUser').value=email;err.style.color='';err.textContent='';},1500);
+}
+function showApp(){
+  $('loginPage').style.display='none';$('appShell').classList.add('show');
+  renderModelDD();updateModelName();switchInputPanel();applyTheme();
+  if(state.currentChatId)renderMessages();
 }
 
-function showApp() {
-  $('loginPage').style.display = 'none';
-  $('appContainer').style.display = '';
-  renderSidebar();
-  updateModelName();
-  switchInputPanel();
-  renderModelDropdown();
-  if (state.currentChatId) renderMessages();
-  applyTheme();
-  // Update profile dark mode status
-  var darkStatus = document.getElementById('darkModeStatus');
-  if (darkStatus) darkStatus.textContent = state.theme === 'dark' ? '开启' : '关闭';
+/* ==================== Voice Gen ==================== */
+function generateTTS(){
+  var text=$('ttsText').value.trim();if(!text){showToast('请输入文本','error');return;}
+  var btn=$('ttsGenBtn');btn.disabled=true;btn.innerHTML='⏳ 生成中...';
+  var key=state.apiKeys.mimoTokenPlan;if(!key){showToast('请配置MiMo Key','error');btn.disabled=false;btn.innerHTML='🎙 生成语音';return;}
+  fetch(getMiMoBase()+'/v1/audio/speech',{method:'POST',headers:{'Content-Type':'application/json','api-key':key},body:JSON.stringify({model:'mimo-v2.5-tts',input:text,voice:$('ttsVoice').value,speed:parseFloat($('ttsSpeed').value)})})
+  .then(function(r){if(!r.ok)throw new Error('TTS错误'+r.status);return r.blob();})
+  .then(function(b){$('ttsResult').innerHTML='<div class="audio-player-wrap"><audio controls src="'+URL.createObjectURL(b)+'" style="flex:1"></audio></div>';showToast('合成成功','success');})
+  .catch(function(e){showToast(e.message,'error');})
+  .finally(function(){btn.disabled=false;btn.innerHTML='🎙 生成语音';});
 }
-
-function closeSidebar() {
-  $('sidebar').classList.remove('open');
-  $('sidebarOverlay').classList.remove('show');
+function generateVC(){
+  var text=$('vcText').value.trim(),file=$('vcFile');
+  if(!text){showToast('请输入文本','error');return;}if(!file.files.length){showToast('请上传音频','error');return;}
+  var btn=$('vcGenBtn');btn.disabled=true;btn.innerHTML='⏳ 克隆中...';
+  var key=state.apiKeys.mimoTokenPlan;if(!key){showToast('请配置Key','error');btn.disabled=false;btn.innerHTML='🧬 克隆语音';return;}
+  var fd=new FormData();fd.append('model','mimo-v2.5-tts-voiceclone');fd.append('input',text);fd.append('reference_audio',file.files[0]);
+  fetch(getMiMoBase()+'/v1/audio/voiceclone',{method:'POST',headers:{'api-key':key},body:fd})
+  .then(function(r){if(!r.ok)throw new Error('错误'+r.status);return r.blob();})
+  .then(function(b){$('vcResult').innerHTML='<div class="audio-player-wrap"><audio controls src="'+URL.createObjectURL(b)+'" style="flex:1"></audio></div>';showToast('克隆成功','success');})
+  .catch(function(e){showToast(e.message,'error');})
+  .finally(function(){btn.disabled=false;btn.innerHTML='🧬 克隆语音';});
 }
-
-function setupUploadArea(areaId, inputId, filenameId) {
-  const area = $(areaId);
-  const input = $(inputId);
-  const fname = $(filenameId);
-  area.addEventListener('click', () => input.click());
-  input.addEventListener('change', () => {
-    if (input.files.length) {
-      fname.textContent = '已选择：' + input.files[0].name;
-      area.classList.add('has-file');
-    } else {
-      fname.textContent = '';
-      area.classList.remove('has-file');
-    }
-  });
+function generateVD(){
+  var text=$('vdText').value.trim(),desc=$('vdDesc').value.trim();
+  if(!text||!desc){showToast('请填写完整','error');return;}
+  var btn=$('vdGenBtn');btn.disabled=true;btn.innerHTML='⏳ 设计中...';
+  var key=state.apiKeys.mimoTokenPlan;if(!key){showToast('请配置Key','error');btn.disabled=false;btn.innerHTML='🎨 设计音色并合成';return;}
+  fetch(getMiMoBase()+'/v1/audio/voicedesign',{method:'POST',headers:{'Content-Type':'application/json','api-key':key},body:JSON.stringify({model:'mimo-v2.5-tts-voicedesign',input:text,voice_description:desc})})
+  .then(function(r){if(!r.ok)throw new Error('错误'+r.status);return r.blob();})
+  .then(function(b){$('vdResult').innerHTML='<div class="audio-player-wrap"><audio controls src="'+URL.createObjectURL(b)+'" style="flex:1"></audio></div>';showToast('成功','success');})
+  .catch(function(e){showToast(e.message,'error');})
+  .finally(function(){btn.disabled=false;btn.innerHTML='🎨 设计音色并合成';});
+}
+function generateASR(){
+  var file=$('asrFile');if(!file.files.length){showToast('请上传音频','error');return;}
+  var btn=$('asrGenBtn');btn.disabled=true;btn.innerHTML='⏳ 识别中...';
+  var key=state.apiKeys.mimoTokenPlan;if(!key){showToast('请配置Key','error');btn.disabled=false;btn.innerHTML='🔍 开始识别';return;}
+  var fd=new FormData();fd.append('model','mimo-v2.5-asr');fd.append('file',file.files[0]);
+  fetch(getMiMoBase()+'/v1/audio/transcriptions',{method:'POST',headers:{'api-key':key},body:fd})
+  .then(function(r){if(!r.ok)throw new Error('错误'+r.status);return r.json();})
+  .then(function(d){$('asrResult').innerHTML='<div style="padding:10px;background:var(--bg-secondary);border-radius:8px;font-size:13px">'+escapeHtml(d.text||JSON.stringify(d))+'</div>';showToast('识别成功','success');})
+  .catch(function(e){showToast(e.message,'error');})
+  .finally(function(){btn.disabled=false;btn.innerHTML='🔍 开始识别';});
 }
 
 /* ==================== Boot ==================== */
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
-
-// Expose functions needed by global onclick handlers
-window.getModel = getModel;
-window.getProviders = getProviders;
-window.getProviderModels = getProviderModels;
-window.selectAndClose = selectAndClose;
-window.toggleModelDetail = toggleModelDetail;
-window.setChatMode = setChatMode;
-window.sendChatMessage = sendChatMessage;
-window.renderMessages = renderMessages;
-window.renderSidebar = renderSidebar;
-window.getCurrentChat = getCurrentChat;
-window.state = state;
-window.saveState = saveState;
-window.showToast = showToast;
-window.escapeHtml = escapeHtml;
-window.renderMarkdown = renderMarkdown;
-window.renderModelDropdown = renderModelDropdown;
-window.updateModelName = updateModelName;
-window.switchInputPanel = switchInputPanel;
-window.MODELS = MODELS;
-window.PROVIDER_ICONS = PROVIDER_ICONS;
-
-})();
-
-
-// ===== Tab Navigation =====
-function switchTab(pageId) {
-  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  var page = document.getElementById(pageId);
-  if (page) page.classList.add('active');
-  var tab = document.querySelector('.nav-tab[data-page="' + pageId + '"]');
-  if (tab) tab.classList.add('active');
-}
-window.switchTab = switchTab;
-
-function openSettings() {
-  if (typeof loadSettingsUI === 'function') loadSettingsUI();
-  document.getElementById('settingsModal').classList.add('show');
-}
-window.openSettings = openSettings;
-
-function openChangelog() {
-  if (typeof loadSettingsUI === 'function') loadSettingsUI();
-  document.getElementById('settingsModal').classList.add('show');
-}
-window.openChangelog = openChangelog;
-
-function toggleDarkMode() {
-  if (typeof state !== 'undefined') {
-    state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    if (typeof saveState === 'function') saveState();
-    if (typeof applyTheme === 'function') applyTheme();
-    var status = document.getElementById('darkModeStatus');
-    if (status) status.textContent = state.theme === 'dark' ? '开启' : '关闭';
-  }
-}
-window.toggleDarkMode = toggleDarkMode;
-
-function doLogout() {
-  if (typeof state !== 'undefined') {
-    state.loggedIn = false;
-    if (typeof saveState === 'function') saveState();
-    document.getElementById('appContainer').style.display = 'none';
-    document.getElementById('loginPage').style.display = '';
-  }
-}
-window.doLogout = doLogout;
-
-
-
-// ===== Register & Auth Tab =====
-let selectedRegTag = '';
-function switchAuthTab(tab) {
-  const loginSection = document.getElementById('loginFormSection');
-  const registerSection = document.getElementById('registerFormSection');
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  if (tab === 'login') {
-    loginSection.style.display = '';
-    registerSection.style.display = 'none';
-    tabLogin.style.background = 'var(--bg-secondary)';
-    tabLogin.style.color = 'var(--text-primary)';
-    tabLogin.style.fontWeight = '600';
-    tabRegister.style.background = 'transparent';
-    tabRegister.style.color = 'var(--text-secondary)';
-    tabRegister.style.fontWeight = '400';
-  } else {
-    loginSection.style.display = 'none';
-    registerSection.style.display = '';
-    tabRegister.style.background = 'var(--bg-secondary)';
-    tabRegister.style.color = 'var(--text-primary)';
-    tabRegister.style.fontWeight = '600';
-    tabLogin.style.background = 'transparent';
-    tabLogin.style.color = 'var(--text-secondary)';
-    tabLogin.style.fontWeight = '400';
-  }
-  document.getElementById('loginError').textContent = '';
-}
-
-function selectRegTag(el) {
-  document.querySelectorAll('.reg-tag').forEach(t => {
-    t.style.borderColor = 'var(--border-color)';
-    t.style.background = 'var(--bg-primary)';
-  });
-  el.style.borderColor = 'var(--accent)';
-  el.style.background = 'rgba(59,130,246,0.1)';
-  selectedRegTag = el.dataset.tag;
-}
-
-// Register button handler
-document.getElementById('registerBtn')?.addEventListener('click', function() {
-  const err = document.getElementById('loginError');
-  const name = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const phone = document.getElementById('regPhone').value.trim();
-  const pass = document.getElementById('regPass').value;
-  const pass2 = document.getElementById('regPass2').value;
-  const remark = document.getElementById('regRemark').value.trim();
-
-  if (!selectedRegTag) { err.textContent = '请选择你的身份'; return; }
-  if (!name) { err.textContent = '请输入真实姓名'; return; }
-  if (!email) { err.textContent = '请输入邮箱'; return; }
-  if (!phone) { err.textContent = '请输入手机号'; return; }
-  if (pass.length < 8) { err.textContent = '密码至少8位'; return; }
-  if (pass !== pass2) { err.textContent = '两次密码不一致'; return; }
-
-  // Check duplicate
-  const users = state.users || [];
-  if (users.find(u => u.username === email)) { err.textContent = '该邮箱已注册'; return; }
-
-  users.push({ username: email, password: pass, role: 'user', tag: selectedRegTag, name, email, phone, remark, createdAt: Date.now() });
-  state.users = users;
-  saveState();
-  err.style.color = '#22C55E';
-  err.textContent = '注册成功！请登录';
-  setTimeout(() => {
-    switchAuthTab('login');
-    document.getElementById('loginUser').value = email;
-    err.style.color = '';
-    err.textContent = '';
-  }, 1500);
-});
-
-// Model detail expand
-function toggleModelDetail(modelId) {
-  const detail = document.getElementById('detail-' + modelId);
-  const arrow = document.getElementById('arrow-' + modelId);
-  if (!detail) return;
-  if (detail.style.display === 'none') {
-    detail.style.display = 'block';
-    if (arrow) arrow.style.transform = 'rotate(90deg)';
-  } else {
-    detail.style.display = 'none';
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
-  }
-}
-
-
-
-// ===== Chat Mode (Single / Multi / Debate) =====
-let chatMode = 'single';
-let debateModels = []; // Models selected for debate
-let debateRounds = 3;
-
-function setChatMode(mode) {
-  chatMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => {
-    b.style.background = 'transparent';
-    b.style.color = 'var(--text-secondary)';
-  });
-  const btn = {single:'modeSingle',multi:'modeMulti',debate:'modeDebate'}[mode];
-  if (btn) {
-    document.getElementById(btn).style.background = 'var(--bg-active)';
-    document.getElementById(btn).style.color = 'var(--text-primary)';
-  }
-  // Show/hide debate config
-  const debateConfig = document.getElementById('debateConfig');
-  if (debateConfig) debateConfig.style.display = mode === 'debate' ? '' : 'none';
-  // Update send button behavior
-  const sendBtn = document.getElementById('sendBtn');
-  if (sendBtn) {
-    if (mode === 'multi') sendBtn.setAttribute('data-mode', 'multi');
-    else if (mode === 'debate') sendBtn.setAttribute('data-mode', 'debate');
-    else sendBtn.removeAttribute('data-mode');
-  }
-}
-
-function addDebateModel(modelId) {
-  if (!debateModels.includes(modelId)) {
-    debateModels.push(modelId);
-    renderDebateModels();
-  }
-}
-
-function removeDebateModel(modelId) {
-  debateModels = debateModels.filter(m => m !== modelId);
-  renderDebateModels();
-}
-
-function renderDebateModels() {
-  const container = document.getElementById('debateModelList');
-  if (!container) return;
-  container.innerHTML = debateModels.map(id => {
-    const m = getModel(id);
-    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:var(--bg-active);font-size:11px;border:1px solid var(--border-color)">
-      ${m ? m.name : id}
-      <span style="cursor:pointer;color:var(--text-tertiary)" onclick="removeDebateModel('${id}')">✕</span>
-    </span>`;
-  }).join('');
-}
-
-// Multi-model: send to all selected models at once
-async function sendMultiModel(text) {
-  const chat = getCurrentChat();
-  if (!chat) return;
-  
-  chat.messages.push({ role: 'user', content: text, time: Date.now() });
-  renderMessages();
-  
-  const models = state.apiKeys.mimo ? 
-    DEFAULT_MODELS.filter(m => m.type === 'chat' && m.provider === '小米 MiMo').slice(0, 3) :
-    DEFAULT_MODELS.filter(m => m.type === 'chat').slice(0, 3);
-  
-  for (const m of models) {
-    const apiKey = getApiKeyForModel(m);
-    if (!apiKey) continue;
-    
-    chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelId: m.id, modelName: m.name, loading: true });
-    renderMessages();
-    
-    try {
-      let response = '';
-      if (m.format === 'anthropic') {
-        response = await callAnthropicAPI(chat.messages.filter(msg => msg.role === 'user' || (msg.role === 'assistant' && !msg.loading)).map(msg => ({role: msg.role, content: msg.content})), m.modelId, apiKey);
-      } else {
-        response = await callChatAPI(chat.messages.filter(msg => msg.role === 'user' || (msg.role === 'assistant' && !msg.loading)).map(msg => ({role: msg.role, content: msg.content})), m.modelId, apiKey);
-      }
-      const lastMsg = chat.messages[chat.messages.length - 1];
-      lastMsg.content = response;
-      lastMsg.loading = false;
-    } catch(e) {
-      const lastMsg = chat.messages[chat.messages.length - 1];
-      lastMsg.content = '❌ 错误: ' + e.message;
-      lastMsg.loading = false;
-    }
-    renderMessages();
-  }
-  saveState();
-}
-
-// Debate: models take turns debating
-async function sendDebate(text) {
-  const chat = getCurrentChat();
-  if (!chat) return;
-  
-  const models = debateModels.length >= 2 ? 
-    debateModels.map(id => getModel(id)).filter(Boolean) :
-    DEFAULT_MODELS.filter(m => m.type === 'chat').slice(0, 2);
-  
-  if (models.length < 2) {
-    alert('辩论模式至少需要选择2个模型');
-    return;
-  }
-  
-  chat.messages.push({ role: 'user', content: '辩论主题: ' + text, time: Date.now() });
-  renderMessages();
-  
-  let context = text;
-  
-  for (let round = 1; round <= debateRounds; round++) {
-    for (const m of models) {
-      const apiKey = getApiKeyForModel(m);
-      if (!apiKey) continue;
-      
-      const prompt = round === 1 ? 
-        '辩论主题: ' + text + '\n\n请发表你的观点。' :
-        '辩论主题: ' + text + '\n\n以下是其他参与者的观点:\n' + context + '\n\n请发表你的第' + round + '轮回应，可以反驳或补充。';
-      
-      chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelId: m.id, modelName: m.name, round: round, loading: true });
-      renderMessages();
-      
-      try {
-        let response = '';
-        if (m.format === 'anthropic') {
-          response = await callAnthropicAPI([{role: 'user', content: prompt}], m.modelId, apiKey);
-        } else {
-          response = await callChatAPI([{role: 'user', content: prompt}], m.modelId, apiKey);
-        }
-        const lastMsg = chat.messages[chat.messages.length - 1];
-        lastMsg.content = response;
-        lastMsg.loading = false;
-        context += '\n\n【' + m.name + '】: ' + response;
-      } catch(e) {
-        const lastMsg = chat.messages[chat.messages.length - 1];
-        lastMsg.content = '❌ 错误: ' + e.message;
-        lastMsg.loading = false;
-      }
-      renderMessages();
-    }
-  }
-  
-  // Summary
-  const summaryPrompt = '以下是辩论的完整内容:\n' + context + '\n\n请作为中立裁判，总结各方观点，指出共识和分歧。';
-  chat.messages.push({ role: 'assistant', content: '', time: Date.now(), modelName: '裁判总结', loading: true });
-  renderMessages();
-  
-  try {
-    const summary = await callChatAPI([{role: 'user', content: summaryPrompt}], models[0].modelId, getApiKeyForModel(models[0]));
-    const lastMsg = chat.messages[chat.messages.length - 1];
-    lastMsg.content = summary;
-    lastMsg.loading = false;
-  } catch(e) {
-    const lastMsg = chat.messages[chat.messages.length - 1];
-    lastMsg.content = '❌ 总结失败: ' + e.message;
-    lastMsg.loading = false;
-  }
-  renderMessages();
-  saveState();
-}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
 </body>
 </html>
