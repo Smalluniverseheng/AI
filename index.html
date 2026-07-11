@@ -2435,16 +2435,30 @@ function init() {
   $('loginUser').addEventListener('keydown', function(e) { if (e.key === 'Enter') $('loginPass').focus(); });
   $('registerBtn').addEventListener('click', doRegister);
 
-  // Model selector
-  $('modelSelBtn').addEventListener('click', function(e) { e.stopPropagation(); $('modelDD').classList.toggle('show'); });
+  // Model selector - with click guard to prevent immediate close
+  var ddClickGuard = false;
+  $('modelSelBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    ddClickGuard = true;
+    $('modelDD').classList.toggle('show');
+    $('modeDD').classList.remove('show');
+    setTimeout(function() { ddClickGuard = false; }, 50);
+  });
   $('modelDD').addEventListener('click', function(e) { e.stopPropagation(); });
 
   // Mode selector
-  $('modeSelBtn').addEventListener('click', function(e) { e.stopPropagation(); $('modeDD').classList.toggle('show'); });
+  $('modeSelBtn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    ddClickGuard = true;
+    $('modeDD').classList.toggle('show');
+    $('modelDD').classList.remove('show');
+    setTimeout(function() { ddClickGuard = false; }, 50);
+  });
   $('modeDD').addEventListener('click', function(e) { e.stopPropagation(); });
 
   // Close dropdowns on outside click
   document.addEventListener('click', function() {
+    if (ddClickGuard) return;
     $('modelDD').classList.remove('show');
     $('modeDD').classList.remove('show');
     $('modelPickerDD').classList.remove('show');
