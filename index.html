@@ -85,25 +85,33 @@ input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 
 .model-sel-btn:hover{background:var(--bg-active);border-color:var(--border-color);}
 .model-sel-btn .m-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;}
 .model-sel-btn .arrow{font-size:8px;color:var(--text-tertiary);transition:transform 0.2s;}
-.model-dd{position:absolute;top:calc(100% + 6px);left:0;background:var(--bg-modal);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-lg);min-width:360px;max-height:500px;overflow-y:auto;display:none;z-index:300;padding:0;animation:slideDown 0.2s ease;}
-.model-dd.show{display:block;}
-.model-dd-tabs{display:flex;gap:0;padding:8px 8px 0;border-bottom:1px solid var(--border-color);}
-.model-dd-tab{padding:6px 12px;font-size:11px;font-weight:600;color:var(--text-tertiary);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;}
-.model-dd-tab:hover{color:var(--text-primary);}
-.model-dd-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.model-dd-search{padding:8px;}
-.model-dd-search input{width:100%;padding:6px 10px;font-size:12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-primary);}
-.model-dd-body{padding:4px 8px 8px;max-height:380px;overflow-y:auto;}
-.model-dd-group{font-size:10px;font-weight:700;color:var(--text-tertiary);padding:10px 12px 4px;text-transform:uppercase;letter-spacing:0.8px;display:flex;align-items:center;gap:6px;}
-.model-dd-item{padding:8px 12px;border-radius:var(--radius-xs);cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all 0.15s;}
+.model-dd{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:var(--bg-modal);border:1px solid var(--border-color);border-radius:var(--radius);box-shadow:var(--shadow-lg);width:680px;max-width:95vw;height:440px;display:none;z-index:300;animation:slideDown 0.2s ease;overflow:hidden;}
+.model-dd.show{display:flex;}
+.model-dd-sidebar{width:160px;border-right:1px solid var(--border-color);overflow-y:auto;background:var(--bg-primary);flex-shrink:0;}
+.model-dd-sidebar-title{padding:12px 10px 6px;font-size:10px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.5px;}
+.model-dd-sidebar-item{padding:7px 10px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all 0.15s;color:var(--text-secondary);}
+.model-dd-sidebar-item:hover{background:var(--bg-hover);}
+.model-dd-sidebar-item.active{background:var(--accent-light);color:var(--accent);font-weight:600;}
+.model-dd-sidebar-item img{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+.model-dd-sidebar-item .sidebar-count{margin-left:auto;font-size:10px;color:var(--text-tertiary);}
+.model-dd-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.model-dd-search{padding:10px 12px;border-bottom:1px solid var(--border-color);}
+.model-dd-search input{width:100%;padding:7px 10px;font-size:12px;border-radius:6px;border:1px solid var(--border-color);background:var(--bg-primary);}
+.model-dd-search input:focus{border-color:var(--accent);outline:none;}
+.model-dd-body{flex:1;overflow-y:auto;padding:4px 8px 8px;}
+.model-dd-group{font-size:10px;font-weight:700;color:var(--text-tertiary);padding:10px 12px 4px;display:flex;align-items:center;gap:6px;}
+.model-dd-item{padding:7px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;display:flex;align-items:center;gap:8px;transition:all 0.15s;}
 .model-dd-item:hover{background:var(--bg-hover);}
 .model-dd-item.active{background:var(--accent-light);color:var(--accent);font-weight:600;}
-.model-dd-item img{width:18px;height:18px;border-radius:4px;flex-shrink:0;}
+.model-dd-item img{width:16px;height:16px;border-radius:3px;flex-shrink:0;}
 .model-dd-badge{font-size:9px;padding:2px 5px;border-radius:4px;font-weight:600;white-space:nowrap;}
 .model-dd-badge.vision{background:#10B981;color:#fff;}
 .model-dd-badge.thinking{background:#6366F1;color:#fff;}
+.model-dd-badge.tool{background:#F59E0B;color:#fff;}
 .model-dd-badge.ctx{background:var(--bg-active);color:var(--text-tertiary);}
-.model-dd-count{font-size:11px;color:var(--text-tertiary);padding:4px 12px;text-align:center;}
+.model-dd-badge.recommend{background:#F59E0B;color:#fff;}
+.model-dd-count{font-size:11px;color:var(--text-tertiary);padding:8px 12px;text-align:center;}
+@media(max-width:720px){.model-dd{width:95vw;}.model-dd-sidebar{width:120px;}}
 
 /* Mode Selector (Right side) */
 .mode-selector{position:relative;margin-left:auto;}
@@ -1256,25 +1264,28 @@ function streamGoogleSSE(resp, onChunk) {
    ==================== UI Render ====================
    ================================================================ */
 
-var modelDDTab = 'all'; // all, cn, intl, brand, func
+var modelDDBrand = 'all'; // all or provider name
 
 function renderModelDD() {
   var dd = $('modelDD');
   var html = '';
-  // Tabs
-  html += '<div class="model-dd-tabs">';
-  html += '<div class="model-dd-tab' + (modelDDTab==='all'?' active':'') + '" onclick="setModelDDTab(\'all\')">全部</div>';
-  html += '<div class="model-dd-tab' + (modelDDTab==='cn'?' active':'') + '" onclick="setModelDDTab(\'cn\')">🇨🇳 国内</div>';
-  html += '<div class="model-dd-tab' + (modelDDTab==='intl'?' active':'') + '" onclick="setModelDDTab(\'intl\')">🌍 国外</div>';
-  html += '<div class="model-dd-tab' + (modelDDTab==='vision'?' active':'') + '" onclick="setModelDDTab(\'vision\')">👁 视觉</div>';
-  html += '<div class="model-dd-tab' + (modelDDTab==='thinking'?' active':'') + '" onclick="setModelDDTab(\'thinking\')">🧠 思考</div>';
+  // Left sidebar
+  html += '<div class="model-dd-sidebar" id="modelDDSidebar">';
+  html += '<div class="model-dd-sidebar-title">全部模型 <span style="float:right">' + MODELS.length + '</span></div>';
+  var provs = getProviders();
+  for (var p = 0; p < provs.length; p++) {
+    var prov = provs[p];
+    var cnt = getProviderModels(prov).length;
+    var active = modelDDBrand === prov ? ' active' : '';
+    html += '<div class="model-dd-sidebar-item' + active + '" onclick="setModelDDBrand(\'' + escapeHtml(prov) + '\')">' + providerIconHtml(prov, 14) + '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(prov) + '</span><span class="sidebar-count">' + cnt + '</span></div>';
+  }
   html += '</div>';
-  // Search
+  // Right main
+  html += '<div class="model-dd-main">';
   html += '<div class="model-dd-search"><input type="text" id="modelSearchInput" placeholder="搜索模型..." oninput="filterModels()" onclick="event.stopPropagation()"></div>';
-  // Body
   html += '<div class="model-dd-body" id="modelDDBody">';
   html += renderModelList();
-  html += '</div>';
+  html += '</div></div>';
   dd.innerHTML = html;
 }
 
@@ -1284,15 +1295,11 @@ function renderModelList(filter) {
   var count = 0;
   for (var p = 0; p < provs.length; p++) {
     var prov = provs[p];
-    var isCn = PROVIDER_REGION[prov] !== false;
-    if (modelDDTab === 'cn' && !isCn) continue;
-    if (modelDDTab === 'intl' && isCn) continue;
+    if (modelDDBrand !== 'all' && modelDDBrand !== prov) continue;
     var models = getProviderModels(prov);
     var filtered = [];
     for (var m = 0; m < models.length; m++) {
       var mod = models[m];
-      if (modelDDTab === 'vision' && !mod.vision) continue;
-      if (modelDDTab === 'thinking' && !mod.thinking) continue;
       if (filter) {
         var q = filter.toLowerCase();
         if (mod.name.toLowerCase().indexOf(q) < 0 && mod.id.toLowerCase().indexOf(q) < 0 && prov.toLowerCase().indexOf(q) < 0) continue;
@@ -1300,15 +1307,16 @@ function renderModelList(filter) {
       filtered.push(mod);
     }
     if (!filtered.length) continue;
-    html += '<div class="model-dd-group">' + providerIconHtml(prov, 14) + ' ' + escapeHtml(prov) + (isCn ? ' 🇨🇳' : '') + '</div>';
+    var isCn = PROVIDER_REGION[prov] !== false;
+    html += '<div class="model-dd-group">' + providerIconHtml(prov, 14) + ' ' + escapeHtml(prov) + (isCn ? ' 🇨🇳' : ' 🌍') + ' <span style="font-weight:400;color:var(--text-tertiary)">(' + filtered.length + ')</span></div>';
     for (var m = 0; m < filtered.length; m++) {
       var mod = filtered[m];
       var active = mod.id === state.currentModelId ? ' active' : '';
       var badges = '';
-      if (mod.vision) badges += '<span class="model-dd-badge vision">视觉</span>';
-      if (mod.thinking) badges += '<span class="model-dd-badge thinking">思考</span>';
-      if (mod.ctx) badges += '<span class="model-dd-badge ctx">' + mod.ctx + 'K</span>';
-      html += '<div class="model-dd-item' + active + '" onclick="selectModel(\'' + mod.id + '\')">' + providerIconHtml(prov, 18) + '<span style="flex:1">' + escapeHtml(mod.name) + '</span>' + badges + '</div>';
+      if (mod.vision) badges += '<span class="model-dd-badge vision">识图</span> ';
+      if (mod.thinking) badges += '<span class="model-dd-badge thinking">思考</span> ';
+      if (mod.ctx && mod.ctx >= 256) badges += '<span class="model-dd-badge tool">长文本</span> ';
+      html += '<div class="model-dd-item' + active + '" onclick="selectModel(\'' + mod.id + '\')">' + providerIconHtml(prov, 16) + '<span style="flex:1">' + escapeHtml(mod.name) + '</span>' + badges + '</div>';
       count++;
     }
   }
@@ -1316,8 +1324,8 @@ function renderModelList(filter) {
   return html;
 }
 
-function setModelDDTab(tab) {
-  modelDDTab = tab;
+function setModelDDBrand(brand) {
+  modelDDBrand = brand;
   renderModelDD();
   $('modelDD').classList.add('show');
 }
