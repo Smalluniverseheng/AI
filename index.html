@@ -1938,6 +1938,28 @@ if (document.readyState === 'loading') {
   init();
 }
 
+// Expose functions needed by global onclick handlers
+window.getModel = getModel;
+window.getProviders = getProviders;
+window.getProviderModels = getProviderModels;
+window.selectAndClose = selectAndClose;
+window.toggleModelDetail = toggleModelDetail;
+window.setChatMode = setChatMode;
+window.sendChatMessage = sendChatMessage;
+window.renderMessages = renderMessages;
+window.renderSidebar = renderSidebar;
+window.getCurrentChat = getCurrentChat;
+window.state = state;
+window.saveState = saveState;
+window.showToast = showToast;
+window.escapeHtml = escapeHtml;
+window.renderMarkdown = renderMarkdown;
+window.renderModelDropdown = renderModelDropdown;
+window.updateModelName = updateModelName;
+window.switchInputPanel = switchInputPanel;
+window.MODELS = MODELS;
+window.PROVIDER_ICONS = PROVIDER_ICONS;
+
 })();
 
 
