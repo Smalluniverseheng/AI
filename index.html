@@ -913,14 +913,16 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
   <div class="modal">
     <div class="modal-header"><h3>⚙️ 设置</h3><button class="modal-close" onclick="closeSettings()">✕</button></div>
     <div class="modal-body">
+      <!-- MiMo Keys -->
       <div class="modal-section">
-        <h4>API Keys</h4>
+        <h4>🟠 小米 MiMo</h4>
         <div class="plan-btns"><div class="plan-btn active" id="planTP" onclick="switchPlan('tokenPlan')">会员计划</div><div class="plan-btn" id="planPAY" onclick="switchPlan('payAsYouGo')">按量付费</div></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch;margin-top:12px" id="rowTP"><div><div class="setting-label">会员计划 Key (tp-)</div><div class="setting-desc">token-plan-cn.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyTP" placeholder="tp-xxxxx"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch;display:none" id="rowPAY"><div><div class="setting-label">按量付费 Key (sk-)</div><div class="setting-desc">api.xiaomimimo.com</div></div><input type="password" class="api-key-input" id="keyPAY" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">OpenAI API Key</div><div class="setting-desc">GPT-4o / o3 / o4 系列</div></div><input type="password" class="api-key-input" id="keyOpenAI" placeholder="sk-xxxxx"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude Opus / Sonnet / Haiku</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
-        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 2.5 Pro / Flash</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
+      </div>
+      <!-- Domestic Models -->
+      <div class="modal-section">
+        <h4>🇨🇳 国内模型</h4>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">DeepSeek API Key</div><div class="setting-desc">deepseek-chat / deepseek-reasoner</div></div><input type="password" class="api-key-input" id="keyDeepSeek" placeholder="输入 Key"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Kimi API Key</div><div class="setting-desc">moonshot-v1 系列 · api.moonshot.cn</div></div><input type="password" class="api-key-input" id="keyKimi" placeholder="sk-xxxxx"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">通义千问 API Key</div><div class="setting-desc">qwen-max / qwen-plus · dashscope.aliyuncs.com</div></div><input type="password" class="api-key-input" id="keyQwen" placeholder="sk-xxxxx"></div>
@@ -928,8 +930,16 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">文心一言 API Key</div><div class="setting-desc">ERNIE 系列</div></div><input type="password" class="api-key-input" id="keyErnie" placeholder="输入 Key"></div>
         <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">豆包 API Key</div><div class="setting-desc">火山引擎 Doubao 系列</div></div><input type="password" class="api-key-input" id="keyDoubao" placeholder="输入 Key"></div>
       </div>
+      <!-- International Models -->
       <div class="modal-section">
-        <h4>批量导入/导出 API Keys</h4>
+        <h4>🌍 国外模型</h4>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">OpenAI API Key</div><div class="setting-desc">GPT-4o / o3 / o4 系列</div></div><input type="password" class="api-key-input" id="keyOpenAI" placeholder="sk-xxxxx"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Anthropic API Key</div><div class="setting-desc">Claude Opus / Sonnet / Haiku</div></div><input type="password" class="api-key-input" id="keyAnthropic" placeholder="输入 Key"></div>
+        <div class="setting-row" style="flex-direction:column;align-items:stretch"><div><div class="setting-label">Google API Key</div><div class="setting-desc">Gemini 2.5 Pro / Flash</div></div><input type="password" class="api-key-input" id="keyGoogle" placeholder="输入 Key"></div>
+      </div>
+      <!-- Import/Export -->
+      <div class="modal-section">
+        <h4>📁 批量导入/导出</h4>
         <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px">
           支持 .txt (key=value 格式) 或 .json 格式导入。空行和以 # 开头的行会被忽略。
         </div>
@@ -942,9 +952,10 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
         </div>
         <div id="batchImportResult" style="margin-top:8px;font-size:12px"></div>
       </div>
+      <!-- Data Management -->
       <div class="modal-section">
-        <h4>数据</h4>
-        <div class="setting-row"><span class="setting-label">清除所有数据</span><button class="danger-btn" id="clearBtn">清除</button></div>
+        <h4>🗑 数据管理</h4>
+        <div class="setting-row"><span class="setting-label">清除所有本地数据</span><button class="danger-btn" id="clearBtn">清除</button></div>
       </div>
     </div>
   </div>
