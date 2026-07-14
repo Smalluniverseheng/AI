@@ -357,7 +357,7 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
 .upload-filename { font-size: 12px; color: var(--accent); margin-top: 4px; font-weight: 500; }
 
 /* Modal */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 999; display: none; align-items: center; justify-content: center; padding: 20px; }
 .modal-overlay.show { display: flex; }
 .modal { background: var(--bg-surface); border-radius: var(--radius-xl); border: 1px solid var(--border-color); width: 100%; max-width: 560px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow-xl); }
 .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
@@ -444,6 +444,55 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
 .hamburger-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
 
 /* Responsive - Watch & Small Devices */
+
+/* ==================== BOTTOM NAVIGATION ==================== */
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: calc(56px + env(safe-area-inset-bottom, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--bg-surface); border-top: 1px solid var(--border-color); z-index: 50; }
+.bottom-nav-inner { display: flex; align-items: center; justify-content: space-around; height: 56px; }
+.bottom-tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; height: 100%; border: none; background: none; color: var(--text-tertiary); font-size: 10px; cursor: pointer; transition: color 0.2s; -webkit-tap-highlight-color: transparent; }
+.bottom-tab .tab-icon { font-size: 20px; line-height: 1; }
+.bottom-tab.active { color: var(--accent); }
+.bottom-tab:active { opacity: 0.7; }
+
+/* Profile page */
+.profile-page { display: none; flex-direction: column; height: 100%; overflow-y: auto; background: var(--bg-page); padding-bottom: 80px; }
+.profile-page.show { display: flex; }
+.profile-header { padding: 32px 20px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+.profile-avatar-lg { width: 72px; height: 72px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 12px; }
+.profile-name-lg { font-size: 18px; font-weight: 600; }
+.profile-tag-lg { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+.profile-section { padding: 16px; }
+.profile-section-title { font-size: 12px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.profile-card { background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-color); overflow: hidden; }
+.profile-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-light); cursor: pointer; transition: background 0.15s; }
+.profile-item:last-child { border-bottom: none; }
+.profile-item:hover { background: var(--bg-hover); }
+.profile-item-left { display: flex; align-items: center; gap: 12px; }
+.profile-item-icon { font-size: 20px; width: 28px; text-align: center; }
+.profile-item-text { font-size: 14px; color: var(--text-primary); }
+.profile-item-arrow { color: var(--text-tertiary); font-size: 14px; }
+.profile-item-value { font-size: 13px; color: var(--text-secondary); }
+
+/* Model page */
+.model-page { display: none; flex-direction: column; height: 100%; overflow-y: auto; background: var(--bg-page); padding: 16px; padding-bottom: 80px; }
+.model-page.show { display: flex; }
+.model-page-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+.model-provider-group { margin-bottom: 20px; }
+.model-provider-header { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
+.model-provider-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); margin-bottom: 6px; border: 1px solid var(--border-light); }
+.model-provider-item-name { font-size: 13px; font-weight: 500; }
+.model-provider-item-badges { display: flex; gap: 4px; }
+
+/* Discover page */
+.discover-page { display: none; flex-direction: column; height: 100%; overflow-y: auto; background: var(--bg-page); padding: 16px; padding-bottom: 80px; }
+.discover-page.show { display: flex; }
+.discover-title { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+.discover-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.discover-card { background: var(--bg-surface); border-radius: var(--radius-lg); padding: 16px; text-align: center; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; }
+.discover-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.discover-card-icon { font-size: 32px; margin-bottom: 8px; }
+.discover-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.discover-card-desc { font-size: 12px; color: var(--text-tertiary); }
+
 @media (max-width: 360px) {
   .login-page { padding: 8px; align-items: flex-start; background: #667eea; }
   .login-card { padding: 20px 16px; border-radius: var(--radius-lg); }
@@ -484,6 +533,7 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
 </style>
 </head>
 <body>
+<input type="file" id="persistentImportInput" accept=".json,.md,.txt" style="display:none" onchange="handleImportFile(this)">
 <!-- ==================== LOGIN PAGE ==================== -->
 <div id="loginPage" class="login-page">
   <div class="login-card">
@@ -589,7 +639,7 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
       </div>
       <div class="topbar-right">
         <button class="topbar-btn" id="exportBtn" onclick="exportChat('markdown')" title="导出对话">📤</button>
-        <button class="topbar-btn" onclick="openSettings()" title="设置">⚙️</button>
+        <button class="topbar-btn" id="settingsBtn" onclick="openSettings()" title="设置">⚙️</button>
         <button class="topbar-btn" onclick="toggleDarkMode()" title="切换主题" id="themeBtn">🌙</button>
       </div>
     </div>
@@ -663,6 +713,114 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
       </div>
     </div>
 
+    <!-- Profile Page -->
+    <div class="profile-page" id="profilePage">
+      <div class="profile-header">
+        <div class="profile-avatar-lg" id="profileAvatar">👤</div>
+        <div class="profile-name-lg" id="profileName">未登录</div>
+        <div class="profile-tag-lg" id="profileTag">点击头像切换</div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-section-title">外观</div>
+        <div class="profile-card">
+          <div class="profile-item" onclick="toggleDarkMode()">
+            <div class="profile-item-left"><span class="profile-item-icon">🌙</span><span class="profile-item-text">主题</span></div>
+            <span class="profile-item-value" id="themeValue">跟随系统</span>
+          </div>
+          <div class="profile-item" onclick="showToast('多语言功能开发中', 'info')">
+            <div class="profile-item-left"><span class="profile-item-icon">🌐</span><span class="profile-item-text">语言</span></div>
+            <span class="profile-item-value">简体中文</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-section-title">账户</div>
+        <div class="profile-card">
+          <div class="profile-item" onclick="openSettings()">
+            <div class="profile-item-left"><span class="profile-item-icon">🔑</span><span class="profile-item-text">API Key 管理</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+          <div class="profile-item" onclick="openProfileModal()">
+            <div class="profile-item-left"><span class="profile-item-icon">👤</span><span class="profile-item-text">个人信息</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-section-title">数据</div>
+        <div class="profile-card">
+          <div class="profile-item" onclick="exportAllHistory()">
+            <div class="profile-item-left"><span class="profile-item-icon">📥</span><span class="profile-item-text">导出对话</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+          <div class="profile-item" onclick="triggerImport()">
+            <div class="profile-item-left"><span class="profile-item-icon">📤</span><span class="profile-item-text">导入对话</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+          <div class="profile-item" onclick="clearAllHistory()">
+            <div class="profile-item-left"><span class="profile-item-icon">🗑</span><span class="profile-item-text">清除数据</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+        </div>
+      </div>
+      <div class="profile-section">
+        <div class="profile-section-title">关于</div>
+        <div class="profile-card">
+          <div class="profile-item" onclick="showChangelog()">
+            <div class="profile-item-left"><span class="profile-item-icon">📋</span><span class="profile-item-text">更新日志</span></div>
+            <span class="profile-item-arrow">›</span>
+          </div>
+          <div class="profile-item">
+            <div class="profile-item-left"><span class="profile-item-icon">ℹ️</span><span class="profile-item-text">版本</span></div>
+            <span class="profile-item-value">v3.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model Page -->
+    <div class="model-page" id="modelPage">
+      <div class="model-page-title">🤖 模型列表</div>
+      <div id="modelPageContent"></div>
+    </div>
+
+    <!-- Discover Page -->
+    <div class="discover-page" id="discoverPage">
+      <div class="discover-title">✨ 发现</div>
+      <div class="discover-grid">
+        <div class="discover-card" onclick="setChatMode('single');switchBottomTab('chat')">
+          <div class="discover-card-icon">💬</div>
+          <div class="discover-card-title">单模型对话</div>
+          <div class="discover-card-desc">与一个 AI 深入交流</div>
+        </div>
+        <div class="discover-card" onclick="setChatMode('multi');switchBottomTab('chat')">
+          <div class="discover-card-icon">📋</div>
+          <div class="discover-card-title">多模型对比</div>
+          <div class="discover-card-desc">多个 AI 同时回答</div>
+        </div>
+        <div class="discover-card" onclick="setChatMode('debate');switchBottomTab('chat')">
+          <div class="discover-card-icon">⚔️</div>
+          <div class="discover-card-title">辩论模式</div>
+          <div class="discover-card-desc">AI 正反方辩论</div>
+        </div>
+        <div class="discover-card" onclick="setChatMode('collab');switchBottomTab('chat')">
+          <div class="discover-card-icon">🤝</div>
+          <div class="discover-card-title">协同合作</div>
+          <div class="discover-card-desc">多 AI 协作完成任务</div>
+        </div>
+        <div class="discover-card" onclick="showToast('语音功能开发中', 'info')">
+          <div class="discover-card-icon">🎙</div>
+          <div class="discover-card-title">语音合成</div>
+          <div class="discover-card-desc">文本转语音</div>
+        </div>
+        <div class="discover-card" onclick="showToast('语音功能开发中', 'info')">
+          <div class="discover-card-icon">🧬</div>
+          <div class="discover-card-title">语音克隆</div>
+          <div class="discover-card-desc">克隆你的声音</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Input Area -->
     <div class="input-area" id="chatInputArea">
       <div id="imgPreview" style="max-width:800px;margin:0 auto 8px"></div>
@@ -721,6 +879,28 @@ body { font-family: var(--font-sans); background: var(--bg-page); color: var(--t
         <div class="upload-area" id="asrUpload"><input type="file" id="asrFile" accept="audio/*"><div class="upload-icon">🎤</div><div class="upload-text">点击上传音频文件</div><div class="upload-filename" id="asrFname"></div></div>
         <button class="voice-gen-btn" id="asrGenBtn">🔍 开始识别</button>
         <div id="asrResult"></div>
+      </div>
+    </div>
+  
+    <!-- Bottom Navigation (Mobile Only) -->
+    <div class="bottom-nav" id="bottomNav">
+      <div class="bottom-nav-inner">
+        <button class="bottom-tab active" data-tab="chat" onclick="switchBottomTab('chat')">
+          <span class="tab-icon">💬</span>
+          <span>对话</span>
+        </button>
+        <button class="bottom-tab" data-tab="model" onclick="switchBottomTab('model')">
+          <span class="tab-icon">🤖</span>
+          <span>模型</span>
+        </button>
+        <button class="bottom-tab" data-tab="discover" onclick="switchBottomTab('discover')">
+          <span class="tab-icon">✨</span>
+          <span>发现</span>
+        </button>
+        <button class="bottom-tab" data-tab="profile" onclick="switchBottomTab('profile')">
+          <span class="tab-icon">👤</span>
+          <span>我的</span>
+        </button>
       </div>
     </div>
   </div>
