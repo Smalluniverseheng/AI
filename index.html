@@ -136,7 +136,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
 .input-hint { text-align: center; font-size: 12px; color: var(--kimi-text-muted); margin-top: 10px; }
 
 /* Model Dropdown */
-.model-dd { position: absolute; top: 48px; left: 20px; width: 360px; max-height: 480px; overflow-y: auto; background: var(--kimi-glass); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.5); border-radius: var(--kimi-radius-lg); box-shadow: 0 8px 40px rgba(0,0,0,0.08); z-index: 100; padding: 12px; }
+.model-dd { position: absolute; top: 48px; left: 20px; width: 360px; max-height: 480px; overflow-y: auto; background: var(--kimi-glass); backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.5); border-radius: var(--kimi-radius-lg); box-shadow: 0 8px 40px rgba(0,0,0,0.08); z-index: 100; padding: 12px; display: none; }
+.model-dd.show { display: block; }
 .model-dd-search { width: 100%; padding: 10px 14px; border: 1px solid var(--kimi-border); border-radius: 12px; font-size: 13px; margin-bottom: 10px; outline: none; background: #fff; }
 .model-dd-search:focus { border-color: var(--kimi-accent); box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
 .model-dd-group { margin-bottom: 8px; }
@@ -737,7 +738,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helv
    Debate: 3 formats (Standard, Fast, Battle) with stage badges
    ================================================================ */
 
-var ICON_CDN = 'https://cdn.simpleicons.org/';
+// Lobe Icons CDN - https://github.com/lobehub/lobe-icons (MIT License)
+var ICON_CDN = 'https://unpkg.com/@lobehub/icons-static-png@latest/light/';
 var MIMO_PLANS = { tokenPlan:{name:'会员计划',base:'https://token-plan-cn.xiaomimimo.com'}, payAsYouGo:{name:'按量付费',base:'https://api.xiaomimimo.com'} };
 
 var PROVIDER_CONFIG = {
@@ -755,7 +757,31 @@ var PROVIDER_CONFIG = {
   '火山引擎':{baseURL:'https://ark.cn-beijing.volces.com/api',headers:function(k){return{'Content-Type':'application/json','Authorization':'Bearer '+k};},endpoint:'/v1/chat/completions'}
 };
 
-var PROVIDER_ICONS = {'小米 MiMo':ICON_CDN+'xiaomi','OpenAI':ICON_CDN+'openai','Anthropic':ICON_CDN+'anthropic','Google':ICON_CDN+'google','DeepSeek':ICON_CDN+'deepseek','通义千问':ICON_CDN+'alibabadotcom','智谱AI':ICON_CDN+'zhipu','Kimi':ICON_CDN+'moonshot','文心一言':ICON_CDN+'baidu','腾讯混元':ICON_CDN+'tencentqq','MiniMax':ICON_CDN+'minimax','零一万物':ICON_CDN+'01','阶跃星辰':ICON_CDN+'stepfun','百川智能':ICON_CDN+'baichuan','火山引擎':ICON_CDN+'bytedance','Mistral':ICON_CDN+'mistral','Meta':ICON_CDN+'meta','Cohere':ICON_CDN+'cohere','xAI':ICON_CDN+'xai','Groq':ICON_CDN+'groq','昆仑万维':ICON_CDN+'kunlun','商汤':ICON_CDN+'sensetime','讯飞星火':ICON_CDN+'iflytek'};
+var PROVIDER_ICONS = {
+  '小米 MiMo': ICON_CDN+'xiaomi.png',
+  'OpenAI': ICON_CDN+'openai.png',
+  'Anthropic': ICON_CDN+'anthropic.png',
+  'Google': ICON_CDN+'google.png',
+  'DeepSeek': ICON_CDN+'deepseek.png',
+  '通义千问': ICON_CDN+'qwen.png',
+  '智谱AI': ICON_CDN+'zhipu.png',
+  'Kimi': ICON_CDN+'moonshot.png',
+  '文心一言': ICON_CDN+'ernie.png',
+  '腾讯混元': ICON_CDN+'hunyuan.png',
+  'MiniMax': ICON_CDN+'minimax.png',
+  '零一万物': ICON_CDN+'yi.png',
+  '阶跃星辰': ICON_CDN+'stepfun.png',
+  '百川智能': ICON_CDN+'baichuan.png',
+  '火山引擎': ICON_CDN+'doubao.png',
+  'Mistral': ICON_CDN+'mistral.png',
+  'Meta': ICON_CDN+'meta.png',
+  'Cohere': ICON_CDN+'cohere.png',
+  'xAI': ICON_CDN+'xai.png',
+  'Groq': ICON_CDN+'groq.png',
+  '昆仑万维': ICON_CDN+'tencent.png',
+  '商汤': ICON_CDN+'sensetime.png',
+  '讯飞星火': ICON_CDN+'spark.png'
+};
 var PROVIDER_REGION = {'小米 MiMo':true,'OpenAI':false,'Anthropic':false,'Google':false,'DeepSeek':true,'通义千问':true,'智谱AI':true,'Kimi':true,'文心一言':true,'腾讯混元':true,'MiniMax':true,'零一万物':true,'阶跃星辰':true,'百川智能':true,'火山引擎':true,'Mistral':false,'Meta':false,'Cohere':false,'xAI':false,'Groq':false,'昆仑万维':true,'商汤':true,'月之暗面':true,'讯飞星火':true};
 var PROVIDER_COLORS = {'小米 MiMo':'#FF6900','OpenAI':'#10A37F','Anthropic':'#D4A574','Google':'#4285F4','DeepSeek':'#0066FF','通义千问':'#FF6A00','智谱AI':'#2B5CE6','Kimi':'#6236FF','文心一言':'#2319DC','腾讯混元':'#07C160','MiniMax':'#000000','零一万物':'#000000','阶跃星辰':'#4F46E5','百川智能':'#2B5CE6','火山引擎':'#3B7DF0','Mistral':'#FF7000','Meta':'#0668E1','Cohere':'#39594D','xAI':'#333333','Groq':'#F55036'};
 
@@ -836,7 +862,7 @@ function fetchWithRetry(url, options, retries) { retries = retries || 1; return 
 function getModel(id) { for (var i = 0; i < MODELS.length; i++) { if (MODELS[i].id === id) return MODELS[i]; } return null; }
 function getProviders() { var seen = {}, acc = []; for (var i = 0; i < MODELS.length; i++) { if (!seen[MODELS[i].provider]) { seen[MODELS[i].provider] = 1; acc.push(MODELS[i].provider); } } return acc; }
 function getProviderModels(p) { return MODELS.filter(function(m) { return m.provider === p; }); }
-function providerIconHtml(prov, size) { size = size || 16; var url = PROVIDER_ICONS[prov], color = PROVIDER_COLORS[prov] || '#666', letter = prov.charAt(0); var html = '<span style="display:inline-flex;align-items:center;justify-content:center;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';color:#fff;font-size:' + Math.round(size * 0.55) + 'px;font-weight:700;flex-shrink:0;position:relative;overflow:hidden">'; if (url) html += '<img src="' + url + '" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\'">'; html += letter + '</span>'; return html; }
+function providerIconHtml(prov, size) { size = size || 16; var url = PROVIDER_ICONS[prov]; if (url) return '<img src="' + url + '" style="width:' + size + 'px;height:' + size + 'px;border-radius:' + Math.round(size * 0.25) + 'px;object-fit:contain;flex-shrink:0;background:#fff;" onerror="this.src=\'\';this.style.display=\'none\'">'; var color = PROVIDER_COLORS[prov] || '#666', letter = prov.charAt(0); return '<span style="display:inline-flex;align-items:center;justify-content:center;width:' + size + 'px;height:' + size + 'px;border-radius:50%;background:' + color + ';color:#fff;font-size:' + Math.round(size * 0.55) + 'px;font-weight:700;flex-shrink:0">' + letter + '</span>'; }
 function getMiMoBase() { return MIMO_PLANS[state.apiKeys.mimoPlan || 'tokenPlan'].base; }
 function getKeyForModel(m) { var k = state.apiKeys; var map = { '小米 MiMo': function() { var plan = k.mimoPlan || 'tokenPlan'; return plan === 'tokenPlan' ? (k.mimoTokenPlan || '') : (k.mimoPayAsYouGo || ''); }, 'OpenAI': function() { return k.openai || ''; }, 'Anthropic': function() { return k.anthropic || ''; }, 'Google': function() { return k.google || ''; }, 'DeepSeek': function() { return k.deepseek || ''; }, 'Kimi': function() { return k.kimi || ''; }, '通义千问': function() { return k.qwen || ''; }, '智谱AI': function() { return k.glm || ''; }, '文心一言': function() { return k.ernie || ''; }, '腾讯混元': function() { return k.hunyuan || ''; }, 'MiniMax': function() { return k.minimax || ''; }, '火山引擎': function() { return k.doubao || ''; } }; return (map[m.provider] || function() { return k.general || ''; })(); }
 function getCurrentChat() { if (!state.chats) return null; for (var i = 0; i < state.chats.length; i++) { if (state.chats[i].id === state.currentChatId) return state.chats[i]; } return null; }
