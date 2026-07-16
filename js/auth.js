@@ -63,19 +63,19 @@ function switchLoginTab(tab) {
 }
 
 function handleLogin() {
-  const phone = document.getElementById('loginPhone')?.value?.trim() || '';
-  const password = document.getElementById('loginPassword')?.value?.trim() || '';
-  if (!phone || !password) { showLoginError('请输入手机号和密码'); return; }
+  const phone = document.getElementById('loginUser')?.value?.trim() || '';
+  const password = document.getElementById('loginPass')?.value?.trim() || '';
+  if (!phone || !password) { showLoginError('请输入账号和密码'); return; }
   const result = AUTH.login(phone, password);
   if (result.ok) { showApp(); showToast('欢迎回来！', 'success'); } else { showLoginError(result.error); }
 }
 
 function handleRegister() {
   const phone = document.getElementById('regPhone')?.value?.trim() || '';
-  const password = document.getElementById('regPassword')?.value?.trim() || '';
+  const password = document.getElementById('regPass')?.value?.trim() || '';
   const name = document.getElementById('regName')?.value?.trim() || '';
-  const age = document.getElementById('regAge')?.value?.trim() || '';
-  const gender = document.getElementById('regGender')?.value?.trim() || '';
+  const age = '';
+  const gender = '';
   const interests = [];
   document.querySelectorAll('.reg-tag.active').forEach(t => { const v = t.getAttribute('data-value'); if (v) interests.push(v); });
   if (!phone || !password || !name) { showRegError('请填写完整信息'); return; }

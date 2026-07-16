@@ -91,20 +91,20 @@
     // Login form
     const loginBtn = document.getElementById('loginBtn');
     if (loginBtn) loginBtn.addEventListener('click', handleLogin);
-    const loginPhone = document.getElementById('loginPhone');
-    const loginPassword = document.getElementById('loginPassword');
-    if (loginPhone && loginPassword) {
-      loginPhone.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
-      loginPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+    const loginUser = document.getElementById('loginUser');
+    const loginPass = document.getElementById('loginPass');
+    if (loginUser && loginPass) {
+      loginUser.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+      loginPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
     }
 
     // Register form
-    const regBtn = document.getElementById('regBtn');
+    const regBtn = document.getElementById('registerBtn');
     if (regBtn) regBtn.addEventListener('click', handleRegister);
     const regPhone = document.getElementById('regPhone');
     if (regPhone) regPhone.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
-    const regPassword = document.getElementById('regPassword');
-    if (regPassword) regPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
+    const regPass = document.getElementById('regPass');
+    if (regPass) regPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
 
     // Reg tags
     document.querySelectorAll('.reg-tag').forEach(t => {
