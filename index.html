@@ -6,7 +6,7 @@
 <!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
 <meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
-<script src="js/device.js?v=5.1.0"></script>
+<script src="js/device.js?v=5.2.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：150+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -19,13 +19,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.1.0">
-<link rel="stylesheet" href="css/layout.css?v=5.1.0">
-<link rel="stylesheet" href="css/components.css?v=5.1.0">
-<link rel="stylesheet" href="css/chat.css?v=5.1.0">
-<link rel="stylesheet" href="css/login.css?v=5.1.0">
-<link rel="stylesheet" href="css/pages.css?v=5.1.0">
-<link rel="stylesheet" href="css/watch.css?v=5.1.0">
+<link rel="stylesheet" href="css/base.css?v=5.2.0">
+<link rel="stylesheet" href="css/layout.css?v=5.2.0">
+<link rel="stylesheet" href="css/components.css?v=5.2.0">
+<link rel="stylesheet" href="css/chat.css?v=5.2.0">
+<link rel="stylesheet" href="css/login.css?v=5.2.0">
+<link rel="stylesheet" href="css/pages.css?v=5.2.0">
+<link rel="stylesheet" href="css/watch.css?v=5.2.0">
 </head>
 <body>
 
@@ -220,7 +220,10 @@
       <div class="page" id="pageModels">
         <div class="page-inner">
           <div class="page-head"><h1><span data-icon="cpu"></span>模型列表</h1><p>按厂商浏览全部模型，点击卡片直接发起对话</p></div>
-          <div class="models-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelsSearchInput" placeholder="搜索模型或厂商…"></div></div>
+          <div class="models-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelsSearchInput" placeholder="搜索模型或厂商…"></div>
+            <button class="sync-btn" id="modelsSyncBtn" title="从已配置 Key 的厂商实时拉取最新模型列表"><span data-icon="refresh"></span><span class="sync-label">同步模型</span></button>
+          </div>
+          <div class="models-sync-hint" id="modelsSyncHint">从已配置 Key 的厂商实时拉取最新模型列表</div>
           <div id="modelsList"></div>
         </div>
       </div>
@@ -349,7 +352,11 @@
                 <h3>第三方科技 AI 智能聚合平台 <span id="aboutVersion"></span></h3>
                 <p>150+ 模型 · 四种对话模式 · 语音 / 文件 / 绘画 / 联网 · PWA 应用化</p>
                 <p>支持厂商：小米 MiMo · OpenAI · Anthropic · Google · DeepSeek · Kimi · 通义千问 · 智谱AI · 文心一言 · 腾讯混元 · MiniMax · 火山引擎 等 23 家</p>
-                <div id="changelogList"></div>
+              </div>
+              <div class="settings-row clickable" id="changelogRow">
+                <span class="row-icon" data-icon="history"></span>
+                <span class="row-label"><span class="row-title">更新日志</span><span class="row-desc" id="changelogRowDesc">查看完整版本历史</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
               </div>
             </div>
           </div>
@@ -393,6 +400,14 @@
   </div>
 </div>
 
+<!-- ==================== 更新日志弹窗 ==================== -->
+<div class="modal-overlay" id="changelogModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3><span data-icon="history"></span>更新日志</h3><button class="modal-close" id="changelogClose" data-icon-btn="x"></button></div>
+    <div class="modal-body" id="changelogModalBody"></div>
+  </div>
+</div>
+
 <!-- ==================== AI 绘画弹窗 ==================== -->
 <div class="modal-overlay" id="paintModal">
   <div class="modal">
@@ -419,21 +434,23 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.1.0"></script>
-<script src="js/models.js?v=5.1.0"></script>
-<script src="js/providers.js?v=5.1.0"></script>
-<script src="js/store.js?v=5.1.0"></script>
-<script src="js/util.js?v=5.1.0"></script>
-<script src="js/markdown.js?v=5.1.0"></script>
-<script src="js/api.js?v=5.1.0"></script>
-<script src="js/voice.js?v=5.1.0"></script>
-<script src="js/files.js?v=5.1.0"></script>
-<script src="js/presets.js?v=5.1.0"></script>
-<script src="js/auth.js?v=5.1.0"></script>
-<script src="js/chat.js?v=5.1.0"></script>
-<script src="js/ui.js?v=5.1.0"></script>
-<script src="js/pages.js?v=5.1.0"></script>
-<script src="js/app.js?v=5.1.0"></script>
+<script src="js/icons.js?v=5.2.0"></script>
+<script src="js/models.js?v=5.2.0"></script>
+<script src="js/providers.js?v=5.2.0"></script>
+<script src="js/changelog.js?v=5.2.0"></script>
+<script src="js/modelsync.js?v=5.2.0"></script>
+<script src="js/store.js?v=5.2.0"></script>
+<script src="js/util.js?v=5.2.0"></script>
+<script src="js/markdown.js?v=5.2.0"></script>
+<script src="js/api.js?v=5.2.0"></script>
+<script src="js/voice.js?v=5.2.0"></script>
+<script src="js/files.js?v=5.2.0"></script>
+<script src="js/presets.js?v=5.2.0"></script>
+<script src="js/auth.js?v=5.2.0"></script>
+<script src="js/chat.js?v=5.2.0"></script>
+<script src="js/ui.js?v=5.2.0"></script>
+<script src="js/pages.js?v=5.2.0"></script>
+<script src="js/app.js?v=5.2.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {

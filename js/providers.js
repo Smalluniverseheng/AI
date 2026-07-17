@@ -204,10 +204,16 @@ function providerIconHtml(provider, size, rounded) {
   const r = rounded === false ? '' : 'border-radius:' + Math.round(size * 0.28) + 'px;';
   let html = '<span class="brand-icon" style="width:' + size + 'px;height:' + size + 'px;' + r + 'background:' + color + '">';
   if (urls.length) {
-    html += '<img src="' + urls[0] + '" data-fallback="' + encodeURIComponent(urls.slice(1).join('|')) + '" onerror="brandIconFallback(this)" loading="lazy" alt="">';
+    html += '<img src="' + urls[0] + '" data-fallback="' + encodeURIComponent(urls.slice(1).join('|')) + '" onload="brandIconLoaded(this)" onerror="brandIconFallback(this)" loading="lazy" alt="">';
   }
   html += '<span class="brand-letter" style="font-size:' + fontSize + 'px">' + letter + '</span></span>';
   return html;
+}
+
+/* 图片加载成功 → 隐藏首字母兜底层，避免双层重叠 */
+function brandIconLoaded(img) {
+  const box = img.closest('.brand-icon');
+  if (box) box.classList.add('loaded');
 }
 
 function brandIconFallback(img) {
@@ -220,21 +226,12 @@ function brandIconFallback(img) {
   }
 }
 
-function getProvidersInOrder() {
-  const seen = {};
-  const order = [];
-  MODELS.forEach(m => {
-    if (!seen[m.provider]) { seen[m.provider] = 1; order.push(m.provider); }
-  });
-  return order;
-}
+/* 目录访问统一走 ModelCatalog（嵌入式 MODELS + 同步合并层） */
+function getProvidersInOrder() { return ModelCatalog.providers(); }
 
-function getProviderModels(provider) { return MODELS.filter(m => m.provider === provider); }
+function getProviderModels(provider) { return ModelCatalog.byProvider(provider); }
 
-function getModel(id) {
-  for (let i = 0; i < MODELS.length; i++) if (MODELS[i].id === id) return MODELS[i];
-  return null;
-}
+function getModel(id) { return ModelCatalog.get(id); }
 
 function getKeyForModel(model) {
   const k = Store.state.apiKeys;
@@ -247,38 +244,8 @@ function getKeyForModel(model) {
   return k[cfg.keySlug] || k.general || '';
 }
 
-/* 应用信息 / 更新日志 */
-const APP_VERSION = '5.1.0';
-const CHANGELOG = [
-  {
-    version: '5.1', date: '2026-07-17', major: false, items: [
-      '全设备适配：电脑（横向宽屏）/ 手机（竖屏）/ 手表（小屏）三端独立界面',
-      '新增手表端：1:1 / 4:3 小屏专用极简界面，语音输入优先，圆屏安全边距',
-      '登录页修复：任意窄小屏幕均可上下滑动完整操作',
-      '电脑端宽屏增强：更宽对话区、三列模型网格、更大字号',
-      'Apple Watch 视口专属适配（disabled-adaptations）'
-    ]
-  },
-  {
-    version: '5.0', date: '2026-07-17', major: true, items: [
-      '完全重构：修复按钮失效、ID 不匹配等全部已知问题，交互全面可用',
-      '全新 UI 体系：Kimi 风格精修、全套 SVG 图标取代 emoji、毛玻璃质感',
-      '官方品牌图标：厂商 Logo 接入 Lobe Icons 官方图标库（国内 CDN 加速）',
-      'PWA 应用化：可安装到手机/电脑桌面，离线可用，像原生 App 一样打开',
-      '语音能力：语音输入（识别转文字）+ AI 回复朗读（TTS）',
-      '角色预设库：12 个精品助手预设，一键开启专业对话',
-      '文件解析：支持 PDF / Word / TXT / 代码等文件上传解析后提问',
-      'AI 绘画：接入 OpenAI / 火山引擎 / 通义万相 绘图模型',
-      '联网搜索：接入 Tavily 搜索，回答可附带真实来源',
-      '性能优化：流式渲染提速、动画更顺滑、长对话不卡顿',
-      '后端就绪：API 网关与存储层预留服务端接入点，后期无缝升级'
-    ]
-  },
-  { version: '4.0', date: '2026-07-15', major: false, items: ['多文件模块化架构', '我的页面 / 发现页 / 模型列表页', 'API Key 批量导入导出'] },
-  { version: '3.0', date: '2026-07-13', major: false, items: ['Kimi 风格 UI', '150+ 模型', '辩论模式升级'] },
-  { version: '2.0', date: '2026-07-13', major: false, items: ['安全升级', '统一 SSE 解析', 'XSS 防护'] },
-  { version: '1.0', date: '2026-07-11', major: false, items: ['全新架构', '四种模式'] }
-];
+/* 应用信息（更新日志数据在 js/changelog.js，添加式维护） */
+const APP_VERSION = '5.2.0';
 
 const MODE_META = {
   single: { icon: 'message', label: '单模型', desc: '与单个 AI 对话' },

@@ -240,6 +240,13 @@
   color: #fff;
   line-height: 1;
 }
+/* 官方图标加载成功后隐藏首字母，避免双层重叠 */
+.brand-icon.loaded .brand-letter { display: none; }
+
+/* 模型状态 */
+.dd-item.deprecated { opacity: .55; }
+.dd-item .tag.new { color: var(--success); background: var(--success-soft); border-color: transparent; }
+.dd-item .tag.deprecated { color: var(--danger); background: var(--danger-soft); border-color: transparent; }
 
 /* ---------- 芯片（模型配置） ---------- */
 .model-chips { display: flex; flex-wrap: wrap; gap: 7px; }

@@ -1,5 +1,5 @@
 /* ==================== Service Worker · PWA 离线缓存 ==================== */
-const VERSION = 'v5.1.0';
+const VERSION = 'v5.2.0';
 const CACHE_STATIC = 'thirdparty-ai-static-' + VERSION;
 const CACHE_RUNTIME = 'thirdparty-ai-runtime-' + VERSION;
 
@@ -9,7 +9,7 @@ const SHELL = [
   'index.html',
   'manifest.json',
   'css/base.css', 'css/layout.css', 'css/components.css', 'css/chat.css', 'css/login.css', 'css/pages.css', 'css/watch.css',
-  'js/device.js', 'js/icons.js', 'js/models.js', 'js/providers.js', 'js/store.js', 'js/util.js', 'js/markdown.js',
+  'js/device.js', 'js/icons.js', 'js/models.js', 'js/providers.js', 'js/changelog.js', 'js/modelsync.js', 'js/store.js', 'js/util.js', 'js/markdown.js',
   'js/api.js', 'js/voice.js', 'js/files.js', 'js/presets.js', 'js/auth.js', 'js/chat.js',
   'js/ui.js', 'js/pages.js', 'js/app.js',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'

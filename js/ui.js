@@ -143,7 +143,7 @@ const UI = (() => {
     }
 
     getProvidersInOrder().forEach(p => {
-      const models = getProviderModels(p).filter(m =>
+      const models = sortModels(getProviderModels(p)).filter(m =>
         !kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
       if (!models.length) return;
       html += '<div class="dd-group-title">' + providerIconHtml(p, 15) + ' ' + esc(p) + '</div>';
@@ -155,14 +155,22 @@ const UI = (() => {
 
   function ddItemHtml(m) {
     const active = m.id === Store.state.currentModelId ? ' active' : '';
+    const dep = m.status === 'deprecated';
     let tags = '';
+    if (m.status === 'new') tags += '<span class="tag new">新</span>';
+    if (dep) tags += '<span class="tag deprecated">已下架</span>';
     if (m.vision) tags += '<span class="tag">识图</span>';
     if (m.thinking) tags += '<span class="tag">思考</span>';
     if (m.ctx >= 512) tags += '<span class="tag">长文</span>';
-    return '<button class="dd-item' + active + '" data-model="' + m.id + '">' +
+    return '<button class="dd-item' + active + (dep ? ' deprecated' : '') + '" data-model="' + m.id + '">' +
       providerIconHtml(m.provider, 20) +
       '<span class="dd-item-name">' + esc(m.name) + '</span>' +
       '<span class="dd-item-tags">' + tags + '</span></button>';
+  }
+
+  /* 排序：在售/新模型在前，已下架沉底 */
+  function sortModels(models) {
+    return models.slice().sort((a, b) => (a.status === 'deprecated' ? 1 : 0) - (b.status === 'deprecated' ? 1 : 0));
   }
 
   function bindModelDD() {
@@ -263,14 +271,18 @@ const UI = (() => {
     kw = (kw || '').trim().toLowerCase();
     let html = '';
     getProvidersInOrder().forEach(p => {
-      const models = getProviderModels(p).filter(m => !kw || m.name.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
+      const models = sortModels(getProviderModels(p)).filter(m => !kw || m.name.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
       if (!models.length) return;
       html += '<div class="dd-group-title">' + providerIconHtml(p, 15) + ' ' + esc(p) + '</div>';
       html += models.map(m => {
         const picked = (Store.state[ROLE_STATE_KEY[pickerRole]] || []).includes(m.id);
-        return '<button class="dd-item' + (picked ? ' active' : '') + '" data-pick="' + m.id + '">' +
+        const dep = m.status === 'deprecated';
+        let tags = '';
+        if (m.status === 'new') tags += '<span class="tag new">新</span>';
+        if (dep) tags += '<span class="tag deprecated">已下架</span>';
+        return '<button class="dd-item' + (picked ? ' active' : '') + (dep ? ' deprecated' : '') + '" data-pick="' + m.id + '">' +
           providerIconHtml(m.provider, 20) + '<span class="dd-item-name">' + esc(m.name) + '</span>' +
-          (picked ? icon('check', 15) : '') + '</button>';
+          '<span class="dd-item-tags">' + tags + '</span>' + (picked ? icon('check', 15) : '') + '</button>';
       }).join('');
     });
     body.innerHTML = html || '<div class="dd-empty">没有匹配的模型</div>';

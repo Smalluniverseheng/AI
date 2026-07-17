@@ -2,15 +2,19 @@
 const Pages = (() => {
 
   /* ==================== 模型列表页 ==================== */
+  /* 排序：在售/新模型在前，已下架沉底 */
+  function sortModels(models) {
+    return models.slice().sort((a, b) => (a.status === 'deprecated' ? 1 : 0) - (b.status === 'deprecated' ? 1 : 0));
+  }
+
   function renderModels() {
     const kw = ($('#modelsSearchInput').value || '').trim().toLowerCase();
     const box = $('#modelsList');
     let html = '';
     getProvidersInOrder().forEach(p => {
-      const models = getProviderModels(p).filter(m =>
+      const models = sortModels(getProviderModels(p)).filter(m =>
         !kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
       if (!models.length) return;
-      const cfg = PROVIDERS[p] || {};
       const keySet = !!getKeyForModel({ provider: p });
       html += '<div class="provider-section">' +
         '<div class="provider-head">' + providerIconHtml(p, 26) +
@@ -19,12 +23,16 @@ const Pages = (() => {
         '<span class="badge ' + (keySet ? 'success' : '') + '">' + (keySet ? 'Key 已配置' : 'Key 未配置') + '</span>' +
         '</div><div class="model-grid">' +
         models.map(m => {
+          const dep = m.status === 'deprecated';
           let tags = '';
+          if (m.status === 'new') tags += '<span class="tag new">新上线</span>';
+          if (dep) tags += '<span class="tag deprecated">已下架</span>';
           if (m.vision) tags += '<span class="tag vision">识图</span>';
           if (m.thinking) tags += '<span class="tag thinking">深度思考</span>';
           if (m.ctx >= 512) tags += '<span class="tag long">长上下文</span>';
+          if ((m.type || 'chat') === 'chat' && m.stream !== false) tags += '<span class="tag stream">流式输出</span>';
           if (m.type && m.type !== 'chat') tags += '<span class="tag">' + esc(m.type) + '</span>';
-          return '<button class="model-card" data-model="' + m.id + '">' +
+          return '<button class="model-card' + (dep ? ' deprecated' : '') + '" data-model="' + m.id + '">' +
             providerIconHtml(p, 34) +
             '<span class="model-card-info"><span class="model-card-name">' + esc(m.name) + '</span>' +
             '<span class="model-card-tags">' + tags + '</span></span>' +
@@ -32,10 +40,51 @@ const Pages = (() => {
         }).join('') + '</div></div>';
     });
     box.innerHTML = html || '<div class="empty-state">' + icon('search', 44) + '<div class="empty-title">没有找到匹配的模型</div></div>';
+    updateSyncHint();
+  }
+
+  /* 同步按钮下方显示最后同步时间 */
+  function updateSyncHint() {
+    const el = $('#modelsSyncHint');
+    if (!el) return;
+    const data = ModelSync.getSyncData();
+    const tsList = Object.keys(data).map(k => data[k].ts).filter(Boolean);
+    if (!tsList.length) { el.textContent = '从已配置 Key 的厂商实时拉取最新模型列表'; return; }
+    const last = new Date(Math.max.apply(null, tsList));
+    const pad = n => String(n).padStart(2, '0');
+    el.textContent = '上次同步：' + last.getFullYear() + '-' + pad(last.getMonth() + 1) + '-' + pad(last.getDate()) +
+      ' ' + pad(last.getHours()) + ':' + pad(last.getMinutes()) + '（' + tsList.length + ' 家厂商）';
+  }
+
+  /* 同步全部已配置 Key 的厂商模型列表 */
+  async function runModelSync() {
+    const btn = $('#modelsSyncBtn');
+    const keyed = Object.keys(PROVIDERS).filter(p => { try { return !!getKeyForModel({ provider: p }); } catch (e) { return false; } });
+    if (!keyed.length) {
+      Toast.warning('还没有配置任何 API Key，请先到「我的 → API Key」添加');
+      return;
+    }
+    btn.disabled = true;
+    btn.classList.add('syncing');
+    const label = btn.querySelector('.sync-label');
+    const oldText = label.textContent;
+    const results = await ModelSync.syncAll(p => { label.textContent = '同步 ' + p + '…'; });
+    let okCount = 0, failCount = 0;
+    const fails = [];
+    Object.keys(results).forEach(p => {
+      if (results[p].ok) okCount++; else { failCount++; fails.push(p + '：' + results[p].error); }
+    });
+    btn.disabled = false;
+    btn.classList.remove('syncing');
+    label.textContent = oldText;
+    renderModels();
+    if (failCount) Toast.warning('同步完成：' + okCount + ' 家成功，' + failCount + ' 家失败（' + fails[0] + '）');
+    else Toast.success('同步完成：' + okCount + ' 家厂商模型列表已更新');
   }
 
   function bindModelsEvents() {
     $('#modelsSearchInput').addEventListener('input', debounce(renderModels, 160));
+    $('#modelsSyncBtn').addEventListener('click', runModelSync);
     $('#modelsList').addEventListener('click', e => {
       const card = e.target.closest('[data-model]');
       if (!card) return;
@@ -380,9 +429,32 @@ const Pages = (() => {
   /* ---- 关于 ---- */
   function renderAboutSection() {
     $('#aboutVersion').textContent = 'v' + APP_VERSION;
-    $('#changelogList').innerHTML = CHANGELOG.map(c =>
-      '<div class="changelog-item"><div class="cl-ver">' + esc('v' + c.version) + '<span class="cl-date">' + esc(c.date) + '</span></div>' +
-      '<ul>' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul></div>').join('');
+    const latest = CHANGELOG[0];
+    if (latest) $('#changelogRowDesc').textContent = '最新 v' + latest.version + ' · ' + latest.date + '，共 ' + CHANGELOG.length + ' 个版本';
+  }
+
+  /* ---- 更新日志弹窗（时间线） ---- */
+  function renderChangelogModal() {
+    $('#changelogModalBody').innerHTML = '<div class="timeline">' + CHANGELOG.map(c =>
+      '<div class="tl-item' + (c.major ? ' major' : '') + '">' +
+      '<div class="tl-dot"></div>' +
+      '<div class="tl-card">' +
+      '<div class="tl-head"><span class="tl-ver">v' + esc(c.version) + '</span>' +
+      (c.major ? '<span class="tl-badge">里程碑</span>' : '') +
+      '<span class="tl-date">' + esc(c.date) + '</span></div>' +
+      '<ul class="tl-list">' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>' +
+      '</div></div>').join('') + '</div>';
+  }
+
+  function bindChangelogEvents() {
+    $('#changelogRow').addEventListener('click', () => {
+      renderChangelogModal();
+      $('#changelogModal').classList.add('show');
+    });
+    $('#changelogClose').addEventListener('click', () => $('#changelogModal').classList.remove('show'));
+    $('#changelogModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+    });
   }
 
   /* ---- 头像 ---- */
@@ -432,7 +504,7 @@ const Pages = (() => {
   }
 
   function bindProfileEvents() {
-    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindAvatarEvents();
+    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindAvatarEvents(); bindChangelogEvents();
     $('#installRow').addEventListener('click', () => { if (window.AppInstall) AppInstall.prompt(); });
     $('#logoutBtn').addEventListener('click', () => {
       confirmDialog('退出登录', '确定退出当前账号吗？对话记录将保留在本机。').then(ok => { if (ok) Auth.logout(); });
