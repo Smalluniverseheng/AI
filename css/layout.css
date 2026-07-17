@@ -295,3 +295,26 @@
   .topbar { padding: 0 10px; }
   .topbar-btn.desktop-only { display: none; }
 }
+
+/* ==================== 电脑端宽屏增强（横向界面） ==================== */
+@media (min-width: 1400px) {
+  :root {
+    --sidebar-w: 320px;
+    --input-max: 960px;
+    --topbar-h: 64px;
+  }
+  html { font-size: 15.5px; }
+  .topbar { padding: 0 28px; }
+  .selector-btn { max-width: 300px; height: 40px; }
+  .chat-container { gap: 24px; padding-top: 28px; }
+  .page-inner { max-width: 1080px; }
+  .model-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .preset-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .discover-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1800px) {
+  :root { --input-max: 1080px; }
+  .page-inner { max-width: 1240px; }
+  .multi-grid { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+}

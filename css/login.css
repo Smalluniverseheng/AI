@@ -4,10 +4,9 @@
   position: fixed;
   inset: 0;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  padding: 16px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background:
     radial-gradient(1000px 500px at 15% -5%, rgba(99, 102, 241, .28), transparent 60%),
     radial-gradient(900px 500px at 90% 15%, rgba(139, 92, 246, .22), transparent 60%),
@@ -25,6 +24,8 @@
 .login-card {
   width: 100%;
   max-width: 400px;
+  /* margin:auto 在 flex 容器内居中；内容超出时自动顶端对齐，保证上下可滑动 */
+  margin: auto;
   background: color-mix(in srgb, var(--bg-elev) 82%, transparent);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);

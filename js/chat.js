@@ -77,6 +77,11 @@ const Chat = (() => {
   }
 
   function selectMode(mode) {
+    // 手表端仅支持单模型
+    if (window.DeviceInfo && DeviceInfo.isWatch() && mode !== 'single') {
+      Toast.info('手表端仅支持单模型对话');
+      return;
+    }
     Store.state.currentMode = mode;
     Store.save();
     UI.updateModeSel();
@@ -158,7 +163,15 @@ const Chat = (() => {
     if (mode === 'collab' && Store.state.collabModels.length < 2) return Toast.warning('协同模式至少需要 2 个模型');
 
     const chat = ensureChat();
-    chat.mode = mode;
+    // 手表端仅支持单模型
+    if (window.DeviceInfo && DeviceInfo.isWatch() && mode !== 'single') {
+      Store.state.currentMode = 'single';
+      UI.updateModeSel(); UI.renderModeConfig();
+      Toast.info('手表端已切换为单模型模式');
+      chat.mode = 'single';
+    } else {
+      chat.mode = mode;
+    }
 
     // 附件打包
     const filesText = Files.wrapAsContext(attachments.files);

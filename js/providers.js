@@ -248,8 +248,17 @@ function getKeyForModel(model) {
 }
 
 /* 应用信息 / 更新日志 */
-const APP_VERSION = '5.0.0';
+const APP_VERSION = '5.1.0';
 const CHANGELOG = [
+  {
+    version: '5.1', date: '2026-07-17', major: false, items: [
+      '全设备适配：电脑（横向宽屏）/ 手机（竖屏）/ 手表（小屏）三端独立界面',
+      '新增手表端：1:1 / 4:3 小屏专用极简界面，语音输入优先，圆屏安全边距',
+      '登录页修复：任意窄小屏幕均可上下滑动完整操作',
+      '电脑端宽屏增强：更宽对话区、三列模型网格、更大字号',
+      'Apple Watch 视口专属适配（disabled-adaptations）'
+    ]
+  },
   {
     version: '5.0', date: '2026-07-17', major: true, items: [
       '完全重构：修复按钮失效、ID 不匹配等全部已知问题，交互全面可用',

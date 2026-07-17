@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
+<meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
+<script src="js/device.js?v=5.1.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：150+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -16,12 +19,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.0.0">
-<link rel="stylesheet" href="css/layout.css?v=5.0.0">
-<link rel="stylesheet" href="css/components.css?v=5.0.0">
-<link rel="stylesheet" href="css/chat.css?v=5.0.0">
-<link rel="stylesheet" href="css/login.css?v=5.0.0">
-<link rel="stylesheet" href="css/pages.css?v=5.0.0">
+<link rel="stylesheet" href="css/base.css?v=5.1.0">
+<link rel="stylesheet" href="css/layout.css?v=5.1.0">
+<link rel="stylesheet" href="css/components.css?v=5.1.0">
+<link rel="stylesheet" href="css/chat.css?v=5.1.0">
+<link rel="stylesheet" href="css/login.css?v=5.1.0">
+<link rel="stylesheet" href="css/pages.css?v=5.1.0">
+<link rel="stylesheet" href="css/watch.css?v=5.1.0">
 </head>
 <body>
 
@@ -64,6 +68,13 @@
     <div class="sidebar-header">
       <div class="sidebar-brand"><span class="brand-logo" id="brandLogo"></span>第三方科技</div>
       <button class="sidebar-new-btn" id="sidebarNewBtn" title="新对话 (Ctrl+K)"></button>
+    </div>
+    <!-- 手表端抽屉导航（仅 data-device=watch 时显示） -->
+    <div class="watch-nav">
+      <button data-page="chat" class="active"><span data-icon="message"></span>对话</button>
+      <button data-page="models"><span data-icon="cpu"></span>模型</button>
+      <button data-page="discover"><span data-icon="compass"></span>发现</button>
+      <button data-page="profile"><span data-icon="user"></span>我的</button>
     </div>
     <div class="sidebar-search">
       <div class="search-box"><span id="sidebarSearchIcon"></span><input type="text" id="sidebarSearchInput" placeholder="搜索对话…"></div>
@@ -408,21 +419,21 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.0.0"></script>
-<script src="js/models.js?v=5.0.0"></script>
-<script src="js/providers.js?v=5.0.0"></script>
-<script src="js/store.js?v=5.0.0"></script>
-<script src="js/util.js?v=5.0.0"></script>
-<script src="js/markdown.js?v=5.0.0"></script>
-<script src="js/api.js?v=5.0.0"></script>
-<script src="js/voice.js?v=5.0.0"></script>
-<script src="js/files.js?v=5.0.0"></script>
-<script src="js/presets.js?v=5.0.0"></script>
-<script src="js/auth.js?v=5.0.0"></script>
-<script src="js/chat.js?v=5.0.0"></script>
-<script src="js/ui.js?v=5.0.0"></script>
-<script src="js/pages.js?v=5.0.0"></script>
-<script src="js/app.js?v=5.0.0"></script>
+<script src="js/icons.js?v=5.1.0"></script>
+<script src="js/models.js?v=5.1.0"></script>
+<script src="js/providers.js?v=5.1.0"></script>
+<script src="js/store.js?v=5.1.0"></script>
+<script src="js/util.js?v=5.1.0"></script>
+<script src="js/markdown.js?v=5.1.0"></script>
+<script src="js/api.js?v=5.1.0"></script>
+<script src="js/voice.js?v=5.1.0"></script>
+<script src="js/files.js?v=5.1.0"></script>
+<script src="js/presets.js?v=5.1.0"></script>
+<script src="js/auth.js?v=5.1.0"></script>
+<script src="js/chat.js?v=5.1.0"></script>
+<script src="js/ui.js?v=5.1.0"></script>
+<script src="js/pages.js?v=5.1.0"></script>
+<script src="js/app.js?v=5.1.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {

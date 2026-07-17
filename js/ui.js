@@ -14,6 +14,11 @@ const UI = (() => {
   function showApp() {
     $('#loginPage').classList.add('hidden');
     $('#appShell').classList.remove('hidden');
+    // 手表端：强制单模型模式（界面为极简单栏设计）
+    if (window.DeviceInfo && DeviceInfo.isWatch() && Store.state.currentMode !== 'single') {
+      Store.state.currentMode = 'single';
+      Store.save();
+    }
     navigate(Store.state.currentPage || 'chat');
     renderSidebar();
     renderChat();
