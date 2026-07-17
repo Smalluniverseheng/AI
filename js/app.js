@@ -124,6 +124,16 @@
     Pages.init();
     bindAuthEvents();
     registerSW();
+    I18n.apply();
+
+    // 语言切换：重渲染 UI 动态部分
+    document.addEventListener('langchange', () => {
+      UI.updateModeSel();
+      UI.updateModelSel();
+      UI.renderSidebar();
+      UI.renderChat();
+      if (Store.state.loggedIn) Pages.renderProfile();
+    });
 
     // 恢复侧边栏折叠状态
     if (Store.state.sidebarCollapsed) {

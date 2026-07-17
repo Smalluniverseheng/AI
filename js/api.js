@@ -44,7 +44,11 @@ const API = (() => {
     const model = getModel(Store.state.currentModelId);
     const ctxLimit = model ? (model.ctx || 128) * 1024 : 128 * 1024;
     const msgs = [];
-    if (chat.system) msgs.push({ role: 'system', content: chat.system });
+    // 系统提示 = 角色预设 + 用户界面语言提示（确保模型按用户语言回复）
+    const sysParts = [];
+    if (chat.system) sysParts.push(chat.system);
+    if (window.I18n) sysParts.push(I18n.langHintForModel());
+    if (sysParts.length) msgs.push({ role: 'system', content: sysParts.join('\n\n') });
 
     // excludeId：调用方刚 push 的当前用户消息（已由参数重建），避免重复注入
     const history = (chat.messages || []).filter(m =>

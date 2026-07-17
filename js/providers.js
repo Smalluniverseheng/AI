@@ -233,6 +233,12 @@ function getProviderModels(provider) { return ModelCatalog.byProvider(provider);
 
 function getModel(id) { return ModelCatalog.get(id); }
 
+/* 对话类模型（tts/asr/voiceclone/voicedesign 等为专用模型，不可对话） */
+function isChatModel(m) { return m && (m.type || 'chat') === 'chat'; }
+
+/* 可被选择对话的模型：对话类且未下架 */
+function isSelectableModel(m) { return isChatModel(m) && m.status !== 'deprecated'; }
+
 function getKeyForModel(model) {
   const k = Store.state.apiKeys;
   const cfg = PROVIDERS[model.provider];
@@ -245,7 +251,7 @@ function getKeyForModel(model) {
 }
 
 /* 应用信息（更新日志数据在 js/changelog.js，添加式维护） */
-const APP_VERSION = '5.2.0';
+const APP_VERSION = '5.3.0';
 
 const MODE_META = {
   single: { icon: 'message', label: '单模型', desc: '与单个 AI 对话' },

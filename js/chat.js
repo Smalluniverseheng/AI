@@ -64,6 +64,11 @@ const Chat = (() => {
   }
 
   function selectModel(id) {
+    const m = getModel(id);
+    if (m && !isSelectableModel(m)) {
+      Toast.warning(isChatModel(m) ? I18n.t('toast.modelOff') : I18n.t('toast.modelSpecial'));
+      return;
+    }
     Store.state.currentModelId = id;
     // 最近使用
     const rec = Store.state.recentModels || [];
@@ -72,8 +77,7 @@ const Chat = (() => {
     if (chat) chat.modelId = id;
     Store.save();
     UI.updateModelSel();
-    const m = getModel(id);
-    if (m) Toast.info('已切换：' + m.name);
+    if (m) Toast.info(I18n.t('toast.switched') + m.name);
   }
 
   function selectMode(mode) {

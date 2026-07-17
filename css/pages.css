@@ -375,3 +375,75 @@
   .avatar-grid { grid-template-columns: repeat(4, 1fr); }
   .theme-options { gap: 8px; }
 }
+
+/* ==================== v5.3 · 语音工坊 / 帮助中心 / 其他页 ==================== */
+.more-soon { text-align: center; color: var(--text-3); font-size: 12.5px; padding: 26px 0 10px; }
+
+/* 语音工坊 */
+.vs-nokey {
+  padding: 14px; border-radius: 12px; font-size: 13px; line-height: 1.7;
+  background: var(--accent-softer); color: var(--accent-2); border: 1px solid var(--accent-soft);
+  margin-bottom: 12px;
+}
+.vs-nokey button { margin-top: 8px; }
+.vs-tabs { display: flex; gap: 6px; margin-bottom: 14px; background: var(--bg-soft); padding: 4px; border-radius: 12px; }
+.vs-tab {
+  flex: 1; padding: 8px 4px; border-radius: 9px;
+  font-size: 13px; font-weight: 600; color: var(--text-3);
+  transition: all var(--dur);
+}
+.vs-tab.active { background: var(--bg-elev); color: var(--accent); box-shadow: var(--shadow); }
+.login-field textarea.input { resize: vertical; min-height: 64px; font-family: inherit; }
+input[type="file"].vs-file { font-size: 13px; color: var(--text-2); }
+
+/* 帮助中心 */
+.faq-item { border-bottom: 1px solid var(--border); }
+.faq-item:last-child { border-bottom: none; }
+.faq-q {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 14px 14px; text-align: left;
+  font-size: 14px; font-weight: 600; color: var(--text);
+  transition: background var(--dur);
+}
+.faq-q:hover { background: var(--bg-hover); }
+.faq-q .faq-arrow { margin-left: auto; transition: transform var(--dur); color: var(--text-3); display: flex; }
+.faq-item.open .faq-q .faq-arrow { transform: rotate(90deg); }
+.faq-a { display: none; padding: 0 16px 14px 16px; font-size: 13px; color: var(--text-2); line-height: 1.8; }
+.faq-item.open .faq-a { display: block; }
+.faq-a ol, .faq-a ul { padding-left: 18px; }
+.faq-a code { background: var(--bg-soft); padding: 1px 6px; border-radius: 6px; font-size: 12px; }
+.help-section-title { font-size: 13px; font-weight: 800; color: var(--text-3); padding: 16px 4px 8px; }
+.console-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.console-row:last-child { border-bottom: none; }
+.console-row .console-name { font-weight: 600; color: var(--text); min-width: 86px; }
+.console-row a { color: var(--accent); text-decoration: none; font-size: 12.5px; word-break: break-all; }
+.console-row a:hover { text-decoration: underline; }
+
+/* 语言列表 */
+.lang-row { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background var(--dur); }
+.lang-row:last-child { border-bottom: none; }
+.lang-row:hover { background: var(--bg-hover); }
+.lang-row .lang-name { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); }
+.lang-row .lang-en { font-size: 12px; color: var(--text-3); }
+.lang-row .lang-check { color: var(--accent); display: none; }
+.lang-row.active .lang-check { display: flex; }
+
+/* ASR 引擎列表 */
+.asr-engine-row { display: flex; align-items: center; gap: 12px; padding: 13px 14px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background var(--dur); }
+.asr-engine-row:last-child { border-bottom: none; }
+.asr-engine-row:hover { background: var(--bg-hover); }
+.asr-engine-row .asr-name { flex: 1; }
+.asr-engine-row .asr-name b { display: block; font-size: 14px; color: var(--text); }
+.asr-engine-row .asr-name span { font-size: 12px; color: var(--text-3); }
+.asr-engine-row .asr-check { color: var(--accent); display: none; }
+.asr-engine-row.active .asr-check { display: flex; }
+.asr-engine-row.nokey .asr-name b { color: var(--text-3); }
+
+/* 模型卡片禁用态（已下架 / 专用模型） */
+.model-card.disabled { cursor: default; }
+.model-card.disabled:hover { transform: none; box-shadow: none; border-color: var(--border); }
+
+/* RTL 基础适配 */
+[dir="rtl"] .chev .icon, [dir="rtl"] .settings-row .chev { transform: rotate(180deg); }
+[dir="rtl"] .chat-item, [dir="rtl"] .sidebar-menu button { text-align: right; }
+[dir="rtl"] .faq-q { text-align: right; }

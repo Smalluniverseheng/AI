@@ -475,6 +475,8 @@
   .chat-container { padding: 16px 12px 24px; gap: 16px; }
   .msg.user .msg-content { max-width: 92%; }
   .welcome-cards { grid-template-columns: 1fr; }
-  .input-area { padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); }
-  .input-footer .left-note span.note-text { display: none; }
+  /* 输入区与底部导航衔接：去掉大空隙与页脚，安全区只由导航栏处理 */
+  .input-area { padding: 6px 10px 8px; background: none; }
+  .input-footer { display: none; }
+  #chatInput { font-size: 14px; }
 }

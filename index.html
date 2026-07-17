@@ -6,7 +6,7 @@
 <!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
 <meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
-<script src="js/device.js?v=5.2.0"></script>
+<script src="js/device.js?v=5.3.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：150+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -19,13 +19,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.2.0">
-<link rel="stylesheet" href="css/layout.css?v=5.2.0">
-<link rel="stylesheet" href="css/components.css?v=5.2.0">
-<link rel="stylesheet" href="css/chat.css?v=5.2.0">
-<link rel="stylesheet" href="css/login.css?v=5.2.0">
-<link rel="stylesheet" href="css/pages.css?v=5.2.0">
-<link rel="stylesheet" href="css/watch.css?v=5.2.0">
+<link rel="stylesheet" href="css/base.css?v=5.3.0">
+<link rel="stylesheet" href="css/layout.css?v=5.3.0">
+<link rel="stylesheet" href="css/components.css?v=5.3.0">
+<link rel="stylesheet" href="css/chat.css?v=5.3.0">
+<link rel="stylesheet" href="css/login.css?v=5.3.0">
+<link rel="stylesheet" href="css/pages.css?v=5.3.0">
+<link rel="stylesheet" href="css/watch.css?v=5.3.0">
 </head>
 <body>
 
@@ -63,24 +63,34 @@
 <!-- ==================== 应用骨架 ==================== -->
 <div id="appShell" class="app-shell hidden">
 
-  <!-- 侧边栏 -->
+  <!-- 侧边栏（Kimi 式：用户卡 → 菜单 → 历史会话 → 底部搜索） -->
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-brand"><span class="brand-logo" id="brandLogo"></span>第三方科技</div>
+    <div class="sidebar-user" id="sidebarUser" title="我的">
+      <div class="sidebar-user-avatar" id="sidebarUserAvatar"></div>
+      <div class="sidebar-user-info">
+        <b id="sidebarUserName">用户</b>
+        <span id="sidebarUserPlan">本地账号</span>
+      </div>
       <button class="sidebar-new-btn" id="sidebarNewBtn" title="新对话 (Ctrl+K)"></button>
     </div>
     <!-- 手表端抽屉导航（仅 data-device=watch 时显示） -->
     <div class="watch-nav">
       <button data-page="chat" class="active"><span data-icon="message"></span>对话</button>
       <button data-page="models"><span data-icon="cpu"></span>模型</button>
-      <button data-page="discover"><span data-icon="compass"></span>发现</button>
+      <button data-page="discover"><span data-icon="grid"></span>其他</button>
       <button data-page="profile"><span data-icon="user"></span>我的</button>
     </div>
-    <div class="sidebar-search">
-      <div class="search-box"><span id="sidebarSearchIcon"></span><input type="text" id="sidebarSearchInput" placeholder="搜索对话…"></div>
+    <div class="sidebar-menu">
+      <button data-page="chat" class="active"><span data-icon="message"></span>对话</button>
+      <button data-page="models"><span data-icon="cpu"></span>模型</button>
+      <button data-page="discover"><span data-icon="grid"></span>其他</button>
+      <button data-page="profile"><span data-icon="user"></span>我的</button>
     </div>
-    <div class="sidebar-section-title">最近对话</div>
+    <div class="sidebar-section-title">历史会话</div>
     <div class="sidebar-list" id="sidebarList"></div>
+    <div class="sidebar-search">
+      <div class="search-box"><span id="sidebarSearchIcon"></span><input type="text" id="sidebarSearchInput" placeholder="搜索历史会话…"></div>
+    </div>
     <div class="sidebar-footer">
       <button id="exportHistoryBtn" title="导出对话"><span data-icon="download"></span>导出</button>
       <button id="importHistoryBtn" title="导入对话"><span data-icon="upload"></span>导入</button>
@@ -128,7 +138,7 @@
       <div class="topbar-right">
         <button class="topbar-btn nav-top-btn desktop-only active" data-page="chat" title="对话" data-icon="message"></button>
         <button class="topbar-btn nav-top-btn desktop-only" data-page="models" title="模型" data-icon="cpu"></button>
-        <button class="topbar-btn nav-top-btn desktop-only" data-page="discover" title="发现" data-icon="compass"></button>
+        <button class="topbar-btn nav-top-btn desktop-only" data-page="discover" title="其他" data-icon="grid"></button>
         <button class="topbar-btn nav-top-btn desktop-only" data-page="profile" title="我的" data-icon="user"></button>
         <span class="desktop-only" style="width:1px;height:22px;background:var(--border);margin:0 4px"></span>
         <button class="topbar-btn desktop-only" id="themeBtn" title="切换主题"></button>
@@ -228,26 +238,39 @@
         </div>
       </div>
 
-      <!-- 发现页 -->
+      <!-- 其他页（微信发现式条目，后续新功能往这里加） -->
       <div class="page" id="pageDiscover">
         <div class="page-inner">
-          <div class="page-head"><h1><span data-icon="compass"></span>发现</h1><p>对话模式 · AI 工具 · 角色助手</p></div>
-          <div class="discover-section">
-            <div class="discover-section-title"><span data-icon="messages"></span>对话模式</div>
-            <div class="discover-grid" id="discoverModes"></div>
+          <div class="page-head"><h1><span data-icon="grid"></span><span data-i18n-text="more.title">其他</span></h1><p data-i18n-text="more.sub">更多 AI 工具与功能，持续上新</p></div>
+          <div class="settings-card">
+            <div class="settings-row clickable" id="toolPaint">
+              <span class="row-icon" data-icon="palette"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.paint">AI 绘画</span><span class="row-desc" data-i18n-text="more.paintD">文字生成图片 · DALL·E / Seedream / 万相</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" id="toolVoiceStudio">
+              <span class="row-icon" data-icon="volume"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.voice">语音工坊</span><span class="row-desc" data-i18n-text="more.voiceD">语音合成 · 音色设计 · 音色克隆</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
           </div>
-          <div class="discover-section">
-            <div class="discover-section-title"><span data-icon="wand"></span>AI 工具</div>
-            <div class="discover-grid" id="discoverTools"></div>
+          <div class="settings-card">
+            <div class="settings-row clickable" id="toolPresets">
+              <span class="row-icon" data-icon="sparkles"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.presets">角色助手</span><span class="row-desc" data-i18n-text="more.presetsD">12 个精品预设，一键开启</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" id="toolWebSearch">
+              <span class="row-icon" data-icon="globe"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.websearch">联网搜索</span><span class="row-desc" data-i18n-text="more.websearchD">Tavily 检索，回答附真实来源</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
           </div>
-          <div class="discover-section">
-            <div class="discover-section-title"><span data-icon="sparkles"></span>角色助手（一键开启）</div>
-            <div class="preset-grid" id="presetGrid"></div>
-          </div>
+          <div class="more-soon" data-i18n-text="more.soon">更多功能，敬请期待</div>
         </div>
       </div>
 
-      <!-- 我的页 -->
+      <!-- 我的页（Kimi 设置式：条目菜单，点击进入子页） -->
       <div class="page" id="pageProfile">
         <div class="page-inner">
           <div class="profile-card">
@@ -259,116 +282,90 @@
             </div>
           </div>
 
-          <!-- 安装 App -->
-          <div class="settings-group">
-            <div class="settings-card">
-              <div class="settings-row clickable" id="installRow">
-                <span class="row-icon" data-icon="smartphone"></span>
-                <span class="row-label"><span class="row-title">安装为 App</span><span class="row-desc" style="display:block">一键安装到桌面，离线可用</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
+          <div class="settings-card">
+            <div class="settings-row clickable" data-sub="subKeys">
+              <span class="row-icon" data-icon="key"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.keys">API Key 管理</span><span class="row-desc" data-i18n-text="pf.keysD">23 家厂商密钥配置</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
 
-          <!-- 外观 -->
-          <div class="settings-group">
-            <div class="settings-group-title"><span data-icon="palette"></span>外观主题</div>
-            <div class="settings-card">
-              <div class="theme-options">
-                <div class="theme-card" data-theme="light"><div class="theme-preview light"></div><div class="theme-name"><span data-icon="sun"></span>亮色</div></div>
-                <div class="theme-card" data-theme="dark"><div class="theme-preview dark"></div><div class="theme-name"><span data-icon="moon"></span>暗色</div></div>
-                <div class="theme-card" data-theme="system"><div class="theme-preview system"></div><div class="theme-name"><span data-icon="monitor"></span>跟随系统</div></div>
-              </div>
+          <div class="settings-group-title" data-i18n-text="pf.general">通用</div>
+          <div class="settings-card">
+            <div class="settings-row clickable" data-sub="subVoice">
+              <span class="row-icon" data-icon="volume"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.speak">播报声音</span><span class="row-desc" id="voiceRowDesc">朗读引擎 · 音色 · 语速</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" data-sub="subAsr">
+              <span class="row-icon" data-icon="mic"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.asr">语音识别</span><span class="row-desc" id="asrRowDesc">语音输入引擎 · 多语言识别</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" data-sub="subTheme">
+              <span class="row-icon" data-icon="palette"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.theme">颜色主题</span><span class="row-desc" id="themeRowDesc">跟随系统</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" data-sub="subLang">
+              <span class="row-icon" data-icon="globe"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.lang">语言</span><span class="row-desc" id="langRowDesc">简体中文</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
 
-          <!-- API Key -->
-          <div class="settings-group" data-group="keys">
-            <div class="settings-group-title"><span data-icon="key"></span>API Key 管理
-              <span class="group-action">
-                <button class="btn btn-ghost btn-sm" id="exportKeysBtn"><span data-icon="download"></span>导出</button>
-                <button class="btn btn-ghost btn-sm" id="importKeysBtn"><span data-icon="upload"></span>批量导入</button>
-              </span>
+          <div class="settings-group-title" data-i18n-text="pf.pluginData">插件与数据</div>
+          <div class="settings-card">
+            <div class="settings-row clickable" data-sub="subPlugin">
+              <span class="row-icon" data-icon="globe"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.plugin">联网搜索</span><span class="row-desc" data-i18n-text="pf.pluginD">Tavily 插件配置</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
-            <div class="settings-card" id="keyManagement"></div>
-            <input type="file" id="importKeysFile" accept=".txt,.json" class="sr-only">
-          </div>
-
-          <!-- 插件 -->
-          <div class="settings-group" data-group="plugin">
-            <div class="settings-group-title"><span data-icon="package"></span>插件与语音</div>
-            <div class="settings-card">
-              <div class="settings-row" style="flex-wrap:wrap">
-                <span class="row-icon" data-icon="globe"></span>
-                <span class="row-label"><span class="row-title">联网搜索（Tavily）</span><span class="row-desc" style="display:block">开启后提问自动联网检索并附来源 · tavily.com 免费申请</span></span>
-                <label class="switch"><input type="checkbox" id="webSearchSwitch"><span class="track"></span></label>
-                <div style="width:100%;padding-left:46px"><input type="password" class="input" id="tavilyKeyInput" placeholder="tvly-..." autocomplete="off"></div>
-              </div>
-              <div class="settings-row">
-                <span class="row-icon" data-icon="volume"></span>
-                <span class="row-label"><span class="row-title">语音朗读</span><span class="row-desc" style="display:block">AI 回复可一键朗读</span></span>
-                <button class="btn btn-secondary btn-sm" id="voiceTestBtn"><span data-icon="play"></span>试听</button>
-              </div>
-              <div class="settings-row">
-                <span class="row-label" style="padding-left:46px"><span class="row-title" style="font-size:13px">朗读声音</span></span>
-                <select class="select" id="voiceSelect" style="max-width:220px"></select>
-              </div>
-              <div class="settings-row">
-                <span class="row-label" style="padding-left:46px"><span class="row-title" style="font-size:13px">语速 <span id="voiceRateLabel">1x</span></span></span>
-                <input type="range" id="voiceRateRange" min="0.5" max="2" step="0.1" value="1" style="flex:1;max-width:220px">
-              </div>
+            <div class="settings-row clickable" data-sub="subData">
+              <span class="row-icon" data-icon="database"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.data">数据管理</span><span class="row-desc" data-i18n-text="pf.dataD">备份 · 恢复 · 清空</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
 
-          <!-- 数据 -->
-          <div class="settings-group">
-            <div class="settings-group-title"><span data-icon="database"></span>数据管理</div>
-            <div class="settings-card">
-              <div class="data-stats-grid" id="dataStats"></div>
-              <div class="settings-row clickable" id="exportAllBtn">
-                <span class="row-icon" data-icon="download"></span>
-                <span class="row-label"><span class="row-title">导出全量备份</span><span class="row-desc" style="display:block">对话 + Key + 设置（JSON）</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
-              <div class="settings-row clickable" id="importAllBtn">
-                <span class="row-icon" data-icon="upload"></span>
-                <span class="row-label"><span class="row-title">恢复备份</span><span class="row-desc" style="display:block">从备份文件恢复全部数据</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
-              <div class="settings-row clickable" id="clearAllBtn">
-                <span class="row-icon danger" data-icon="trash"></span>
-                <span class="row-label"><span class="row-title" style="color:var(--danger)">清除所有数据</span><span class="row-desc" style="display:block">删除对话、Key 与账号，恢复初始状态</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
-              <input type="file" id="importAllFile" accept=".json" class="sr-only">
+          <div class="settings-group-title" data-i18n-text="pf.help">帮助</div>
+          <div class="settings-card">
+            <div class="settings-row clickable" data-sub="subHelp">
+              <span class="row-icon" data-icon="info"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.helpC">帮助中心</span><span class="row-desc" data-i18n-text="pf.helpD">使用指南 · API 申请指引</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" id="feedbackRow">
+              <span class="row-icon" data-icon="message"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.feedback">意见反馈</span><span class="row-desc" data-i18n-text="pf.feedbackD">前往 GitHub 提交建议</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
 
-          <!-- 关于 -->
-          <div class="settings-group">
-            <div class="settings-group-title"><span data-icon="info"></span>关于</div>
-            <div class="settings-card">
-              <div class="about-content">
-                <h3>第三方科技 AI 智能聚合平台 <span id="aboutVersion"></span></h3>
-                <p>150+ 模型 · 四种对话模式 · 语音 / 文件 / 绘画 / 联网 · PWA 应用化</p>
-                <p>支持厂商：小米 MiMo · OpenAI · Anthropic · Google · DeepSeek · Kimi · 通义千问 · 智谱AI · 文心一言 · 腾讯混元 · MiniMax · 火山引擎 等 23 家</p>
-              </div>
-              <div class="settings-row clickable" id="changelogRow">
-                <span class="row-icon" data-icon="history"></span>
-                <span class="row-label"><span class="row-title">更新日志</span><span class="row-desc" id="changelogRowDesc">查看完整版本历史</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
+          <div class="settings-group-title" data-i18n-text="pf.aboutG">关于</div>
+          <div class="settings-card">
+            <div class="settings-row clickable" data-sub="subAbout">
+              <span class="row-icon" data-icon="info"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.about">关于平台</span><span class="row-desc">v<span id="aboutVersion"></span> · 150+ 模型 · 23 家厂商</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" id="changelogRow">
+              <span class="row-icon" data-icon="history"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.changelog">更新日志</span><span class="row-desc" id="changelogRowDesc">查看完整版本历史</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" id="installRow">
+              <span class="row-icon" data-icon="smartphone"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.install">安装为 App</span><span class="row-desc" style="display:block">一键安装到桌面，离线可用</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
 
-          <!-- 退出 -->
-          <div class="settings-group">
-            <div class="settings-card">
-              <div class="settings-row clickable" id="logoutBtn">
-                <span class="row-icon danger" data-icon="logout"></span>
-                <span class="row-label"><span class="row-title" style="color:var(--danger)">退出登录</span></span>
-                <span class="chev" data-icon="chevronRight"></span>
-              </div>
+          <div class="settings-card">
+            <div class="settings-row clickable" id="logoutBtn">
+              <span class="row-icon danger" data-icon="logout"></span>
+              <span class="row-label"><span class="row-title" style="color:var(--danger)" data-i18n-text="pf.logout">退出登录</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
         </div>
@@ -376,12 +373,143 @@
 
     </div>
 
+    <!-- ==================== 设置子页（全屏覆盖，点击条目进入） ==================== -->
+    <!-- 颜色主题 -->
+    <div class="subpage" id="subTheme">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.theme">颜色主题</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card">
+          <div class="theme-options">
+            <div class="theme-card" data-theme="light"><div class="theme-preview light"></div><div class="theme-name"><span data-icon="sun"></span>亮色</div></div>
+            <div class="theme-card" data-theme="dark"><div class="theme-preview dark"></div><div class="theme-name"><span data-icon="moon"></span>暗色</div></div>
+            <div class="theme-card" data-theme="system"><div class="theme-preview system"></div><div class="theme-name"><span data-icon="monitor"></span>跟随系统</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 语言 -->
+    <div class="subpage" id="subLang">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.lang">语言</h2></div>
+      <div class="subpage-body"><div class="settings-card" id="langList"></div>
+        <div class="subpage-tip">切换语言后，界面、语音播报、语音识别与模型回复语言将同步切换。</div>
+      </div>
+    </div>
+
+    <!-- 播报声音 -->
+    <div class="subpage" id="subVoice">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.voice">播报声音</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card">
+          <div class="settings-row">
+            <span class="row-label"><span class="row-title" data-i18n-text="voice.engine">朗读引擎</span></span>
+            <select class="select" id="ttsEngineSelect" style="max-width:240px"></select>
+          </div>
+          <div class="settings-row">
+            <span class="row-label"><span class="row-title" data-i18n-text="voice.voiceName">音色</span></span>
+            <select class="select" id="voiceSelect" style="max-width:240px"></select>
+          </div>
+          <div class="settings-row">
+            <span class="row-label"><span class="row-title" style="font-size:13px"><span data-i18n-text="voice.rate">语速</span> <span id="voiceRateLabel">1x</span></span></span>
+            <input type="range" id="voiceRateRange" min="0.5" max="2" step="0.1" value="1" style="flex:1;max-width:240px">
+          </div>
+          <div class="settings-row">
+            <span class="row-label"><span class="row-desc" id="ttsKeyHint"></span></span>
+            <button class="btn btn-secondary btn-sm" id="voiceTestBtn"><span data-icon="play"></span>试听</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 语音识别 -->
+    <div class="subpage" id="subAsr">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.asr">语音识别</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card" id="asrEngineList"></div>
+        <div class="subpage-tip" data-i18n-text="voice.asrHint">小米 MiMo 支持中文、英语及粤语/吴语/闽南语/四川话等方言识别</div>
+      </div>
+    </div>
+
+    <!-- API Key -->
+    <div class="subpage" id="subKeys">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.keys">API Key 管理</h2>
+        <span class="group-action">
+          <button class="btn btn-ghost btn-sm" id="exportKeysBtn"><span data-icon="download"></span>导出</button>
+          <button class="btn btn-ghost btn-sm" id="importKeysBtn"><span data-icon="upload"></span>批量导入</button>
+        </span>
+      </div>
+      <div class="subpage-body"><div class="settings-card" id="keyManagement"></div>
+        <input type="file" id="importKeysFile" accept=".txt,.json" class="sr-only">
+      </div>
+    </div>
+
+    <!-- 联网搜索 -->
+    <div class="subpage" id="subPlugin">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.plugin">联网搜索</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card">
+          <div class="settings-row" style="flex-wrap:wrap">
+            <span class="row-icon" data-icon="globe"></span>
+            <span class="row-label"><span class="row-title">联网搜索（Tavily）</span><span class="row-desc" style="display:block">开启后提问自动联网检索并附来源 · tavily.com 免费申请</span></span>
+            <label class="switch"><input type="checkbox" id="webSearchSwitch"><span class="track"></span></label>
+            <div style="width:100%;padding-left:46px"><input type="password" class="input" id="tavilyKeyInput" placeholder="tvly-..." autocomplete="off"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据管理 -->
+    <div class="subpage" id="subData">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.data">数据管理</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card">
+          <div class="data-stats-grid" id="dataStats"></div>
+          <div class="settings-row clickable" id="exportAllBtn">
+            <span class="row-icon" data-icon="download"></span>
+            <span class="row-label"><span class="row-title">导出全量备份</span><span class="row-desc" style="display:block">对话 + Key + 设置（JSON）</span></span>
+            <span class="chev" data-icon="chevronRight"></span>
+          </div>
+          <div class="settings-row clickable" id="importAllBtn">
+            <span class="row-icon" data-icon="upload"></span>
+            <span class="row-label"><span class="row-title">恢复备份</span><span class="row-desc" style="display:block">从备份文件恢复全部数据</span></span>
+            <span class="chev" data-icon="chevronRight"></span>
+          </div>
+          <div class="settings-row clickable" id="clearAllBtn">
+            <span class="row-icon danger" data-icon="trash"></span>
+            <span class="row-label"><span class="row-title" style="color:var(--danger)">清除所有数据</span><span class="row-desc" style="display:block">删除对话、Key 与账号，恢复初始状态</span></span>
+            <span class="chev" data-icon="chevronRight"></span>
+          </div>
+          <input type="file" id="importAllFile" accept=".json" class="sr-only">
+        </div>
+      </div>
+    </div>
+
+    <!-- 帮助中心 -->
+    <div class="subpage" id="subHelp">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.help">帮助中心</h2></div>
+      <div class="subpage-body" id="helpBody"></div>
+    </div>
+
+    <!-- 关于平台 -->
+    <div class="subpage" id="subAbout">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.about">关于平台</h2></div>
+      <div class="subpage-body">
+        <div class="settings-card">
+          <div class="about-content">
+            <h3>第三方科技 AI 智能聚合平台 <span id="aboutVersionSub"></span></h3>
+            <p>150+ 模型 · 四种对话模式 · 语音 / 文件 / 绘画 / 联网 · PWA 应用化</p>
+            <p>支持厂商：小米 MiMo · OpenAI · Anthropic · Google · DeepSeek · Kimi · 通义千问 · 智谱AI · 文心一言 · 腾讯混元 · MiniMax · 火山引擎 等 23 家</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 移动端底部导航 -->
     <nav class="bottom-nav">
       <div class="bottom-nav-inner">
         <button class="nav-item active" data-page="chat"><span data-icon="message"></span>对话</button>
         <button class="nav-item" data-page="models"><span data-icon="cpu"></span>模型</button>
-        <button class="nav-item" data-page="discover"><span data-icon="compass"></span>发现</button>
+        <button class="nav-item" data-page="discover"><span data-icon="grid"></span>其他</button>
         <button class="nav-item" data-page="profile"><span data-icon="user"></span>我的</button>
       </div>
     </nav>
@@ -405,6 +533,41 @@
   <div class="modal modal-lg">
     <div class="modal-header"><h3><span data-icon="history"></span>更新日志</h3><button class="modal-close" id="changelogClose" data-icon-btn="x"></button></div>
     <div class="modal-body" id="changelogModalBody"></div>
+  </div>
+</div>
+
+<!-- ==================== 语音工坊弹窗 ==================== -->
+<div class="modal-overlay" id="voiceStudioModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3><span data-icon="volume"></span><span data-i18n-text="vs.title">语音工坊</span></h3><button class="modal-close" id="vsClose" data-icon-btn="x"></button></div>
+    <div class="modal-body">
+      <div id="vsNoKey" class="vs-nokey" style="display:none"></div>
+      <div id="vsBody">
+        <div class="vs-tabs">
+          <button class="vs-tab active" data-vsmode="preset" data-i18n-text="vs.preset">预置音色</button>
+          <button class="vs-tab" data-vsmode="design" data-i18n-text="vs.design">音色设计</button>
+          <button class="vs-tab" data-vsmode="clone" data-i18n-text="vs.clone">音色克隆</button>
+        </div>
+        <div class="login-field"><label data-i18n-text="vs.text">要合成的文本</label><textarea id="vsText" class="input" rows="3" placeholder="输入要朗读的文字…"></textarea></div>
+        <div class="login-field" id="vsVoiceRow"><label data-i18n-text="vs.voice">音色</label><select id="vsVoice" class="select"></select></div>
+        <div class="login-field" id="vsStyleRow"><label data-i18n-text="vs.style">风格指令（可选）</label><input id="vsStyle" class="input" placeholder="例：用轻快上扬的语调，语速稍快"></div>
+        <div class="login-field" id="vsDescRow" style="display:none"><label data-i18n-text="vs.design">音色设计</label><textarea id="vsDesc" class="input" rows="2" placeholder="例：一位年迈的老先生，说带北方口音的普通话，语速缓慢而沉稳"></textarea></div>
+        <div class="login-field" id="vsSampleRow" style="display:none"><label data-i18n-text="vs.sample">音频样本（mp3 / wav，≤10MB）</label><input type="file" id="vsSample" accept="audio/mpeg,audio/mp3,audio/wav"></div>
+        <button class="login-btn" id="vsGen" data-i18n-text="vs.gen">开始合成</button>
+        <div id="vsResult" style="display:none;margin-top:14px">
+          <audio id="vsAudio" controls style="width:100%"></audio>
+          <a id="vsDownload" class="btn btn-secondary btn-sm" download="voice.wav" style="margin-top:8px;display:inline-block"><span data-icon="download"></span> <span data-i18n-text="vs.download">下载音频</span></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 角色助手弹窗 ==================== -->
+<div class="modal-overlay" id="presetsModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3><span data-icon="sparkles"></span><span data-i18n-text="more.presets">角色助手</span></h3><button class="modal-close" id="presetsClose" data-icon-btn="x"></button></div>
+    <div class="modal-body"><div class="preset-grid" id="presetGrid"></div></div>
   </div>
 </div>
 
@@ -434,23 +597,24 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.2.0"></script>
-<script src="js/models.js?v=5.2.0"></script>
-<script src="js/providers.js?v=5.2.0"></script>
-<script src="js/changelog.js?v=5.2.0"></script>
-<script src="js/modelsync.js?v=5.2.0"></script>
-<script src="js/store.js?v=5.2.0"></script>
-<script src="js/util.js?v=5.2.0"></script>
-<script src="js/markdown.js?v=5.2.0"></script>
-<script src="js/api.js?v=5.2.0"></script>
-<script src="js/voice.js?v=5.2.0"></script>
-<script src="js/files.js?v=5.2.0"></script>
-<script src="js/presets.js?v=5.2.0"></script>
-<script src="js/auth.js?v=5.2.0"></script>
-<script src="js/chat.js?v=5.2.0"></script>
-<script src="js/ui.js?v=5.2.0"></script>
-<script src="js/pages.js?v=5.2.0"></script>
-<script src="js/app.js?v=5.2.0"></script>
+<script src="js/icons.js?v=5.3.0"></script>
+<script src="js/models.js?v=5.3.0"></script>
+<script src="js/providers.js?v=5.3.0"></script>
+<script src="js/changelog.js?v=5.3.0"></script>
+<script src="js/modelsync.js?v=5.3.0"></script>
+<script src="js/store.js?v=5.3.0"></script>
+<script src="js/i18n.js?v=5.3.0"></script>
+<script src="js/util.js?v=5.3.0"></script>
+<script src="js/markdown.js?v=5.3.0"></script>
+<script src="js/api.js?v=5.3.0"></script>
+<script src="js/voice.js?v=5.3.0"></script>
+<script src="js/files.js?v=5.3.0"></script>
+<script src="js/presets.js?v=5.3.0"></script>
+<script src="js/auth.js?v=5.3.0"></script>
+<script src="js/chat.js?v=5.3.0"></script>
+<script src="js/ui.js?v=5.3.0"></script>
+<script src="js/pages.js?v=5.3.0"></script>
+<script src="js/app.js?v=5.3.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {

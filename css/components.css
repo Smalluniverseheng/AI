@@ -242,6 +242,9 @@
 }
 /* 官方图标加载成功后隐藏首字母，避免双层重叠 */
 .brand-icon.loaded .brand-letter { display: none; }
+/* Logo 加载成功后改浅色底衬托：避免彩色 Logo 溶于同色品牌底色（图标“消失”） */
+.brand-icon.loaded { background: #fff !important; border: 1px solid var(--border); }
+.brand-icon.loaded img { width: 82%; height: 82%; object-fit: contain; margin: 9%; padding: 0; inset: auto; }
 
 /* 模型状态 */
 .dd-item.deprecated { opacity: .55; }

@@ -26,7 +26,8 @@ const Store = (() => {
     debateFormat: 'standard',
     collabRounds: 2,
     avatar: null,          // { type:'preset', idx } 或 { type:'image', data }
-    voiceSettings: { enabled: true, voiceURI: '', rate: 1 },
+    lang: 'zh-CN',         // 界面语言（zh-CN/zh-TW/en/fr/es/ru/ar）
+    voiceSettings: { enabled: true, voiceURI: '', rate: 1, ttsEngine: 'browser', ttsVoice: 'mimo_default', asrEngine: 'browser' },
     webSearch: { enabled: false, tavilyKey: '' },
     sidebarCollapsed: false,
     recentModels: []
@@ -44,6 +45,8 @@ const Store = (() => {
       if (!raw) raw = localStorage.getItem(LEGACY_KEYS[0]);
       if (raw) {
         const parsed = JSON.parse(raw);
+        // voiceSettings 深合并：老数据缺少新字段（ttsEngine/asrEngine 等）时补默认值
+        parsed.voiceSettings = Object.assign(JSON.parse(JSON.stringify(DEFAULTS.voiceSettings)), parsed.voiceSettings || {});
         replaceState(Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), parsed));
       }
     } catch (e) { /* 数据损坏时使用默认 */ }

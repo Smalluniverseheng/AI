@@ -70,12 +70,19 @@ const Toast = (() => {
     el.className = 'toast ' + type;
     el.innerHTML = icon(TOAST_ICONS[type] || 'info', 16) + '<span>' + esc(msg) + '</span>';
     box.appendChild(el);
-    setTimeout(() => {
+    el._timer = setTimeout(() => {
       el.classList.add('leaving');
       setTimeout(() => el.remove(), 300);
     }, duration);
+    return el;
   }
-  return { show, success: m => show(m, 'success'), error: m => show(m, 'error', 3800), info: m => show(m, 'info'), warning: m => show(m, 'warning', 3200) };
+  function dismiss(el) {
+    if (!el) return;
+    clearTimeout(el._timer);
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 180);
+  }
+  return { show, dismiss, success: m => show(m, 'success'), error: m => show(m, 'error', 3800), info: (m, d) => show(m, 'info', d), warning: m => show(m, 'warning', 3200) };
 })();
 
 /* ---------- 确认对话框 ---------- */

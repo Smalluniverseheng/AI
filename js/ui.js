@@ -40,7 +40,22 @@ const UI = (() => {
   }
 
   /* ==================== 侧边栏 ==================== */
+  /* 侧边栏用户卡 */
+  function renderSidebarUser() {
+    const u = Store.state.userInfo || {};
+    const av = Store.state.avatar;
+    const box = $('#sidebarUserAvatar');
+    if (box) {
+      if (av && av.type === 'image' && av.data) box.innerHTML = '<img src="' + av.data + '">';
+      else box.innerHTML = esc((u.name || 'U').charAt(0).toUpperCase());
+      box.style.background = (av && av.type === 'image') ? 'transparent' : AVATAR_GRADS[(av && av.idx) || 0];
+    }
+    const nm = $('#sidebarUserName');
+    if (nm) nm.textContent = u.name || '用户';
+  }
+
   function renderSidebar(filter) {
+    renderSidebarUser();
     const list = $('#sidebarList');
     const kw = (filter !== undefined ? filter : ($('#sidebarSearchInput').value || '')).trim();
     const chats = (Store.state.chats || []).filter(c => !kw || (c.title || '').toLowerCase().includes(kw.toLowerCase()));
@@ -71,7 +86,12 @@ const UI = (() => {
       if (item) Chat.load(item.dataset.id);
     });
     $('#sidebarSearchInput').addEventListener('input', debounce(e => renderSidebar(e.target.value), 180));
-    $('#sidebarNewBtn').addEventListener('click', () => Chat.new());
+    $('#sidebarNewBtn').addEventListener('click', e => { e.stopPropagation(); Chat.new(); });
+    $('#sidebarUser').addEventListener('click', e => {
+      if (e.target.closest('#sidebarNewBtn')) return;
+      navigate('profile');
+      closeSidebarMobile();
+    });
     $('#exportHistoryBtn').addEventListener('click', () => {
       if (!Store.state.chats.length) return Toast.warning('暂无对话可导出');
       download('对话记录-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(Store.state.chats, null, 2), 'application/json');
@@ -134,7 +154,8 @@ const UI = (() => {
   function renderModelDD(filter) {
     const body = $('#modelDDBody');
     const kw = (filter || '').trim().toLowerCase();
-    const recent = (Store.state.recentModels || []).map(getModel).filter(Boolean);
+    // 已下架 / 专用（语音等）模型不可选：选择器只列出对话类在售模型
+    const recent = (Store.state.recentModels || []).map(getModel).filter(isSelectableModel);
     let html = '';
 
     if (!kw && recent.length) {
@@ -143,8 +164,8 @@ const UI = (() => {
     }
 
     getProvidersInOrder().forEach(p => {
-      const models = sortModels(getProviderModels(p)).filter(m =>
-        !kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
+      const models = getProviderModels(p).filter(m => isSelectableModel(m) &&
+        (!kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw)));
       if (!models.length) return;
       html += '<div class="dd-group-title">' + providerIconHtml(p, 15) + ' ' + esc(p) + '</div>';
       html += models.map(m => ddItemHtml(m)).join('');
@@ -155,14 +176,12 @@ const UI = (() => {
 
   function ddItemHtml(m) {
     const active = m.id === Store.state.currentModelId ? ' active' : '';
-    const dep = m.status === 'deprecated';
     let tags = '';
-    if (m.status === 'new') tags += '<span class="tag new">新</span>';
-    if (dep) tags += '<span class="tag deprecated">已下架</span>';
-    if (m.vision) tags += '<span class="tag">识图</span>';
-    if (m.thinking) tags += '<span class="tag">思考</span>';
-    if (m.ctx >= 512) tags += '<span class="tag">长文</span>';
-    return '<button class="dd-item' + active + (dep ? ' deprecated' : '') + '" data-model="' + m.id + '">' +
+    if (m.status === 'new') tags += '<span class="tag new">' + I18n.t('models.new') + '</span>';
+    if (m.vision) tags += '<span class="tag">' + I18n.t('tag.vision') + '</span>';
+    if (m.thinking) tags += '<span class="tag">' + I18n.t('tag.thinking') + '</span>';
+    if (m.ctx >= 512) tags += '<span class="tag">' + I18n.t('tag.long') + '</span>';
+    return '<button class="dd-item' + active + '" data-model="' + m.id + '">' +
       providerIconHtml(m.provider, 20) +
       '<span class="dd-item-name">' + esc(m.name) + '</span>' +
       '<span class="dd-item-tags">' + tags + '</span></button>';
@@ -200,7 +219,7 @@ const UI = (() => {
   function updateModeSel() {
     const meta = MODE_META[Store.state.currentMode] || MODE_META.single;
     $('#modeIcon').innerHTML = icon(meta.icon, 16);
-    $('#modeLabel').textContent = meta.label;
+    $('#modeLabel').textContent = I18n.t('mode.' + (Store.state.currentMode || 'single'));
     $$('#modeDD .mode-dd-item').forEach(el => el.classList.toggle('active', el.dataset.mode === Store.state.currentMode));
   }
 
@@ -271,16 +290,15 @@ const UI = (() => {
     kw = (kw || '').trim().toLowerCase();
     let html = '';
     getProvidersInOrder().forEach(p => {
-      const models = sortModels(getProviderModels(p)).filter(m => !kw || m.name.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
+      const models = getProviderModels(p).filter(m => isSelectableModel(m) &&
+        (!kw || m.name.toLowerCase().includes(kw) || p.toLowerCase().includes(kw)));
       if (!models.length) return;
       html += '<div class="dd-group-title">' + providerIconHtml(p, 15) + ' ' + esc(p) + '</div>';
       html += models.map(m => {
         const picked = (Store.state[ROLE_STATE_KEY[pickerRole]] || []).includes(m.id);
-        const dep = m.status === 'deprecated';
         let tags = '';
-        if (m.status === 'new') tags += '<span class="tag new">新</span>';
-        if (dep) tags += '<span class="tag deprecated">已下架</span>';
-        return '<button class="dd-item' + (picked ? ' active' : '') + (dep ? ' deprecated' : '') + '" data-pick="' + m.id + '">' +
+        if (m.status === 'new') tags += '<span class="tag new">' + I18n.t('models.new') + '</span>';
+        return '<button class="dd-item' + (picked ? ' active' : '') + '" data-pick="' + m.id + '">' +
           providerIconHtml(m.provider, 20) + '<span class="dd-item-name">' + esc(m.name) + '</span>' +
           '<span class="dd-item-tags">' + tags + '</span>' + (picked ? icon('check', 15) : '') + '</button>';
       }).join('');
@@ -311,14 +329,14 @@ const UI = (() => {
   function renderWelcome() {
     const box = $('#chatContainer');
     const cards = [
-      { icon: 'message', t: '开始对话', d: '与任意 AI 模型聊天', act: 'focus' },
-      { icon: 'grid', t: '多模型对比', d: '多个模型同题竞技', act: 'multi' },
-      { icon: 'sword', t: '辩论模式', d: '正反交锋，裁判点评', act: 'debate' },
-      { icon: 'sparkles', t: '探索助手', d: '角色预设与 AI 工具', act: 'discover' }
+      { icon: 'message', t: I18n.t('welcome.c1t'), d: I18n.t('welcome.c1d'), act: 'focus' },
+      { icon: 'grid', t: I18n.t('welcome.c2t'), d: I18n.t('welcome.c2d'), act: 'multi' },
+      { icon: 'sword', t: I18n.t('welcome.c3t'), d: I18n.t('welcome.c3d'), act: 'debate' },
+      { icon: 'sparkles', t: I18n.t('welcome.c4t'), d: I18n.t('welcome.c4d'), act: 'discover' }
     ];
     box.innerHTML = '<div class="welcome"><div class="welcome-logo">' + icon('sparkles', 32) + '</div>' +
-      '<h2>第三方科技 · AI 聚合平台</h2>' +
-      '<p>150+ 模型一站通达 · 四种对话模式 · 支持语音 / 文件 / 联网 / 绘画</p>' +
+      '<h2>' + I18n.t('welcome.title') + '</h2>' +
+      '<p>' + I18n.t('welcome.sub') + '</p>' +
       '<div class="welcome-cards">' + cards.map(c =>
         '<button class="welcome-card" data-act="' + c.act + '">' + icon(c.icon, 17) + '<span>' + c.t + '<small>' + c.d + '</small></span></button>').join('') +
       '</div></div>';
