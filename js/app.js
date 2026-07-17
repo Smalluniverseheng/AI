@@ -1,159 +1,137 @@
-// ==================== APP ====================
-(function() {
-  // 1. Load state
-  loadState();
-  loadState(); // ensure chat arrays initialized
+/* ==================== APP · 应用入口 ==================== */
+(function () {
+  // 加载状态
+  Store.load();
+  Auth.ensureDefaultUser();
+  UI.applyTheme();
 
-  // 2. Ensure default user 1234/1234
-  AUTH.ensureDefaultUser();
+  /* ---------- PWA 安装 ---------- */
+  window.AppInstall = (() => {
+    let deferredPrompt = null;
+    let installed = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
-  // 3. Theme
-  initTheme();
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (Store.state.loggedIn) Pages.renderProfile && Pages.renderProfile();
+    });
+    window.addEventListener('appinstalled', () => {
+      installed = true;
+      deferredPrompt = null;
+      Toast.success('已安装到桌面 🎉');
+    });
 
-  // 4. DOM events
+    return {
+      canInstall: () => !!deferredPrompt,
+      isInstalled: () => installed,
+      prompt: () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(choice => {
+            if (choice.outcome !== 'accepted') Toast.info('已取消安装');
+            deferredPrompt = null;
+          });
+        } else if (installed) {
+          Toast.info('应用已安装');
+        } else {
+          Toast.info('请使用浏览器菜单「添加到主屏幕」安装（iOS：分享 → 添加到主屏幕）');
+        }
+      }
+    };
+  })();
+
+  /* ---------- Service Worker 注册 ---------- */
+  function registerSW() {
+    if (!('serviceWorker' in navigator)) return;
+    // file:// 协议下跳过
+    if (location.protocol === 'file:') return;
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // 有更新时提示刷新
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            Toast.info('新版本已就绪，刷新后生效');
+          }
+        });
+      });
+    }).catch(() => {});
+  }
+
+  /* ---------- 登录/注册 ---------- */
+  function bindAuthEvents() {
+    const switchTab = tab => {
+      $$('.login-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      $('#loginFormSection').style.display = tab === 'login' ? 'block' : 'none';
+      $('#registerFormSection').style.display = tab === 'register' ? 'block' : 'none';
+      hideError();
+    };
+    $$('.login-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+    const showError = msg => {
+      const box = $('#loginError');
+      box.innerHTML = icon('zap', 15) + '<span>' + esc(msg) + '</span>';
+      box.classList.add('show');
+    };
+    const hideError = () => $('#loginError').classList.remove('show');
+
+    const doLogin = async () => {
+      const account = $('#loginUser').value.trim();
+      const password = $('#loginPass').value;
+      if (!account || !password) return showError('请输入账号和密码');
+      const btn = $('#loginBtn');
+      btn.disabled = true;
+      btn.textContent = '登录中…';
+      const result = await Auth.login(account, password);
+      btn.disabled = false;
+      btn.textContent = '登 录';
+      if (result.ok) {
+        UI.showApp();
+        Toast.success('欢迎回来，' + ((Store.state.userInfo || {}).name || account));
+      } else showError(result.error);
+    };
+
+    const doRegister = async () => {
+      const info = {
+        name: $('#regName').value.trim(),
+        account: $('#regAccount').value.trim(),
+        password: $('#regPass').value,
+        password2: $('#regPass2').value,
+        remark: $('#regRemark').value.trim()
+      };
+      const btn = $('#registerBtn');
+      btn.disabled = true;
+      btn.textContent = '注册中…';
+      const result = await Auth.register(info);
+      btn.disabled = false;
+      btn.textContent = '注册并登录';
+      if (result.ok) {
+        UI.showApp();
+        Toast.success('注册成功，欢迎使用！');
+      } else showError(result.error);
+    };
+
+    $('#loginBtn').addEventListener('click', doLogin);
+    $('#registerBtn').addEventListener('click', doRegister);
+    [$('#loginUser'), $('#loginPass')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); }));
+    [$('#regName'), $('#regAccount'), $('#regPass'), $('#regPass2'), $('#regRemark')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); }));
+  }
+
+  /* ---------- 启动 ---------- */
   document.addEventListener('DOMContentLoaded', () => {
-    // Auto-login check
-    if (state.loggedIn && state.user) { autoLogin(); } else { showLogin(); }
+    UI.init();
+    Pages.init();
+    bindAuthEvents();
+    registerSW();
 
-    // Init UI
-    renderSidebarList();
-    renderChatUI();
-    updateModelSelector();
-    updateModeSelector();
-    setInputAreaMode();
-
-    // Input area
-    const input = document.getElementById('msgInput');
-    if (input) {
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } });
-      input.addEventListener('input', () => autoResize(input));
+    // 恢复侧边栏折叠状态
+    if (Store.state.sidebarCollapsed) {
+      $('#sidebar').classList.add('collapsed');
+      $('#sidebarToggle').classList.add('collapsed');
     }
 
-    // File input
-    const fileInput = document.getElementById('fileInput');
-    if (fileInput) fileInput.addEventListener('change', handleFileSelect);
-
-    // Attach button
-    const attachBtn = document.getElementById('attachBtn');
-    if (attachBtn) attachBtn.addEventListener('click', handleAttach);
-
-    // Send button
-    const sendBtn = document.getElementById('sendBtn');
-    if (sendBtn) sendBtn.addEventListener('click', handleSend);
-
-    // Model dropdown
-    const modelBtn = document.getElementById('modelSelectorBtn');
-    const modelDd = document.getElementById('modelDropdown');
-    if (modelBtn && modelDd) {
-      modelBtn.addEventListener('click', (e) => { e.stopPropagation(); modelDd.classList.toggle('show'); modelBtn.classList.toggle('open'); });
-    }
-
-    // Mode dropdown
-    const modeBtn = document.getElementById('modeSelectorBtn');
-    const modeDd = document.getElementById('modeDropdown');
-    if (modeBtn && modeDd) {
-      modeBtn.addEventListener('click', (e) => { e.stopPropagation(); modeDd.classList.toggle('show'); modeBtn.classList.toggle('open'); });
-    }
-
-    // Settings
-    const settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn) settingsBtn.addEventListener('click', openSettings);
-    const closeSettingsBtn = document.getElementById('closeSettings');
-    if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', closeSettings);
-    const saveKeysBtn = document.getElementById('saveKeysBtn');
-    if (saveKeysBtn) saveKeysBtn.addEventListener('click', saveKeys);
-    const exportKeysBtn = document.getElementById('exportKeysBtn');
-    if (exportKeysBtn) exportKeysBtn.addEventListener('click', exportKeys);
-    const importKeysBtn = document.getElementById('importKeysBtn');
-    if (importKeysBtn) importKeysBtn.addEventListener('click', importKeys);
-    const exportDataBtn = document.getElementById('exportDataBtn');
-    if (exportDataBtn) exportDataBtn.addEventListener('click', exportData);
-    const importDataBtn = document.getElementById('importDataBtn');
-    if (importDataBtn) importDataBtn.addEventListener('click', importData);
-    const clearDataBtn = document.getElementById('clearDataBtn');
-    if (clearDataBtn) clearDataBtn.addEventListener('click', clearAll);
-
-    // Theme cards
-    document.querySelectorAll('.theme-card').forEach(c => {
-      c.addEventListener('click', () => setTheme(c.getAttribute('data-theme')));
-    });
-
-    // Settings tabs
-    document.querySelectorAll('.settings-tab').forEach(t => {
-      t.addEventListener('click', () => switchSettingsTab(t.getAttribute('data-tab')));
-    });
-
-    // Login tabs
-    document.querySelectorAll('.login-tab').forEach(t => {
-      t.addEventListener('click', () => switchLoginTab(t.getAttribute('data-login-tab')));
-    });
-
-    // Login form
-    const loginBtn = document.getElementById('loginBtn');
-    if (loginBtn) loginBtn.addEventListener('click', handleLogin);
-    const loginUser = document.getElementById('loginUser');
-    const loginPass = document.getElementById('loginPass');
-    if (loginUser && loginPass) {
-      loginUser.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
-      loginPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
-    }
-
-    // Register form
-    const regBtn = document.getElementById('registerBtn');
-    if (regBtn) regBtn.addEventListener('click', handleRegister);
-    const regPhone = document.getElementById('regPhone');
-    if (regPhone) regPhone.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
-    const regPass = document.getElementById('regPass');
-    if (regPass) regPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleRegister(); });
-
-    // Reg tags
-    document.querySelectorAll('.reg-tag').forEach(t => {
-      t.addEventListener('click', () => toggleRegTag(t));
-    });
-
-    // Avatar modal
-    const closeAvatarBtn = document.getElementById('closeAvatarModal');
-    if (closeAvatarBtn) closeAvatarBtn.addEventListener('click', closeAvatarModal);
-    const avatarFile = document.getElementById('avatarFileInput');
-    if (avatarFile) avatarFile.addEventListener('change', handleAvatarFile);
-
-    // Mobile nav
-    const navChat = document.getElementById('navChatBtn');
-    if (navChat) navChat.addEventListener('click', () => navigateTo('chat'));
-    const navModels = document.getElementById('navModelsBtn');
-    if (navModels) navModels.addEventListener('click', () => navigateTo('models'));
-    const navDiscover = document.getElementById('navDiscoverBtn');
-    if (navDiscover) navDiscover.addEventListener('click', () => navigateTo('discover'));
-    const navProfile = document.getElementById('navProfileBtn');
-    if (navProfile) navProfile.addEventListener('click', () => navigateTo('profile'));
-
-    // Sidebar toggle
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebarDesktop);
-    const hamburger = document.getElementById('hamburgerBtn');
-    if (hamburger) hamburger.addEventListener('click', toggleSidebar);
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
-    const newChatBtn = document.getElementById('newChatBtn');
-    if (newChatBtn) newChatBtn.addEventListener('click', newChat);
-    const sidebarNew = document.getElementById('sidebarNewBtn');
-    if (sidebarNew) sidebarNew.addEventListener('click', newChat);
-
-    // Logout
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) logoutBtn.addEventListener('click', AUTH.logout);
-
-    // Global keys
-    initGlobalKeys();
-
-    // Set chat page active
-    document.querySelector('.page[data-page="chat"]')?.classList.add('active');
-    document.getElementById('navChatBtn')?.classList.add('active');
-
-    // Initial sidebar state
-    if (window.innerWidth > 768) {
-      const sidebar = document.getElementById('sidebar');
-      if (sidebar) { sidebar.classList.remove('collapsed'); }
-    }
+    if (Auth.checkSession()) UI.showApp();
+    else UI.showLogin();
   });
 })();

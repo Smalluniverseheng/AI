@@ -1,345 +1,504 @@
-// ==================== CHAT LOGIC ====================
+/* ==================== CHAT · 对话编排（单模型/多模型/辩论/协同） ==================== */
+const Chat = (() => {
 
-function selectModel(id) {
-  state.currentModelId = id;
-  const chat = getCurrentChat();
-  if (chat) { chat.modelId = id; saveState(); }
-  updateModelSelector();
-  const dd = document.getElementById('modelDropdown');
-  if (dd) dd.classList.remove('show');
-  document.getElementById('modelSelectorBtn')?.classList.remove('open');
-}
+  let sending = false;
+  let stopFlag = false;
 
-function selectMode(mode) {
-  currentMode = mode;
-  updateModeSelector();
-  setInputAreaMode();
-  const dd = document.getElementById('modeDropdown');
-  if (dd) dd.classList.remove('show');
-  document.getElementById('modeSelectorBtn')?.classList.remove('open');
-}
+  const attachments = { image: null, files: [] };
 
-function loadChat(id) {
-  state.currentChatId = id;
-  saveState();
-  const chat = getCurrentChat();
-  if (chat) {
-    state.currentModelId = chat.modelId || state.currentModelId;
-    updateModelSelector();
+  /* ==================== 基础操作 ==================== */
+  function getCurrentChat() {
+    return Store.state.chats.find(c => c.id === Store.state.currentChatId) || null;
   }
-  renderSidebarList();
-  renderChatUI();
-  document.getElementById('sidebar')?.classList.remove('show');
-  document.getElementById('sidebarOverlay')?.classList.remove('show');
-}
 
-function deleteChat(id) {
-  if (!confirm('确定删除此对话？')) return;
-  state.chats = state.chats.filter(c => c.id !== id);
-  if (state.currentChatId === id) { state.currentChatId = null; }
-  saveState();
-  renderSidebarList();
-  if (!state.currentChatId) { renderChatUI(); }
-}
-
-function newChat() {
-  const id = genId();
-  const chat = { id: id, title: '新对话', modelId: state.currentModelId, messages: [], createdAt: Date.now(), updatedAt: Date.now() };
-  state.chats.unshift(chat);
-  state.currentChatId = id;
-  saveState();
-  renderSidebarList();
-  renderChatUI();
-  document.getElementById('sidebar')?.classList.remove('show');
-  document.getElementById('sidebarOverlay')?.classList.remove('show');
-}
-
-function quickStart(type) {
-  if (type === '单模型') { selectMode('single'); }
-  else if (type === '多模型') { selectMode('multi'); }
-  else if (type === '辩论') { selectMode('debate'); }
-  else if (type === '协同') { selectMode('collab'); }
-  document.getElementById('msgInput')?.focus();
-}
-
-function addMultiModel(id) { addToArray(state, 'multiModels', id); setInputAreaMode(); saveState(); }
-function removeMultiModel(id) { removeFromArray(state, 'multiModels', id); setInputAreaMode(); saveState(); }
-function addDebateModel(side, id) { addToArray(state, 'debate' + side[0].toUpperCase() + side.slice(1) + 's', id); setInputAreaMode(); saveState(); }
-function removeDebatePro(id) { removeFromArray(state, 'debatePro', id); setInputAreaMode(); saveState(); }
-function removeDebateCon(id) { removeFromArray(state, 'debateCon', id); setInputAreaMode(); saveState(); }
-function removeDebateJudge(id) { removeFromArray(state, 'debateJudge', id); setInputAreaMode(); saveState(); }
-function addCollabModel(id) { addToArray(state, 'collabModels', id); setInputAreaMode(); saveState(); }
-function removeCollabModel(id) { removeFromArray(state, 'collabModels', id); setInputAreaMode(); saveState(); }
-
-function addToArray(obj, key, val) { if (!obj[key]) obj[key] = []; if (obj[key].indexOf(val) === -1) { obj[key].push(val); } }
-function removeFromArray(obj, key, val) { if (obj[key]) obj[key] = obj[key].filter(v => v !== val); }
-
-function copyMsg(id) {
-  const chat = getCurrentChat(); if (!chat) return;
-  const msg = chat.messages.find(m => m.id === id); if (!msg) return;
-  navigator.clipboard.writeText(msg.content).then(() => showToast('消息已复制', 'success'));
-}
-
-function regenerateMsg(id) {
-  const chat = getCurrentChat(); if (!chat) return;
-  const idx = chat.messages.findIndex(m => m.id === id); if (idx < 0) return;
-  const userMsg = chat.messages[idx - 1];
-  if (!userMsg || userMsg.role !== 'user') { showToast('找不到对应用户消息', 'warning'); return; }
-  sendMessage(userMsg.content, true);
-}
-
-function deleteMsg(id) {
-  const chat = getCurrentChat(); if (!chat) return;
-  if (!confirm('确定删除此消息？')) return;
-  chat.messages = chat.messages.filter(m => m.id !== id);
-  saveState();
-  renderChatUI();
-}
-
-function sendMessage(content, force) {
-  const chat = ensureChat();
-  if (!content) content = document.getElementById('msgInput')?.value?.trim() || '';
-  if (!content && !imageData) return;
-  if (!content) return;
-
-  const userMsg = { id: genId(), role: 'user', content: content, timestamp: Date.now(), modelId: state.currentModelId };
-  chat.messages.push(userMsg);
-  chat.updatedAt = Date.now();
-  if (!chat.title || chat.title === '新对话') chat.title = generateTitle(content);
-  saveState();
-  appendMessageEl(userMsg);
-  renderSidebarList();
-  document.getElementById('msgInput').value = '';
-  autoResize(document.getElementById('msgInput'));
-  if (imageData) { clearImage(); }
-
-  switch (currentMode) {
-    case 'single': sendSingle(content); break;
-    case 'multi': sendMulti(content); break;
-    case 'debate': sendDebate(content); break;
-    case 'collab': sendCollab(content); break;
+  function ensureChat() {
+    let chat = getCurrentChat();
+    if (!chat) { create(); chat = getCurrentChat(); }
+    return chat;
   }
-}
 
-function sendSingle(content) {
-  const chat = getCurrentChat();
-  if (!chat) return;
-  const m = getModel(state.currentModelId) || getModel(DEFAULT_MODEL_ID);
-  const msgId = genId();
-  let contentBuffer = '';
-  let thinkBuffer = '';
-  let typer = null;
+  function create(opts) {
+    opts = opts || {};
+    const id = genId();
+    const chat = {
+      id,
+      title: opts.title || '新对话',
+      modelId: Store.state.currentModelId,
+      mode: opts.mode || Store.state.currentMode,
+      system: opts.system || '',
+      presetId: opts.presetId || '',
+      messages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    Store.state.chats.unshift(chat);
+    Store.state.currentChatId = id;
+    Store.save();
+    UI.renderSidebar();
+    UI.renderChat();
+    return chat;
+  }
 
-  const aiMsg = {
-    id: msgId, role: 'assistant', content: '', thinking: '',
-    timestamp: Date.now(), modelId: state.currentModelId, isNew: true
-  };
-  chat.messages.push(aiMsg);
-  chat.updatedAt = Date.now();
-  saveState();
-  appendMessageEl(aiMsg);
-
-  const msgs = buildMessages(chat, content, imageData);
-
-  callChatAPI(msgs, state.currentModelId,
-    (chunk, full) => {
-      if (stopRequested) return;
-      contentBuffer = full;
-      if (!typer) {
-        typer = createTypewriter(
-          null,
-          (c) => {
-            aiMsg.content = contentBuffer;
-            updateMessageEl(msgId, contentBuffer);
-          },
-          () => {}
-        );
-      }
-      typer.add(chunk);
-    },
-    (think, fullThink) => {
-      thinkBuffer = fullThink;
-      aiMsg.thinking = thinkBuffer;
-      updateMessageThinking(msgId, thinkBuffer);
+  function load(id) {
+    API.abortAll(); Voice.stopSpeak();
+    sending = false; stopFlag = false;
+    UI.setSending(false);
+    Store.state.currentChatId = id;
+    const chat = getCurrentChat();
+    if (chat && chat.modelId && getModel(chat.modelId)) {
+      Store.state.currentModelId = chat.modelId;
+      UI.updateModelSel();
     }
-  ).then(() => {
-    if (typer) typer.flush();
-    removeMessageCursor(msgId);
-    aiMsg.content = contentBuffer;
-    aiMsg.thinking = thinkBuffer;
-    saveState();
-    renderSidebarList();
-  }).catch(err => {
-    removeMessageCursor(msgId);
-    aiMsg.content = '❌ ' + err.message;
-    saveState();
-    updateMessageEl(msgId, aiMsg.content);
-    showToast(err.message, 'error');
-  }).finally(() => {
-    isSending = false; stopRequested = false;
-    updateSendBtn();
-  });
-}
-
-function sendMulti(content) {
-  const models = state.multiModels || [];
-  if (models.length === 0) { showToast('请先在模式配置中选择至少一个模型', 'warning'); return; }
-  const chat = ensureChat();
-  if (!chat) return;
-  showMultiGrid(models);
-  stopRequested = false;
-  isSending = true;
-  updateSendBtn();
-
-  const promises = models.map(id => {
-    const m = getModel(id); if (!m) return Promise.resolve();
-    const key = getKeyForModel(m); if (!key) { setMultiStatus(id, '未配置Key'); return Promise.resolve(); }
-    const msgId = genId();
-    const aiMsg = { id: msgId, role: 'assistant', content: '', modelId: id, timestamp: Date.now() };
-    chat.messages.push(aiMsg);
-    const msgs = buildMessages(chat, content, imageData);
-    return callChatAPI(msgs, id,
-      (chunk, full) => { if (stopRequested) return; aiMsg.content = full; updateMultiCard(id, full); },
-      null
-    ).then(() => { setMultiStatus(id, '完成'); aiMsg.content = full; saveState(); })
-    .catch(err => { setMultiStatus(id, '错误'); aiMsg.content = '❌ ' + err.message; saveState(); });
-  });
-  Promise.all(promises).finally(() => { isSending = false; stopRequested = false; updateSendBtn(); });
-}
-
-function sendDebate(content) {
-  const dp = state.debatePro || [], dc = state.debateCon || [], dj = state.debateJudge || [];
-  if (dp.length === 0 || dc.length === 0) { showToast('请配置正方和反方模型', 'warning'); return; }
-  const rounds = Math.min(parseInt(document.getElementById('debateRounds')?.value || 3), 10);
-  const chat = ensureChat(); if (!chat) return;
-  stopRequested = false; isSending = true; updateSendBtn();
-  let round = 1;
-  function runRound() {
-    if (stopRequested || round > rounds) { if (dj.length > 0) runJudge(); else finishDebate(); return; }
-    showDebateRound(round);
-    const promises = [];
-    for (let i = 0; i < dp.length; i++) promises.push(debateTurn(dp[i], 'pro', round, content));
-    for (let i = 0; i < dc.length; i++) promises.push(debateTurn(dc[i], 'con', round, content));
-    Promise.all(promises).then(() => { round++; if (round <= rounds && !stopRequested) runRound(); else if (dj.length > 0) runJudge(); else finishDebate(); });
+    Store.save();
+    UI.renderSidebar();
+    UI.renderChat();
   }
-  runRound();
-  function runJudge() {
-    const promises = [];
-    for (let i = 0; i < dj.length; i++) promises.push(debateTurn(dj[i], 'judge', rounds + 1, content));
-    Promise.all(promises).then(() => finishDebate());
+
+  function del(id) {
+    Store.state.chats = Store.state.chats.filter(c => c.id !== id);
+    if (Store.state.currentChatId === id) Store.state.currentChatId = null;
+    Store.save();
+    UI.renderSidebar();
+    UI.renderChat();
+    Toast.success('已删除');
   }
-  function finishDebate() { isSending = false; stopRequested = false; updateSendBtn(); showToast('辩论结束', 'info'); }
-}
 
-function debateTurn(modelId, side, round, topic) {
-  const chat = getCurrentChat(); if (!chat) return Promise.resolve();
-  const m = getModel(modelId); if (!m) return Promise.resolve();
-  const key = getKeyForModel(m); if (!key) return Promise.resolve();
-  const msgId = genId();
-  const aiMsg = { id: msgId, role: 'assistant', content: '', modelId: modelId, timestamp: Date.now() };
-  chat.messages.push(aiMsg);
+  function selectModel(id) {
+    Store.state.currentModelId = id;
+    // 最近使用
+    const rec = Store.state.recentModels || [];
+    Store.state.recentModels = [id].concat(rec.filter(x => x !== id)).slice(0, 4);
+    const chat = getCurrentChat();
+    if (chat) chat.modelId = id;
+    Store.save();
+    UI.updateModelSel();
+    const m = getModel(id);
+    if (m) Toast.info('已切换：' + m.name);
+  }
 
-  const sideNames = { pro: '正方', con: '反方', judge: '裁判' };
-  const prompts = {
-    pro: '你是正方辩手。辩论主题：' + topic + '。这是第' + round + '轮。请从支持该观点的角度进行论述。',
-    con: '你是反方辩手。辩论主题：' + topic + '。这是第' + round + '轮。请从反对该观点的角度进行论述。',
-    judge: '你是辩论裁判。请对以上辩论进行总结和评判，给出你的观点。'
+  function selectMode(mode) {
+    Store.state.currentMode = mode;
+    Store.save();
+    UI.updateModeSel();
+    UI.renderModeConfig();
+  }
+
+  function addToRole(role, modelId) {
+    const key = { multi: 'multiModels', pro: 'debatePro', con: 'debateCon', judge: 'debateJudge', collab: 'collabModels' }[role];
+    const arr = Store.state[key];
+    const idx = arr.indexOf(modelId);
+    if (idx >= 0) arr.splice(idx, 1);
+    else {
+      if (role === 'judge' && arr.length >= 2) return Toast.warning('裁判最多 2 个');
+      if (arr.length >= 8) return Toast.warning('最多选择 8 个模型');
+      arr.push(modelId);
+    }
+    Store.save();
+    UI.renderChips(role);
+  }
+
+  function removeFromRole(role, modelId) {
+    const key = { multi: 'multiModels', pro: 'debatePro', con: 'debateCon', judge: 'debateJudge', collab: 'collabModels' }[role];
+    Store.state[key] = Store.state[key].filter(x => x !== modelId);
+    Store.save();
+    UI.renderChips(role);
+  }
+
+  /* ==================== 附件 ==================== */
+  async function addAttachment(file) {
+    try {
+      const parsed = await Files.parse(file);
+      if (parsed.kind === 'image') {
+        const model = getModel(Store.state.currentModelId);
+        if (model && !model.vision && Store.state.currentMode === 'single') {
+          Toast.warning('当前模型不支持识图，图片将以链接形式占位；建议切换带「识图」标签的模型');
+        }
+        attachments.image = { name: parsed.name, dataUrl: parsed.dataUrl };
+      } else {
+        attachments.files.push(parsed);
+        Toast.success('已解析：' + parsed.name + (parsed.truncated ? '（已截断）' : ''));
+      }
+      UI.renderAttachments();
+    } catch (e) {
+      Toast.error(e.message || '文件解析失败');
+    }
+  }
+
+  function removeAttachment(key) {
+    if (key === 'image') attachments.image = null;
+    else if (key.startsWith('file:')) attachments.files.splice(+key.slice(5), 1);
+    UI.renderAttachments();
+  }
+
+  function clearAttachments() {
+    attachments.image = null;
+    attachments.files = [];
+    UI.renderAttachments();
+  }
+
+  /* ==================== 发送 ==================== */
+  function isSending() { return sending; }
+
+  function stop() {
+    if (!sending) return;
+    stopFlag = true;
+    API.abortAll();
+  }
+
+  async function send(rawContent) {
+    if (sending) return;
+    const input = $('#chatInput');
+    const content = (rawContent !== undefined ? rawContent : input.value).trim();
+    if (!content && !attachments.image && !attachments.files.length) return;
+
+    const mode = Store.state.currentMode;
+    // 模式前置校验
+    if (mode === 'multi' && !Store.state.multiModels.length) return Toast.warning('请先在上方配置多模型（至少 1 个）');
+    if (mode === 'debate' && (!Store.state.debatePro.length || !Store.state.debateCon.length)) return Toast.warning('请先配置正方和反方模型');
+    if (mode === 'collab' && Store.state.collabModels.length < 2) return Toast.warning('协同模式至少需要 2 个模型');
+
+    const chat = ensureChat();
+    chat.mode = mode;
+
+    // 附件打包
+    const filesText = Files.wrapAsContext(attachments.files);
+    const img = attachments.image;
+    const at = { image: img, filesText };
+
+    const userMsg = { id: genId(), role: 'user', content, ts: Date.now(), image: img ? img.dataUrl : null, files: attachments.files.map(f => f.name) };
+    chat.messages.push(userMsg);
+    if (!chat.title || chat.title === '新对话') chat.title = makeTitle(content || (img ? '图片对话' : '文件分析'));
+    chat.updatedAt = Date.now();
+    Store.save();
+
+    UI.appendMsg(userMsg);
+    UI.renderSidebar();
+    input.value = '';
+    autoResize(input);
+    $('#charCount').textContent = '0 字';
+    clearAttachments();
+
+    sending = true;
+    stopFlag = false;
+    UI.setSending(true);
+
+    try {
+      const runnerOpts = { excludeId: userMsg.id };
+      if (mode === 'multi') await runMulti(chat, content, at, runnerOpts);
+      else if (mode === 'debate') await runDebate(chat, content);
+      else if (mode === 'collab') await runCollab(chat, content, at, runnerOpts);
+      else await runSingle(chat, content, at, runnerOpts);
+    } catch (e) {
+      if (e && e.name !== 'AbortError') Toast.error(e.message || '出错了');
+    }
+
+    sending = false;
+    UI.setSending(false);
+    UI.renderSidebar();
+    Store.save();
+  }
+
+  function makeTitle(text) {
+    return text.replace(/\s+/g, ' ').slice(0, 24) || '新对话';
+  }
+
+  /* ==================== 单模型 ==================== */
+  async function buildSendMessages(chat, content, at, opts) {
+    opts = opts || {};
+    const msgs = API.buildMessages(chat, content, at, { excludeId: opts.excludeId });
+    // 联网搜索注入
+    if (opts.webSearch !== false && Store.state.webSearch.enabled && Store.state.webSearch.tavilyKey && content) {
+      try {
+        Toast.info('正在联网搜索…');
+        const data = await API.webSearch(content);
+        if (data.results.length) {
+          msgs.unshift({ role: 'system', content: API.buildSearchContext(content, data) });
+          Toast.success('已获取 ' + data.results.length + ' 条搜索结果');
+        }
+      } catch (e) {
+        Toast.warning('搜索失败，将离线回答：' + e.message);
+      }
+    }
+    return msgs;
+  }
+
+  async function runSingle(chat, content, at, opts) {
+    opts = opts || {};
+    const modelId = opts.modelId || chat.modelId || Store.state.currentModelId;
+    const msg = { id: genId(), role: 'assistant', modelId, content: '', thinking: '', ts: Date.now() };
+    chat.messages.push(msg);
+    UI.appendMsg(msg);
+
+    const msgs = await buildSendMessages(chat, content, at, opts);
+    // buildMessages 用了刚 push 的空消息，剔除
+    const cleanMsgs = msgs.filter(m => !(m.role === 'assistant' && !m.content));
+
+    try {
+      const result = await API.chat({
+        modelId, messages: cleanMsgs,
+        onChunk: (chunk, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+      });
+      msg.content = result.content;
+      msg.thinking = result.thinking || msg.thinking;
+      UI.finishMsg(msg.id, msg.content);
+    } catch (e) {
+      if (stopFlag || e.name === 'AbortError') {
+        msg.content = msg.content || '';
+        UI.finishMsg(msg.id, msg.content);
+      } else {
+        msg.error = e.message;
+        msg.content = '';
+        UI.setMsgError(msg.id, e.message);
+      }
+    }
+    chat.updatedAt = Date.now();
+  }
+
+  /* ==================== 多模型并行 ==================== */
+  async function runMulti(chat, content, at, opts) {
+    opts = opts || {};
+    const ids = Store.state.multiModels.slice(0, 8);
+    const batchId = genId();
+    const tasks = ids.map(modelId => {
+      const msg = { id: genId(), role: 'assistant', modelId, batchId, content: '', thinking: '', ts: Date.now() };
+      chat.messages.push(msg);
+      UI.appendMsg(msg);
+      const msgs = API.buildMessages(chat, content, at, { excludeId: opts.excludeId }).filter(m => !(m.role === 'assistant' && !m.content));
+      return API.chat({
+        modelId, messages: msgs,
+        onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+      }).then(r => {
+        msg.content = r.content;
+        msg.thinking = r.thinking || msg.thinking;
+        UI.finishMsg(msg.id, msg.content);
+      }).catch(e => {
+        if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); }
+        else { msg.error = e.message; msg.content = ''; UI.setMsgError(msg.id, e.message); }
+      });
+    });
+    await Promise.all(tasks);
+    chat.updatedAt = Date.now();
+  }
+
+  /* ==================== 辩论模式 ==================== */
+  const DEBATE_ROLE_PROMPT = {
+    pro: '你是辩论赛正方辩手。围绕辩题坚定支持正方立场，论据充分、逻辑严密、表达有感染力。每次发言控制在 250 字以内。',
+    con: '你是辩论赛反方辩手。围绕辩题坚定支持反方立场，犀利反驳正方观点，论据充分、逻辑严密。每次发言控制在 250 字以内。',
+    judge: '你是辩论赛裁判。客观中立地分析双方表现，指出亮点与漏洞，并最终给出评判结果。'
   };
 
-  return callChatAPI([{ role: 'user', content: prompts[side] }], modelId,
-    (chunk, full) => { if (stopRequested) return; aiMsg.content = full; appendMessageEl(aiMsg); }
-  ).then(() => { aiMsg.content = full; saveState(); })
-  .catch(err => { aiMsg.content = '❌ ' + err.message; saveState(); });
-}
+  async function debateSpeak(chat, modelId, role, stage, topic, transcript) {
+    if (stopFlag) throw new Error('__stopped__');
+    const msg = { id: genId(), role: 'assistant', modelId, debateRole: role, stage, content: '', thinking: '', ts: Date.now() };
+    chat.messages.push(msg);
+    UI.appendMsg(msg);
 
-function sendCollab(content) {
-  const models = state.collabModels || [];
-  if (models.length === 0) { showToast('请配置协作模型', 'warning'); return; }
-  const chat = ensureChat(); if (!chat) return;
-  stopRequested = false; isSending = true; updateSendBtn();
-  let responses = [];
-  function nextStep(step) {
-    if (stopRequested || step >= models.length) { showCollabSummary(responses); finish(); return; }
-    const m = getModel(models[step]); if (!m) { nextStep(step + 1); return; }
-    const key = getKeyForModel(m); if (!key) { nextStep(step + 1); return; }
-    const prompt = step === 0 ? '请分析以下问题：' + content : '基于之前分析：' + responses.join(' | ') + '，请进一步补充和完善。';
-    const msgId = genId();
-    const aiMsg = { id: msgId, role: 'assistant', content: '', modelId: models[step], timestamp: Date.now() };
-    chat.messages.push(aiMsg);
-    return callChatAPI([{ role: 'user', content: prompt }], models[step],
-      (chunk, full) => { if (stopRequested) return; aiMsg.content = full; appendMessageEl(aiMsg); }
-    ).then(() => { responses.push(aiMsg.content); saveState(); nextStep(step + 1); })
-    .catch(() => { nextStep(step + 1); });
+    const historyText = transcript.slice(-14).map(t => '【' + t.who + '】' + t.text).join('\n\n');
+    const userPrompt = '辩题：' + topic + (historyText ? '\n\n以下是目前的辩论记录：\n' + historyText : '') + '\n\n轮到你发言（' + stage + '），请直接输出发言内容：';
+    const msgs = [
+      { role: 'system', content: DEBATE_ROLE_PROMPT[role] },
+      { role: 'user', content: userPrompt }
+    ];
+
+    try {
+      const result = await API.chat({
+        modelId, messages: msgs,
+        onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+      });
+      msg.content = result.content;
+      UI.finishMsg(msg.id, msg.content);
+      transcript.push({ who: (role === 'pro' ? '正方' : role === 'con' ? '反方' : '裁判') + '·' + stage, text: result.content });
+    } catch (e) {
+      if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); throw new Error('__stopped__'); }
+      msg.error = e.message;
+      UI.setMsgError(msg.id, e.message);
+      transcript.push({ who: stage, text: '（发言失败：' + e.message + '）' });
+    }
+    chat.updatedAt = Date.now();
   }
-  nextStep(0);
-  function finish() { isSending = false; stopRequested = false; updateSendBtn(); }
-}
 
-function showCollabSummary(responses) {
-  const chat = getCurrentChat(); if (!chat) return;
-  const summaryId = genId();
-  const summaryMsg = { id: summaryId, role: 'assistant', content: '', timestamp: Date.now(), modelId: 'summary' };
-  chat.messages.push(summaryMsg);
-  appendMessageEl(summaryMsg);
-  summaryMsg.content = '**协同总结**\n\n' + responses.map((r, i) => '**模型' + (i + 1) + '：** ' + r.slice(0, 500) + (r.length > 500 ? '...' : '')).join('\n\n');
-  saveState();
-  updateMessageEl(summaryId, summaryMsg.content);
-}
+  async function runDebate(chat, topic) {
+    const pros = Store.state.debatePro.slice(0, 3);
+    const cons = Store.state.debateCon.slice(0, 3);
+    const judges = Store.state.debateJudge.length ? Store.state.debateJudge : [Store.state.currentModelId];
+    const rounds = Store.state.debateRounds;
+    const format = Store.state.debateFormat;
+    const transcript = [];
 
-function showDebateRound(round) {
-  const chat = getCurrentChat(); if (!chat) return;
-  const dividerId = genId();
-  const dividerMsg = { id: dividerId, role: 'assistant', content: '**第 ' + round + ' 轮**', timestamp: Date.now(), modelId: 'divider' };
-  chat.messages.push(dividerMsg);
-  appendMessageEl(dividerMsg);
-  saveState();
-}
+    const cycle = async (stageName, firstSpeaker) => {
+      for (let r = 0; r < rounds; r++) {
+        for (const m of (firstSpeaker === 'pro' ? pros : cons)) await debateSpeak(chat, m, firstSpeaker, stageName + ' 第' + (r + 1) + '轮', topic, transcript);
+        for (const m of (firstSpeaker === 'pro' ? cons : pros)) await debateSpeak(chat, m, firstSpeaker === 'pro' ? 'con' : 'pro', stageName + ' 第' + (r + 1) + '轮', topic, transcript);
+      }
+    };
 
-function updateSendBtn() {
-  const btn = document.getElementById('sendBtn');
-  if (!btn) return;
-  if (isSending) { btn.classList.add('stop'); btn.textContent = '⏹'; btn.title = '停止'; } else { btn.classList.remove('stop'); btn.textContent = '➤'; btn.title = '发送'; }
-}
+    if (format === 'battle') {
+      await cycle('观点交锋', 'pro');
+    } else if (format === 'fast') {
+      for (const m of pros) await debateSpeak(chat, m, 'pro', '立论', topic, transcript);
+      for (const m of cons) await debateSpeak(chat, m, 'con', '立论', topic, transcript);
+      await cycle('自由辩论', 'con');
+    } else {
+      // standard：立论 → 攻辩 → 自由辩 → 总结
+      for (const m of pros) await debateSpeak(chat, m, 'pro', '开篇立论', topic, transcript);
+      for (const m of cons) await debateSpeak(chat, m, 'con', '开篇立论', topic, transcript);
+      await cycle('攻辩', 'con');
+      await cycle('自由辩论', 'pro');
+      for (const m of cons) await debateSpeak(chat, m, 'con', '总结陈词', topic, transcript);
+      for (const m of pros) await debateSpeak(chat, m, 'pro', '总结陈词', topic, transcript);
+    }
+    for (const m of judges.slice(0, 1)) await debateSpeak(chat, m, 'judge', '裁判点评', topic, transcript);
+    chat.updatedAt = Date.now();
+  }
 
-function handleSend() {
-  const btn = document.getElementById('sendBtn');
-  if (isSending) { stopGeneration(); return; }
-  const input = document.getElementById('msgInput');
-  if (!input) return;
-  const content = input.value.trim();
-  if (!content) return;
-  sendMessage(content);
-}
+  /* ==================== 协同合作 ==================== */
+  async function collabSpeak(chat, modelId, role, stage, prompt, sysPrompt) {
+    if (stopFlag) throw new Error('__stopped__');
+    const msg = { id: genId(), role: 'assistant', modelId, collabRole: role, stage, content: '', thinking: '', ts: Date.now() };
+    chat.messages.push(msg);
+    UI.appendMsg(msg);
+    const msgs = [
+      { role: 'system', content: sysPrompt },
+      { role: 'user', content: prompt }
+    ];
+    try {
+      const result = await API.chat({
+        modelId, messages: msgs,
+        onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+      });
+      msg.content = result.content;
+      UI.finishMsg(msg.id, msg.content);
+      return result.content;
+    } catch (e) {
+      if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); throw new Error('__stopped__'); }
+      msg.error = e.message;
+      UI.setMsgError(msg.id, e.message);
+      return '（执行失败：' + e.message + '）';
+    } finally {
+      chat.updatedAt = Date.now();
+    }
+  }
 
-function autoResize(el) {
-  if (!el) return;
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-}
+  async function runCollab(chat, task, at) {
+    const models = Store.state.collabModels.slice(0, 6);
+    const leader = models[0];
+    const workers = models.slice(1);
+    const rounds = Store.state.collabRounds;
+    const leaderModel = getModel(leader);
+    const filesNote = at && at.filesText ? '\n\n随附资料：\n' + at.filesText : '';
 
-function handleAttach() {
-  document.getElementById('fileInput')?.click();
-}
+    // ① 主持人拆解任务
+    const plan = await collabSpeak(chat, leader, 'leader', '任务拆解',
+      '任务：' + task + filesNote + '\n\n你是项目主持人，请将任务拆解为 ' + workers.length + ' 个子任务，分配给 ' + workers.length + ' 位协作者（按序号 1-' + workers.length + ' 编号）。输出格式：\n总体思路：...\n子任务1：...\n子任务2：...\n（每个子任务一句话说明）',
+      '你是一位项目主持人，擅长把复杂任务拆解成可并行执行的子任务。输出简洁、结构清晰。');
 
-function handleFileSelect(e) {
-  const file = e.target.files?.[0]; if (!file) return;
-  if (!file.type.startsWith('image/')) { showToast('仅支持图片文件', 'warning'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    imageData = { base64: reader.result.split(',')[1], mimeType: file.type, name: file.name };
-    const bar = document.getElementById('imagePreviewBar');
-    if (bar) { bar.innerHTML = '<div class="img-preview"><img src="' + reader.result + '" alt=""><span>' + file.name + '</span><span class="img-x" onclick="clearImage()">×</span></div>'; bar.classList.remove('hidden'); }
-    const btn = document.getElementById('attachBtn');
-    if (btn) btn.classList.add('has-file');
+    // ② 协作者并行执行
+    const workSys = '你是一位专业协作者，负责完成分配给你的子任务。输出高质量、可直接使用的内容，使用 Markdown 排版。';
+    const doWork = (w, idx, extra) => {
+      const m = getModel(w);
+      return collabSpeak(chat, w, 'worker', '协作执行' + (extra ? '（修订）' : ''),
+        '总任务：' + task + '\n\n主持人方案：\n' + plan + '\n\n你是协作者 ' + (idx + 1) + ' 号（' + (m ? m.name : '') + '），请完成分配给你的子任务部分：' + (extra || ''),
+        workSys);
+    };
+    let results = await Promise.all(workers.map((w, i) => doWork(w, i)));
+
+    // ③ 修订轮（主持人点评 → 协作者改进）
+    for (let r = 1; r < rounds; r++) {
+      const review = await collabSpeak(chat, leader, 'leader', '评审 第' + r + '轮',
+        '总任务：' + task + '\n\n各协作者当前成果：\n' + results.map((t, i) => '【协作者' + (i + 1) + '】\n' + t).join('\n\n') + '\n\n请指出每份成果的不足之处与具体修改建议（分点、简短）。',
+        '你是严格的评审专家，提出具体可执行的修改意见。');
+      results = await Promise.all(workers.map((w, i) => doWork(w, i,
+        '\n\n你上一版的成果：\n' + results[i] + '\n\n评审意见：\n' + review + '\n\n请输出修订后的完整版本：')));
+    }
+
+    // ④ 主持人汇总
+    await collabSpeak(chat, leader, 'leader', '成果汇总',
+      '总任务：' + task + '\n\n各协作者最终成果：\n' + results.map((t, i) => '【协作者' + (i + 1) + '】\n' + t).join('\n\n') + '\n\n请将所有成果整合为一份完整、连贯、高质量的最终交付内容。',
+      '你是项目主持人，负责把多人成果整合为统一风格的最终交付物。输出完整内容，而非摘要。');
+    chat.updatedAt = Date.now();
+  }
+
+  /* ==================== 消息操作 ==================== */
+  async function regenerate(id) {
+    if (sending) return Toast.warning('正在生成中，请先停止');
+    const chat = getCurrentChat();
+    if (!chat) return;
+    const idx = chat.messages.findIndex(m => m.id === id);
+    if (idx < 0) return;
+    const msg = chat.messages[idx];
+
+    // 找到前面的用户消息
+    let userMsg = null;
+    for (let i = idx - 1; i >= 0; i--) {
+      if (chat.messages[i].role === 'user') { userMsg = chat.messages[i]; break; }
+    }
+    if (!userMsg) return Toast.warning('找不到对应的提问');
+
+    if (msg.batchId) {
+      // 多模型单条重试
+      chat.messages.splice(idx, 1);
+      Store.save();
+      UI.renderChat();
+      sending = true; stopFlag = false; UI.setSending(true);
+      const newMsg = { id: genId(), role: 'assistant', modelId: msg.modelId, batchId: msg.batchId, content: '', thinking: '', ts: Date.now() };
+      chat.messages.splice(idx, 0, newMsg);
+      UI.renderChat();
+      const msgs = API.buildMessages(chat, userMsg.content, {}).filter(m => !(m.role === 'assistant' && !m.content));
+      try {
+        const r = await API.chat({
+          modelId: newMsg.modelId, messages: msgs,
+          onChunk: (c, full) => { if (!stopFlag) { newMsg.content = full; UI.setMsgContent(newMsg.id, full); } }
+        });
+        newMsg.content = r.content;
+        UI.finishMsg(newMsg.id, newMsg.content);
+      } catch (e) {
+        if (!(stopFlag || e.name === 'AbortError')) { newMsg.error = e.message; UI.setMsgError(newMsg.id, e.message); }
+      }
+      sending = false; UI.setSending(false); Store.save();
+      return;
+    }
+
+    // 单条重生成：删除该消息及其后所有 assistant 消息，重发
+    chat.messages = chat.messages.slice(0, idx);
+    Store.save();
+    UI.renderChat();
+    await send(userMsg.content);
+  }
+
+  function editUserMsg(id) {
+    const chat = getCurrentChat();
+    if (!chat) return;
+    const idx = chat.messages.findIndex(m => m.id === id);
+    if (idx < 0) return;
+    const msg = chat.messages[idx];
+    $('#chatInput').value = msg.content;
+    autoResize($('#chatInput'));
+    $('#charCount').textContent = msg.content.length + ' 字';
+    // 删除该消息及其后内容
+    chat.messages = chat.messages.slice(0, idx);
+    Store.save();
+    UI.renderChat();
+    $('#chatInput').focus();
+    Toast.info('已载入编辑，发送将从此处重新对话');
+  }
+
+  function delMsg(id) {
+    const chat = getCurrentChat();
+    if (!chat) return;
+    chat.messages = chat.messages.filter(m => m.id !== id);
+    Store.save();
+    UI.renderChat();
+  }
+
+  return {
+    attachments, isSending, getCurrentChat,
+    new: create, load, del, selectModel, selectMode,
+    addToRole, removeFromRole,
+    addAttachment, removeAttachment, clearAttachments,
+    send, stop, regenerate, editUserMsg, delMsg
   };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-}
-
-function clearImage() {
-  imageData = null;
-  const bar = document.getElementById('imagePreviewBar');
-  if (bar) { bar.innerHTML = ''; bar.classList.add('hidden'); }
-  const btn = document.getElementById('attachBtn');
-  if (btn) btn.classList.remove('has-file');
-}
+})();

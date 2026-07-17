@@ -1,94 +1,76 @@
-// ==================== AUTH ====================
-const AUTH = (() => {
-  function getUsers() {
-    try { const u = localStorage.getItem(USERS_KEY); return u ? JSON.parse(u) : {}; } catch (e) { return {}; }
-  }
-  function saveUsers(users) { localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
-  function hash(p) {
+/* ==================== AUTH · 登录 / 注册 ====================
+ * 当前为本地演示账号体系（localStorage）。
+ * 后期接入后端时替换 login/register/logout 为服务端接口调用即可，UI 无需改动。
+ */
+const Auth = (() => {
+
+  async function hash(p) {
+    if (crypto && crypto.subtle) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('3rd-ai:' + p));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    // 降级（非安全上下文）
     let h = 0;
-    for (let i = 0; i < p.length; i++) { h = ((h << 5) - h) + p.charCodeAt(i); h |= 0; }
+    const s = '3rd-ai:' + p;
+    for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; }
     return String(h);
   }
-  function login(phone, password) {
-    const users = getUsers();
-    if (!users[phone]) { return { ok: false, error: '用户不存在' }; }
-    if (users[phone].password !== hash(password)) { return { ok: false, error: '密码错误' }; }
-    state.loggedIn = true; state.user = phone; state.userInfo = users[phone];
-    saveState(); return { ok: true };
-  }
-  function register(phone, password, name, age, gender, interests) {
-    const users = getUsers();
-    if (users[phone]) { return { ok: false, error: '手机号已注册' }; }
-    if (!phone || phone.length < 4) { return { ok: false, error: '请输入手机号' }; }
-    if (!password || password.length < 4) { return { ok: false, error: '密码至少4位' }; }
-    if (!name) { return { ok: false, error: '请输入姓名' }; }
-    const user = { phone, password: hash(password), name, age, gender, interests, createdAt: Date.now() };
-    users[phone] = user; saveUsers(users);
-    state.loggedIn = true; state.user = phone; state.userInfo = user;
-    saveState(); return { ok: true };
-  }
-  function logout() {
-    state.loggedIn = false; state.user = null; state.userInfo = null; state.currentChatId = null;
-    saveState();
-    showLogin();
-    showToast('已退出登录', 'info');
-  }
+
   function ensureDefaultUser() {
-    const users = getUsers();
+    const users = Store.getUsers();
     if (!users['1234']) {
-      users['1234'] = { phone: '1234', password: hash('1234'), name: '默认用户', age: '25', gender: '保密', interests: [], createdAt: Date.now() };
-      saveUsers(users);
+      hash('1234').then(h => {
+        const u2 = Store.getUsers();
+        if (!u2['1234']) {
+          u2['1234'] = { account: '1234', password: h, name: '演示用户', createdAt: Date.now() };
+          Store.saveUsers(u2);
+        }
+      });
     }
   }
-  return { login, register, logout, ensureDefaultUser, getUsers };
+
+  async function login(account, password) {
+    const users = Store.getUsers();
+    const u = users[account];
+    if (!u) return { ok: false, error: '账号不存在，请先注册' };
+    if (u.password !== await hash(password)) return { ok: false, error: '密码错误，请重试' };
+    Store.patch({ loggedIn: true, user: account, userInfo: u });
+    return { ok: true };
+  }
+
+  async function register(info) {
+    const { account, password, name } = info;
+    if (!name || !name.trim()) return { ok: false, error: '请填写昵称' };
+    if (!account || account.length < 3) return { ok: false, error: '账号至少 3 位' };
+    if (!password || password.length < 4) return { ok: false, error: '密码至少 4 位' };
+    if (password !== info.password2) return { ok: false, error: '两次输入的密码不一致' };
+    const users = Store.getUsers();
+    if (users[account]) return { ok: false, error: '该账号已被注册' };
+    const user = { account, password: await hash(password), name: name.trim(), remark: info.remark || '', createdAt: Date.now() };
+    users[account] = user;
+    Store.saveUsers(users);
+    Store.patch({ loggedIn: true, user: account, userInfo: user });
+    return { ok: true };
+  }
+
+  function logout() {
+    API.abortAll();
+    Voice.stopSpeak();
+    Voice.stopInput();
+    Store.patch({ loggedIn: false, user: null, userInfo: null, currentChatId: null });
+    UI.showLogin();
+    Toast.info('已退出登录');
+  }
+
+  /* 进入应用前的会话检查 */
+  function checkSession() {
+    const s = Store.state;
+    if (s.loggedIn && s.user) {
+      const users = Store.getUsers();
+      if (users[s.user]) { Store.patch({ userInfo: users[s.user] }); return true; }
+    }
+    return false;
+  }
+
+  return { ensureDefaultUser, login, register, logout, checkSession };
 })();
-
-function showLogin() {
-  document.querySelector('.login-page')?.classList.remove('hidden');
-  document.querySelector('.app-shell')?.classList.add('hidden');
-}
-
-function showApp() {
-  document.querySelector('.login-page')?.classList.add('hidden');
-  document.querySelector('.app-shell')?.classList.remove('hidden');
-  document.querySelector('.app-shell').style.display = 'flex';
-}
-
-function switchLoginTab(tab) {
-  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.login-form').forEach(f => f.classList.add('hidden'));
-  document.querySelector('[data-login-tab="' + tab + '"]')?.classList.add('active');
-  document.getElementById(tab + 'Form')?.classList.remove('hidden');
-  showLoginError(''); showRegError('');
-}
-
-function handleLogin() {
-  const phone = document.getElementById('loginUser')?.value?.trim() || '';
-  const password = document.getElementById('loginPass')?.value?.trim() || '';
-  if (!phone || !password) { showLoginError('请输入账号和密码'); return; }
-  const result = AUTH.login(phone, password);
-  if (result.ok) { showApp(); showToast('欢迎回来！', 'success'); } else { showLoginError(result.error); }
-}
-
-function handleRegister() {
-  const phone = document.getElementById('regPhone')?.value?.trim() || '';
-  const password = document.getElementById('regPass')?.value?.trim() || '';
-  const name = document.getElementById('regName')?.value?.trim() || '';
-  const age = '';
-  const gender = '';
-  const interests = [];
-  document.querySelectorAll('.reg-tag.active').forEach(t => { const v = t.getAttribute('data-value'); if (v) interests.push(v); });
-  if (!phone || !password || !name) { showRegError('请填写完整信息'); return; }
-  const result = AUTH.register(phone, password, name, age, gender, interests);
-  if (result.ok) { showApp(); showToast('注册成功！', 'success'); } else { showRegError(result.error); }
-}
-
-function toggleRegTag(el) { el.classList.toggle('active'); }
-
-function autoLogin() {
-  if (state.loggedIn && state.user) {
-    const users = AUTH.getUsers();
-    if (users[state.user]) { state.userInfo = users[state.user]; showApp(); }
-    else { showLogin(); }
-  } else { showLogin(); }
-}

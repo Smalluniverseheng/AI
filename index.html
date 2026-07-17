@@ -2,312 +2,454 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>第三方科技 - AI 智能聚合平台</title>
-<link rel="stylesheet" href="css/base.css?v=4.1">
-<link rel="stylesheet" href="css/layout.css?v=4.1">
-<link rel="stylesheet" href="css/components.css?v=4.1">
-<link rel="stylesheet" href="css/chat.css?v=4.1">
-<link rel="stylesheet" href="css/login.css?v=4.1">
-<link rel="stylesheet" href="css/mobile.css?v=4.1">
-<link rel="stylesheet" href="css/theme.css?v=4.1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>第三方科技 · AI 智能聚合平台</title>
+<meta name="description" content="第三方科技 AI 智能聚合平台：150+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
+<meta name="theme-color" content="#F5F6F8">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="第三方AI">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<!-- KaTeX（数学公式渲染，可选增强） -->
+<link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
+<link rel="stylesheet" href="css/base.css?v=5.0.0">
+<link rel="stylesheet" href="css/layout.css?v=5.0.0">
+<link rel="stylesheet" href="css/components.css?v=5.0.0">
+<link rel="stylesheet" href="css/chat.css?v=5.0.0">
+<link rel="stylesheet" href="css/login.css?v=5.0.0">
+<link rel="stylesheet" href="css/pages.css?v=5.0.0">
 </head>
 <body>
 
-<!-- ==================== LOGIN PAGE ==================== -->
-<div id="loginPage" class="login-page">
+<!-- ==================== 登录页 ==================== -->
+<div id="loginPage" class="login-page hidden">
   <div class="login-card">
-    <div class="login-logo">第三方科技</div>
-    <div class="login-subtitle">AI 智能聚合平台 v4.0 · 150+ 模型一站通达</div>
+    <div class="login-logo"><span class="logo-mark" id="logoMark"></span>第三方科技</div>
+    <div class="login-subtitle">AI 智能聚合平台 v5.0 · 150+ 模型一站通达</div>
     <div class="login-tabs">
-      <button class="login-tab active" id="tabLogin" data-tab="login">登录</button>
-      <button class="login-tab" id="tabRegister" data-tab="register">注册</button>
+      <button class="login-tab active" data-tab="login">登录</button>
+      <button class="login-tab" data-tab="register">注册</button>
     </div>
+
     <div id="loginFormSection">
-      <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off"></div>
-      <div class="login-field"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="off"></div>
+      <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="请输入账号" autocomplete="username"></div>
+      <div class="login-field"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password"></div>
       <button class="login-btn" id="loginBtn">登 录</button>
-      <div class="login-hint">演示模式：首次登录将自动创建账号 (1234/1234)</div>
+      <div class="login-hint">演示模式：首次登录自动创建账号 <code>1234 / 1234</code></div>
     </div>
+
     <div id="registerFormSection" style="display:none">
-      <div class="login-field"><label>选择身份</label>
-        <div class="reg-grid" id="regGrid"></div>
-      </div>
-      <div class="login-field"><label>真实姓名</label><input type="text" id="regName" placeholder="你的真实姓名" autocomplete="off"></div>
-      <div class="login-field"><label>邮箱</label><input type="email" id="regEmail" placeholder="your@email.com" autocomplete="off"></div>
-      <div class="login-field"><label>手机号</label><input type="tel" id="regPhone" placeholder="你的手机号" autocomplete="off"></div>
-      <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="8位以上，含大小写+数字" autocomplete="off"></div>
-      <div class="login-field"><label>确认密码</label><input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="off"></div>
+      <div class="login-field"><label>昵称</label><input type="text" id="regName" placeholder="你的昵称" autocomplete="off"></div>
+      <div class="login-field"><label>账号</label><input type="text" id="regAccount" placeholder="登录账号（手机号/用户名）" autocomplete="username"></div>
+      <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="至少 4 位" autocomplete="new-password"></div>
+      <div class="login-field"><label>确认密码</label><input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="new-password"></div>
       <div class="login-field"><label>备注（可选）</label><input type="text" id="regRemark" placeholder="例如：海口中学3班" autocomplete="off"></div>
-      <button class="login-btn register" id="registerBtn">提交注册</button>
+      <button class="login-btn" id="registerBtn">注册并登录</button>
     </div>
+
     <div class="login-error" id="loginError"></div>
+    <div class="login-footer"><span id="loginShieldIcon"></span>数据存储在本机浏览器 · 可安装为 App 离线使用</div>
   </div>
 </div>
 
-<!-- ==================== APP SHELL ==================== -->
-<div id="appShell" class="app-shell" style="display:none">
+<!-- ==================== 应用骨架 ==================== -->
+<div id="appShell" class="app-shell hidden">
 
-  <!-- Sidebar -->
+  <!-- 侧边栏 -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-brand">第三方科技</div>
-      <button class="sidebar-new-btn" id="sidebarNewBtn" title="新对话">+</button>
+      <div class="sidebar-brand"><span class="brand-logo" id="brandLogo"></span>第三方科技</div>
+      <button class="sidebar-new-btn" id="sidebarNewBtn" title="新对话 (Ctrl+K)"></button>
+    </div>
+    <div class="sidebar-search">
+      <div class="search-box"><span id="sidebarSearchIcon"></span><input type="text" id="sidebarSearchInput" placeholder="搜索对话…"></div>
     </div>
     <div class="sidebar-section-title">最近对话</div>
     <div class="sidebar-list" id="sidebarList"></div>
     <div class="sidebar-footer">
-      <button id="exportHistoryBtn">📥 导出</button>
-      <button id="importHistoryBtn">📤 导入</button>
-      <button id="clearHistoryBtn" style="color:var(--danger)">🗑 清空</button>
+      <button id="exportHistoryBtn" title="导出对话"><span data-icon="download"></span>导出</button>
+      <button id="importHistoryBtn" title="导入对话"><span data-icon="upload"></span>导入</button>
+      <button id="clearHistoryBtn" class="danger" title="清空对话"><span data-icon="trash"></span>清空</button>
     </div>
+    <input type="file" id="importHistoryFile" accept=".json" class="sr-only">
   </aside>
-  <div class="sidebar-toggle" id="sidebarToggle">‹</div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar-toggle" id="sidebarToggle" title="折叠/展开侧边栏"></div>
 
-  <!-- Main Area -->
-  <main class="main-area" id="mainArea">
-
-    <!-- Top Bar -->
-    <header class="topbar" id="topbar">
+  <!-- 主区域 -->
+  <main class="main-area">
+    <!-- 顶栏 -->
+    <header class="topbar">
       <div class="topbar-left">
-        <div class="hamburger-btn" id="hamburgerBtn" title="菜单">☰</div>
-        <div class="model-selector">
-          <button class="model-sel-btn" id="modelSelBtn">
-            <span class="sel-icon" id="modelSelIcon">A</span>
-            <span id="modelSelLabel">选择模型</span>
-            <span class="arrow">▼</span>
+        <button class="topbar-btn hamburger-btn" id="hamburgerBtn" title="菜单"></button>
+        <div class="selector">
+          <button class="selector-btn" id="modelSelBtn">
+            <span id="modelSelIcon"></span>
+            <span class="sel-label" id="modelSelLabel">选择模型</span>
+            <span class="arrow" id="modelSelArrow"></span>
           </button>
-          <div class="model-dd" id="modelDD">
-            <div class="model-dd-search"><input type="text" id="modelSearchInput" placeholder="搜索模型..." onclick="event.stopPropagation()"></div>
-            <div class="model-dd-body" id="modelDDBody"></div>
+          <div class="dropdown" id="modelDD">
+            <div class="dropdown-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelSearchInput" placeholder="搜索模型或厂商…"></div></div>
+            <div class="dropdown-body" id="modelDDBody"></div>
           </div>
         </div>
-        <div class="mode-selector">
-          <button class="mode-sel-btn" id="modeSelBtn">
-            <span class="mode-icon" id="modeIcon">💬</span>
-            <span id="modeLabel">单模型</span>
-            <span class="arrow">▼</span>
+        <div class="selector">
+          <button class="selector-btn" id="modeSelBtn">
+            <span id="modeIcon"></span>
+            <span class="sel-label" id="modeLabel">单模型</span>
+            <span class="arrow"></span>
           </button>
-          <div class="mode-dd" id="modeDD">
-            <div class="mode-dd-item active" data-mode="single"><span class="mode-icon">💬</span><div class="mode-info"><div class="mode-name">单模型</div><div class="mode-desc">与单个AI对话</div></div></div>
-            <div class="mode-dd-item" data-mode="multi"><span class="mode-icon">📋</span><div class="mode-info"><div class="mode-name">多模型</div><div class="mode-desc">多个AI同时回答</div></div></div>
-            <div class="mode-dd-divider"></div>
-            <div class="mode-dd-item" data-mode="debate"><span class="mode-icon">⚔️</span><div class="mode-info"><div class="mode-name">辩论模式</div><div class="mode-desc">立论 · 攻辩 · 总结</div></div></div>
-            <div class="mode-dd-item" data-mode="collab"><span class="mode-icon">🤝</span><div class="mode-info"><div class="mode-name">协同合作</div><div class="mode-desc">多AI协作完成任务</div></div></div>
+          <div class="dropdown" id="modeDD" style="width:280px">
+            <div class="dropdown-body">
+              <button class="mode-dd-item active" data-mode="single"><span class="mode-ic" data-icon="message"></span><span><span class="mode-name">单模型</span><span class="mode-desc" style="display:block">与单个 AI 对话</span></span></button>
+              <button class="mode-dd-item" data-mode="multi"><span class="mode-ic" data-icon="grid"></span><span><span class="mode-name">多模型</span><span class="mode-desc" style="display:block">多个 AI 同时回答，同题竞技</span></span></button>
+              <div class="dd-divider"></div>
+              <button class="mode-dd-item" data-mode="debate"><span class="mode-ic" data-icon="sword"></span><span><span class="mode-name">辩论模式</span><span class="mode-desc" style="display:block">正反交锋 · 裁判点评</span></span></button>
+              <button class="mode-dd-item" data-mode="collab"><span class="mode-ic" data-icon="handshake"></span><span><span class="mode-name">协同合作</span><span class="mode-desc" style="display:block">多 AI 分工协作完成任务</span></span></button>
+            </div>
           </div>
         </div>
       </div>
       <div class="topbar-right">
-        <button class="topbar-btn" id="navChatBtn" title="对话">💬</button>
-        <button class="topbar-btn" id="navModelsBtn" title="模型">🤖</button>
-        <button class="topbar-btn" id="navDiscoverBtn" title="发现">✨</button>
-        <button class="topbar-btn" id="navProfileBtn" title="我的">👤</button>
-        <button class="topbar-btn" id="exportChatBtn" title="导出对话">📤</button>
-        <button class="topbar-btn" id="settingsBtn" title="设置">⚙️</button>
-        <button class="topbar-btn" id="themeBtn" title="切换主题">🌙</button>
+        <button class="topbar-btn nav-top-btn desktop-only active" data-page="chat" title="对话" data-icon="message"></button>
+        <button class="topbar-btn nav-top-btn desktop-only" data-page="models" title="模型" data-icon="cpu"></button>
+        <button class="topbar-btn nav-top-btn desktop-only" data-page="discover" title="发现" data-icon="compass"></button>
+        <button class="topbar-btn nav-top-btn desktop-only" data-page="profile" title="我的" data-icon="user"></button>
+        <span class="desktop-only" style="width:1px;height:22px;background:var(--border);margin:0 4px"></span>
+        <button class="topbar-btn desktop-only" id="themeBtn" title="切换主题"></button>
       </div>
     </header>
 
-    <!-- Pages -->
-    <div class="page-container" id="pageContainer">
+    <!-- 页面容器 -->
+    <div class="page-container">
 
-      <!-- Chat Page -->
+      <!-- 对话页 -->
       <div class="page page-chat active" id="pageChat">
-        <!-- Mode Config -->
+        <!-- 模式配置条 -->
         <div class="mode-config" id="modeConfig" style="display:none">
           <div class="mode-config-inner">
             <div id="multiConfig" style="display:none">
-              <label>多模型配置</label>
+              <label>多模型配置（1-8 个，将并行回答同一问题）</label>
               <div class="model-chips" id="multiModelChips"></div>
-              <button class="add-model-btn" data-role="multi">+ 添加模型</button>
+              <div style="margin-top:8px"><button class="add-model-btn" data-role="multi">+ 添加模型</button></div>
             </div>
             <div id="debateConfig" style="display:none">
               <div class="debate-columns">
-                <div class="debate-col">
-                  <label>🟢 正方</label>
+                <div class="debate-col pro">
+                  <label>正方</label>
                   <div class="model-chips" id="debateProChips"></div>
-                  <button class="add-model-btn" data-role="pro">+ 添加</button>
+                  <div style="margin-top:7px"><button class="add-model-btn" data-role="pro">+ 添加</button></div>
                 </div>
-                <div class="debate-col">
-                  <label>🔴 反方</label>
+                <div class="debate-col con">
+                  <label>反方</label>
                   <div class="model-chips" id="debateConChips"></div>
-                  <button class="add-model-btn" data-role="con">+ 添加</button>
+                  <div style="margin-top:7px"><button class="add-model-btn" data-role="con">+ 添加</button></div>
                 </div>
-                <div class="debate-col">
-                  <label>🔵 裁判</label>
+                <div class="debate-col judge">
+                  <label>裁判（可选）</label>
                   <div class="model-chips" id="debateJudgeChips"></div>
-                  <button class="add-model-btn" data-role="judge">+ 添加</button>
+                  <div style="margin-top:7px"><button class="add-model-btn" data-role="judge">+ 添加</button></div>
                 </div>
               </div>
-              <div class="debate-rounds">
-                <label>辩论轮数:</label><input type="number" id="debateRounds" value="2" min="1" max="20">
-                <label>赛制:</label>
-                <select id="debateFormat">
-                  <option value="standard">标准辩论 (立论→攻辩→自由辩→总结)</option>
-                  <option value="fast">快速辩论 (立论→自由辩→总结)</option>
-                  <option value="battle">观点交锋 (交替发言)</option>
-                </select>
+              <div class="mode-params" style="margin-top:10px">
+                <span class="param">辩论轮数 <input type="number" id="debateRounds" value="2" min="1" max="10"></span>
+                <span class="param">赛制 <select id="debateFormat">
+                  <option value="standard">标准（立论→攻辩→自由辩→总结）</option>
+                  <option value="fast">快速（立论→自由辩→总结）</option>
+                  <option value="battle">观点交锋（交替发言）</option>
+                </select></span>
               </div>
             </div>
             <div id="collabConfig" style="display:none">
-              <label>协同模型配置</label>
+              <label>协同模型配置（第 1 个为主持人，其余为协作者）</label>
               <div class="model-chips" id="collabModelChips"></div>
-              <button class="add-model-btn" data-role="collab">+ 添加模型</button>
-              <div class="debate-rounds">
-                <label>协作者数量:</label><input type="number" id="collabCount" value="3" min="2" max="20">
-                <label>协作轮数:</label><input type="number" id="collabRounds" value="3" min="1" max="10">
+              <div class="mode-params" style="margin-top:8px">
+                <button class="add-model-btn" data-role="collab">+ 添加模型</button>
+                <span class="param">修订轮数 <input type="number" id="collabRounds" value="2" min="1" max="5"></span>
               </div>
             </div>
           </div>
-          <div class="model-picker-dd" id="modelPickerDD"></div>
+          <!-- 模型挑选浮层 -->
+          <div class="dropdown" id="modelPickerDD" style="position:absolute;top:calc(100% - 6px);left:18px">
+            <div class="dropdown-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelPickerSearch" placeholder="搜索模型…"></div></div>
+            <div class="dropdown-body" id="modelPickerBody"></div>
+          </div>
         </div>
 
-        <!-- Chat Scroll Area -->
+        <!-- 消息区 -->
         <div class="chat-scroll" id="chatScroll">
           <div class="chat-container" id="chatContainer"></div>
         </div>
 
-        <!-- Input Area -->
-        <div class="input-area" id="chatInputArea">
-          <div class="img-preview-bar" id="imgPreview"></div>
-          <div class="input-box">
-            <button class="attach-btn" id="attachBtn" title="上传图片">📎</button>
-            <input type="file" id="imgInput" accept="image/*" style="display:none">
-            <textarea id="chatInput" placeholder="输入消息... (Ctrl+Enter 发送, Esc 停止)"></textarea>
-            <button class="send-btn" id="sendBtn" title="发送">➤</button>
-          </div>
-          <div class="input-hint">
-            <span>AI 可能生成不准确信息，请核实重要内容</span>
-            <span id="charCount">0 字</span>
+        <!-- 输入区 -->
+        <div class="input-area">
+          <div class="input-wrap">
+            <div class="attach-preview-bar" id="attachPreview"></div>
+            <div class="input-box">
+              <button class="input-btn" id="attachBtn" title="上传图片 / 文件（PDF、Word、文本、代码）"></button>
+              <button class="input-btn" id="micBtn" title="语音输入"></button>
+              <button class="input-btn" id="webSearchBtn" title="联网搜索开关"></button>
+              <input type="file" id="fileInput" class="sr-only" multiple accept="image/*,.pdf,.doc,.docx,.txt,.md,.markdown,.json,.csv,.log,.xml,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.h,.cs,.go,.rs,.rb,.php,.html,.css,.scss,.sql,.sh,.ini,.toml,.vue">
+              <textarea id="chatInput" rows="1" placeholder="输入消息… (Enter 发送, Shift+Enter 换行)"></textarea>
+              <button class="send-btn" id="sendBtn" title="发送"></button>
+            </div>
+            <div class="input-footer">
+              <span class="left-note"><span class="badge accent hidden" id="webSearchBadge">联网中</span><span class="note-text">AI 可能生成不准确信息，请核实重要内容</span></span>
+              <span id="charCount">0 字</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Models Page -->
-      <div class="page page-models" id="pageModels">
-        <div class="models-header">
-          <h1>🤖 模型列表</h1>
-          <div class="models-search"><input type="text" id="modelsSearchInput" placeholder="搜索模型..."></div>
+      <!-- 模型页 -->
+      <div class="page" id="pageModels">
+        <div class="page-inner">
+          <div class="page-head"><h1><span data-icon="cpu"></span>模型列表</h1><p>按厂商浏览全部模型，点击卡片直接发起对话</p></div>
+          <div class="models-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelsSearchInput" placeholder="搜索模型或厂商…"></div></div>
+          <div id="modelsList"></div>
         </div>
-        <div class="models-list" id="modelsList"></div>
       </div>
 
-      <!-- Discover Page -->
-      <div class="page page-discover" id="pageDiscover">
-        <div class="discover-header"><h1>✨ 发现</h1><p>探索 AI 的多种玩法</p></div>
-        <div class="discover-grid" id="discoverGrid"></div>
-      </div>
-
-      <!-- Profile Page -->
-      <div class="page page-profile" id="pageProfile">
-        <div class="profile-header">
-          <div class="profile-avatar" id="profileAvatar">👤</div>
-          <div class="profile-info">
-            <h2 id="profileName">用户</h2>
-            <p id="profileTag">网友</p>
+      <!-- 发现页 -->
+      <div class="page" id="pageDiscover">
+        <div class="page-inner">
+          <div class="page-head"><h1><span data-icon="compass"></span>发现</h1><p>对话模式 · AI 工具 · 角色助手</p></div>
+          <div class="discover-section">
+            <div class="discover-section-title"><span data-icon="messages"></span>对话模式</div>
+            <div class="discover-grid" id="discoverModes"></div>
+          </div>
+          <div class="discover-section">
+            <div class="discover-section-title"><span data-icon="wand"></span>AI 工具</div>
+            <div class="discover-grid" id="discoverTools"></div>
+          </div>
+          <div class="discover-section">
+            <div class="discover-section-title"><span data-icon="sparkles"></span>角色助手（一键开启）</div>
+            <div class="preset-grid" id="presetGrid"></div>
           </div>
         </div>
-        <div class="profile-sections" id="profileSections"></div>
+      </div>
+
+      <!-- 我的页 -->
+      <div class="page" id="pageProfile">
+        <div class="page-inner">
+          <div class="profile-card">
+            <div class="profile-avatar" id="profileAvatar" title="点击更换头像"></div>
+            <div class="profile-info">
+              <h2 id="profileName">用户</h2>
+              <p id="profileTag"></p>
+              <div class="profile-stats" id="profileStats"></div>
+            </div>
+          </div>
+
+          <!-- 安装 App -->
+          <div class="settings-group">
+            <div class="settings-card">
+              <div class="settings-row clickable" id="installRow">
+                <span class="row-icon" data-icon="smartphone"></span>
+                <span class="row-label"><span class="row-title">安装为 App</span><span class="row-desc" style="display:block">一键安装到桌面，离线可用</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 外观 -->
+          <div class="settings-group">
+            <div class="settings-group-title"><span data-icon="palette"></span>外观主题</div>
+            <div class="settings-card">
+              <div class="theme-options">
+                <div class="theme-card" data-theme="light"><div class="theme-preview light"></div><div class="theme-name"><span data-icon="sun"></span>亮色</div></div>
+                <div class="theme-card" data-theme="dark"><div class="theme-preview dark"></div><div class="theme-name"><span data-icon="moon"></span>暗色</div></div>
+                <div class="theme-card" data-theme="system"><div class="theme-preview system"></div><div class="theme-name"><span data-icon="monitor"></span>跟随系统</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API Key -->
+          <div class="settings-group" data-group="keys">
+            <div class="settings-group-title"><span data-icon="key"></span>API Key 管理
+              <span class="group-action">
+                <button class="btn btn-ghost btn-sm" id="exportKeysBtn"><span data-icon="download"></span>导出</button>
+                <button class="btn btn-ghost btn-sm" id="importKeysBtn"><span data-icon="upload"></span>批量导入</button>
+              </span>
+            </div>
+            <div class="settings-card" id="keyManagement"></div>
+            <input type="file" id="importKeysFile" accept=".txt,.json" class="sr-only">
+          </div>
+
+          <!-- 插件 -->
+          <div class="settings-group" data-group="plugin">
+            <div class="settings-group-title"><span data-icon="package"></span>插件与语音</div>
+            <div class="settings-card">
+              <div class="settings-row" style="flex-wrap:wrap">
+                <span class="row-icon" data-icon="globe"></span>
+                <span class="row-label"><span class="row-title">联网搜索（Tavily）</span><span class="row-desc" style="display:block">开启后提问自动联网检索并附来源 · tavily.com 免费申请</span></span>
+                <label class="switch"><input type="checkbox" id="webSearchSwitch"><span class="track"></span></label>
+                <div style="width:100%;padding-left:46px"><input type="password" class="input" id="tavilyKeyInput" placeholder="tvly-..." autocomplete="off"></div>
+              </div>
+              <div class="settings-row">
+                <span class="row-icon" data-icon="volume"></span>
+                <span class="row-label"><span class="row-title">语音朗读</span><span class="row-desc" style="display:block">AI 回复可一键朗读</span></span>
+                <button class="btn btn-secondary btn-sm" id="voiceTestBtn"><span data-icon="play"></span>试听</button>
+              </div>
+              <div class="settings-row">
+                <span class="row-label" style="padding-left:46px"><span class="row-title" style="font-size:13px">朗读声音</span></span>
+                <select class="select" id="voiceSelect" style="max-width:220px"></select>
+              </div>
+              <div class="settings-row">
+                <span class="row-label" style="padding-left:46px"><span class="row-title" style="font-size:13px">语速 <span id="voiceRateLabel">1x</span></span></span>
+                <input type="range" id="voiceRateRange" min="0.5" max="2" step="0.1" value="1" style="flex:1;max-width:220px">
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据 -->
+          <div class="settings-group">
+            <div class="settings-group-title"><span data-icon="database"></span>数据管理</div>
+            <div class="settings-card">
+              <div class="data-stats-grid" id="dataStats"></div>
+              <div class="settings-row clickable" id="exportAllBtn">
+                <span class="row-icon" data-icon="download"></span>
+                <span class="row-label"><span class="row-title">导出全量备份</span><span class="row-desc" style="display:block">对话 + Key + 设置（JSON）</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
+              </div>
+              <div class="settings-row clickable" id="importAllBtn">
+                <span class="row-icon" data-icon="upload"></span>
+                <span class="row-label"><span class="row-title">恢复备份</span><span class="row-desc" style="display:block">从备份文件恢复全部数据</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
+              </div>
+              <div class="settings-row clickable" id="clearAllBtn">
+                <span class="row-icon danger" data-icon="trash"></span>
+                <span class="row-label"><span class="row-title" style="color:var(--danger)">清除所有数据</span><span class="row-desc" style="display:block">删除对话、Key 与账号，恢复初始状态</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
+              </div>
+              <input type="file" id="importAllFile" accept=".json" class="sr-only">
+            </div>
+          </div>
+
+          <!-- 关于 -->
+          <div class="settings-group">
+            <div class="settings-group-title"><span data-icon="info"></span>关于</div>
+            <div class="settings-card">
+              <div class="about-content">
+                <h3>第三方科技 AI 智能聚合平台 <span id="aboutVersion"></span></h3>
+                <p>150+ 模型 · 四种对话模式 · 语音 / 文件 / 绘画 / 联网 · PWA 应用化</p>
+                <p>支持厂商：小米 MiMo · OpenAI · Anthropic · Google · DeepSeek · Kimi · 通义千问 · 智谱AI · 文心一言 · 腾讯混元 · MiniMax · 火山引擎 等 23 家</p>
+                <div id="changelogList"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 退出 -->
+          <div class="settings-group">
+            <div class="settings-card">
+              <div class="settings-row clickable" id="logoutBtn">
+                <span class="row-icon danger" data-icon="logout"></span>
+                <span class="row-label"><span class="row-title" style="color:var(--danger)">退出登录</span></span>
+                <span class="chev" data-icon="chevronRight"></span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>
 
+    <!-- 移动端底部导航 -->
+    <nav class="bottom-nav">
+      <div class="bottom-nav-inner">
+        <button class="nav-item active" data-page="chat"><span data-icon="message"></span>对话</button>
+        <button class="nav-item" data-page="models"><span data-icon="cpu"></span>模型</button>
+        <button class="nav-item" data-page="discover"><span data-icon="compass"></span>发现</button>
+        <button class="nav-item" data-page="profile"><span data-icon="user"></span>我的</button>
+      </div>
+    </nav>
   </main>
 </div>
 
-<!-- ==================== SETTINGS MODAL ==================== -->
-<div class="modal-overlay" id="settingsModal">
-  <div class="modal settings-modal">
-    <div class="modal-header"><h3>⚙️ 设置</h3><button class="modal-close" id="settingsClose">✕</button></div>
-    <div class="modal-body">
-      <div class="settings-tabs">
-        <button class="settings-tab active" data-tab="keys">🔑 API Key</button>
-        <button class="settings-tab" data-tab="theme">🎨 主题</button>
-        <button class="settings-tab" data-tab="data">💾 数据</button>
-        <button class="settings-tab" data-tab="about">ℹ️ 关于</button>
-      </div>
-      <div class="settings-panels">
-        <div class="settings-panel active" id="panelKeys">
-          <div class="key-section"><h4>🔶 小米 MiMo</h4>
-            <div class="plan-switch"><button class="plan-btn active" data-plan="tokenPlan">会员计划</button><button class="plan-btn" data-plan="payAsYouGo">按量付费</button></div>
-            <div class="key-row" id="rowTP"><label>会员计划 Key</label><input type="password" id="keyTP" placeholder="输入 Token Plan API Key"></div>
-            <div class="key-row" id="rowPAY" style="display:none"><label>按量付费 Key</label><input type="password" id="keyPAY" placeholder="输入 Pay As You Go API Key"></div>
-          </div>
-          <div class="key-section"><h4>🌍 国外厂商</h4>
-            <div class="key-row"><label>OpenAI</label><input type="password" id="keyOpenAI" placeholder="sk-..."></div>
-            <div class="key-row"><label>Anthropic</label><input type="password" id="keyAnthropic" placeholder="sk-ant-..."></div>
-            <div class="key-row"><label>Google</label><input type="password" id="keyGoogle" placeholder="AIza..."></div>
-          </div>
-          <div class="key-section"><h4>🇨🇳 国内厂商</h4>
-            <div class="key-row"><label>DeepSeek</label><input type="password" id="keyDeepSeek" placeholder="sk-..."></div>
-            <div class="key-row"><label>Kimi</label><input type="password" id="keyKimi" placeholder="sk-..."></div>
-            <div class="key-row"><label>通义千问</label><input type="password" id="keyQwen" placeholder="sk-..."></div>
-            <div class="key-row"><label>智谱AI</label><input type="password" id="keyGLM" placeholder="sk-..."></div>
-            <div class="key-row"><label>文心一言</label><input type="password" id="keyErnie" placeholder="sk-..."></div>
-            <div class="key-row"><label>火山引擎</label><input type="password" id="keyDoubao" placeholder="sk-..."></div>
-          </div>
-          <div class="key-actions">
-            <button class="btn-secondary" id="exportKeysBtn">📥 导出 Keys</button>
-            <button class="btn-secondary" id="importKeysBtn">📤 导入 Keys</button>
-            <input type="file" id="importKeysFile" accept=".txt,.json" style="display:none">
-          </div>
-        </div>
-        <div class="settings-panel" id="panelTheme">
-          <div class="theme-options">
-            <div class="theme-card" data-theme="light"><div class="theme-preview light"></div><div class="theme-name">☀️ 亮色</div></div>
-            <div class="theme-card" data-theme="dark"><div class="theme-preview dark"></div><div class="theme-name">🌙 暗色</div></div>
-            <div class="theme-card" data-theme="system"><div class="theme-preview system"></div><div class="theme-name">🖥️ 跟随系统</div></div>
-          </div>
-        </div>
-        <div class="settings-panel" id="panelData">
-          <div class="data-actions">
-            <button class="btn-danger" id="clearAllDataBtn">🗑 清除所有数据</button>
-            <button class="btn-secondary" id="exportAllDataBtn">📥 导出全部数据</button>
-          </div>
-          <div class="data-stats" id="dataStats"></div>
-        </div>
-        <div class="settings-panel" id="panelAbout">
-          <div class="about-content">
-            <h3>第三方科技 AI 聚合平台</h3>
-            <p>版本：v4.0</p>
-            <p>模型数量：150+</p>
-            <p>对话模式：单模型 / 多模型 / 辩论 / 协同</p>
-            <p>支持厂商：OpenAI · Anthropic · Google · DeepSeek · Kimi · 通义千问 · 智谱AI · 文心一言 · 腾讯混元 · MiniMax · 火山引擎 · MiMo 等</p>
-            <div class="changelog" id="changelogList"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer"><button class="btn-primary" id="saveSettingsBtn">保存</button></div>
-  </div>
-</div>
-
-<!-- ==================== AVATAR PICKER MODAL ==================== -->
+<!-- ==================== 头像弹窗 ==================== -->
 <div class="modal-overlay" id="avatarModal">
-  <div class="modal avatar-modal">
-    <div class="modal-header"><h3>选择头像</h3><button class="modal-close" id="avatarClose">✕</button></div>
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3><span data-icon="user"></span>选择头像</h3><button class="modal-close" id="avatarClose" data-icon-btn="x"></button></div>
     <div class="modal-body">
-      <div class="avatar-preview" id="avatarPreview">👤</div>
-      <div class="preset-avatars" id="presetAvatars"></div>
-      <div class="avatar-upload"><label>上传图片</label><input type="file" id="avatarFileInput" accept="image/*"></div>
+      <div class="avatar-grid" id="avatarOptions"></div>
+      <button class="btn btn-secondary btn-block" id="avatarUploadBtn"><span data-icon="upload"></span>上传图片</button>
+      <input type="file" id="avatarFileInput" accept="image/*" class="sr-only">
     </div>
   </div>
 </div>
 
-<!-- Toast Container -->
+<!-- ==================== AI 绘画弹窗 ==================== -->
+<div class="modal-overlay" id="paintModal">
+  <div class="modal">
+    <div class="modal-header"><h3><span data-icon="palette"></span>AI 绘画</h3><button class="modal-close" id="paintClose" data-icon-btn="x"></button></div>
+    <div class="modal-body">
+      <div class="field"><label>画面描述（支持中英文，越详细越好）</label>
+        <textarea class="textarea" id="paintPrompt" placeholder="例：一只在星空下奔跑的白鹿，赛博朋克风格，霓虹灯光，4K 高清"></textarea>
+      </div>
+      <div class="flex" style="gap:10px;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:150px"><label>绘画服务</label><select class="select" id="paintProvider"></select></div>
+        <div class="field" style="flex:1;min-width:150px"><label>尺寸</label><select class="select" id="paintSize">
+          <option value="1024x1024">方形 1024×1024</option>
+          <option value="1024x1792">竖版 1024×1792</option>
+          <option value="1792x1024">横版 1792×1024</option>
+        </select></div>
+      </div>
+      <button class="btn btn-primary btn-block" id="paintBtn"></button>
+      <div class="paint-result" id="paintResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- Scripts -->
-<script src="js/models.js?v=4.1"></script>
-<script src="js/providers.js?v=4.1"></script>
-<script src="js/storage.js?v=4.1"></script>
-<script src="js/markdown.js?v=4.1"></script>
-<script src="js/api.js?v=4.1"></script>
-<script src="js/ui.js?v=4.1"></script>
-<script src="js/chat.js?v=4.1"></script>
-<script src="js/settings.js?v=4.1"></script>
-<script src="js/auth.js?v=4.1"></script>
-<script src="js/mobile.js?v=4.1"></script>
-<script src="js/app.js?v=4.1"></script>
+<!-- 脚本（顺序有依赖） -->
+<script src="js/icons.js?v=5.0.0"></script>
+<script src="js/models.js?v=5.0.0"></script>
+<script src="js/providers.js?v=5.0.0"></script>
+<script src="js/store.js?v=5.0.0"></script>
+<script src="js/util.js?v=5.0.0"></script>
+<script src="js/markdown.js?v=5.0.0"></script>
+<script src="js/api.js?v=5.0.0"></script>
+<script src="js/voice.js?v=5.0.0"></script>
+<script src="js/files.js?v=5.0.0"></script>
+<script src="js/presets.js?v=5.0.0"></script>
+<script src="js/auth.js?v=5.0.0"></script>
+<script src="js/chat.js?v=5.0.0"></script>
+<script src="js/ui.js?v=5.0.0"></script>
+<script src="js/pages.js?v=5.0.0"></script>
+<script src="js/app.js?v=5.0.0"></script>
+<script>
+/* 静态占位图标注入（减少 HTML 重复） */
+document.addEventListener('DOMContentLoaded', () => {
+  const fill = (id, name, size) => { const el = document.getElementById(id); if (el) el.innerHTML = icon(name, size); };
+  fill('logoMark', 'sparkles', 21);
+  fill('brandLogo', 'sparkles', 17);
+  fill('sidebarNewBtn', 'plus', 17);
+  fill('sidebarSearchIcon', 'search', 15);
+  fill('sidebarToggle', 'chevronLeft', 14);
+  fill('hamburgerBtn', 'menu', 19);
+  fill('modelSelArrow', 'chevronDown', 13);
+  fill('attachBtn', 'paperclip', 19);
+  fill('micBtn', 'mic', 19);
+  fill('webSearchBtn', 'globe', 19);
+  fill('sendBtn', 'send', 18);
+  fill('themeBtn', 'moon', 19);
+  fill('loginShieldIcon', 'shield', 13);
+  fill('paintBtn', 'wand', 16);
+  document.querySelectorAll('[data-icon]').forEach(el => {
+    const size = el.classList.contains('chev') ? 15 : el.classList.contains('topbar-btn') ? 19 : 16;
+    el.innerHTML = icon(el.dataset.icon, size);
+  });
+  document.querySelectorAll('[data-icon-btn]').forEach(el => { el.innerHTML = icon(el.dataset.iconBtn, 15); });
+  document.querySelectorAll('#modeDD .mode-ic').forEach(el => { el.innerHTML = icon(el.dataset.icon, 17); });
+  document.querySelectorAll('.selector-btn .arrow').forEach(el => { if (!el.innerHTML) el.innerHTML = icon('chevronDown', 13); });
+  document.getElementById('paintBtn').insertAdjacentText('beforeend', ' 开始生成');
+});
+</script>
 </body>
 </html>
