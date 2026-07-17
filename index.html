@@ -33,7 +33,7 @@
 <div id="loginPage" class="login-page hidden">
   <div class="login-card">
     <div class="login-logo"><span class="logo-mark" id="logoMark"></span>第三方科技</div>
-    <div class="login-subtitle">AI 智能聚合平台 v5.0 · 150+ 模型一站通达</div>
+    <div class="login-subtitle">AI 智能聚合平台 v<span id="loginVersion">5</span> · 150+ 模型一站通达</div>
     <div class="login-tabs">
       <button class="login-tab active" data-tab="login">登录</button>
       <button class="login-tab" data-tab="register">注册</button>
@@ -460,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#modeDD .mode-ic').forEach(el => { el.innerHTML = icon(el.dataset.icon, 17); });
   document.querySelectorAll('.selector-btn .arrow').forEach(el => { if (!el.innerHTML) el.innerHTML = icon('chevronDown', 13); });
   document.getElementById('paintBtn').insertAdjacentText('beforeend', ' 开始生成');
+  document.getElementById('loginVersion').textContent = APP_VERSION.split('.').slice(0, 2).join('.');
 });
 </script>
 </body>
