@@ -232,6 +232,16 @@ const Chat = (() => {
     return text.replace(/\s+/g, ' ').slice(0, 24) || '新对话';
   }
 
+  /* 流式工具调用回调：快照写入 msg 并实时渲染卡片 */
+  function toolCallHandler(msg) {
+    return tcs => { if (!stopFlag) { msg.toolCalls = tcs; UI.setMsgToolCalls(msg.id, tcs, true); } };
+  }
+
+  /* 结束（含中止）时将所有工具卡片定态为已完成，避免持久化后仍显示执行中 */
+  function settleToolCalls(msg) {
+    (msg.toolCalls || []).forEach(t => { t.status = 'done'; });
+  }
+
   /* ==================== 单模型 ==================== */
   async function buildSendMessages(chat, content, at, opts) {
     opts = opts || {};
@@ -255,7 +265,7 @@ const Chat = (() => {
   async function runSingle(chat, content, at, opts) {
     opts = opts || {};
     const modelId = opts.modelId || chat.modelId || Store.state.currentModelId;
-    const msg = { id: genId(), role: 'assistant', modelId, content: '', thinking: '', ts: Date.now() };
+    const msg = { id: genId(), role: 'assistant', modelId, content: '', thinking: '', toolCalls: [], ts: Date.now() };
     chat.messages.push(msg);
     UI.appendMsg(msg);
 
@@ -267,18 +277,23 @@ const Chat = (() => {
       const result = await API.chat({
         modelId, messages: cleanMsgs,
         onChunk: (chunk, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
-        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } },
+        onToolCall: toolCallHandler(msg)
       });
       msg.content = result.content;
       msg.thinking = result.thinking || msg.thinking;
+      if (result.toolCalls && result.toolCalls.length) msg.toolCalls = result.toolCalls;
+      settleToolCalls(msg);
       UI.finishMsg(msg.id, msg.content);
     } catch (e) {
       if (stopFlag || e.name === 'AbortError') {
         msg.content = msg.content || '';
+        settleToolCalls(msg);
         UI.finishMsg(msg.id, msg.content);
       } else {
         msg.error = e.message;
         msg.content = '';
+        settleToolCalls(msg);
         UI.setMsgError(msg.id, e.message);
       }
     }
@@ -291,19 +306,23 @@ const Chat = (() => {
     const ids = Store.state.multiModels.slice(0, 8);
     const batchId = genId();
     const tasks = ids.map(modelId => {
-      const msg = { id: genId(), role: 'assistant', modelId, batchId, content: '', thinking: '', ts: Date.now() };
+      const msg = { id: genId(), role: 'assistant', modelId, batchId, content: '', thinking: '', toolCalls: [], ts: Date.now() };
       chat.messages.push(msg);
       UI.appendMsg(msg);
       const msgs = API.buildMessages(chat, content, at, { excludeId: opts.excludeId }).filter(m => !(m.role === 'assistant' && !m.content));
       return API.chat({
         modelId, messages: msgs,
         onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
-        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } },
+        onToolCall: toolCallHandler(msg)
       }).then(r => {
         msg.content = r.content;
         msg.thinking = r.thinking || msg.thinking;
+        if (r.toolCalls && r.toolCalls.length) msg.toolCalls = r.toolCalls;
+        settleToolCalls(msg);
         UI.finishMsg(msg.id, msg.content);
       }).catch(e => {
+        settleToolCalls(msg);
         if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); }
         else { msg.error = e.message; msg.content = ''; UI.setMsgError(msg.id, e.message); }
       });
@@ -321,7 +340,7 @@ const Chat = (() => {
 
   async function debateSpeak(chat, modelId, role, stage, topic, transcript) {
     if (stopFlag) throw new Error('__stopped__');
-    const msg = { id: genId(), role: 'assistant', modelId, debateRole: role, stage, content: '', thinking: '', ts: Date.now() };
+    const msg = { id: genId(), role: 'assistant', modelId, debateRole: role, stage, content: '', thinking: '', toolCalls: [], ts: Date.now() };
     chat.messages.push(msg);
     UI.appendMsg(msg);
 
@@ -336,12 +355,16 @@ const Chat = (() => {
       const result = await API.chat({
         modelId, messages: msgs,
         onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
-        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } },
+        onToolCall: toolCallHandler(msg)
       });
       msg.content = result.content;
+      if (result.toolCalls && result.toolCalls.length) msg.toolCalls = result.toolCalls;
+      settleToolCalls(msg);
       UI.finishMsg(msg.id, msg.content);
       transcript.push({ who: (role === 'pro' ? '正方' : role === 'con' ? '反方' : '裁判') + '·' + stage, text: result.content });
     } catch (e) {
+      settleToolCalls(msg);
       if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); throw new Error('__stopped__'); }
       msg.error = e.message;
       UI.setMsgError(msg.id, e.message);
@@ -387,7 +410,7 @@ const Chat = (() => {
   /* ==================== 协同合作 ==================== */
   async function collabSpeak(chat, modelId, role, stage, prompt, sysPrompt) {
     if (stopFlag) throw new Error('__stopped__');
-    const msg = { id: genId(), role: 'assistant', modelId, collabRole: role, stage, content: '', thinking: '', ts: Date.now() };
+    const msg = { id: genId(), role: 'assistant', modelId, collabRole: role, stage, content: '', thinking: '', toolCalls: [], ts: Date.now() };
     chat.messages.push(msg);
     UI.appendMsg(msg);
     const msgs = [
@@ -398,12 +421,16 @@ const Chat = (() => {
       const result = await API.chat({
         modelId, messages: msgs,
         onChunk: (c, full) => { if (!stopFlag) { msg.content = full; UI.setMsgContent(msg.id, full); } },
-        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } }
+        onThinking: (t, fullT) => { if (!stopFlag) { msg.thinking = fullT; UI.setMsgThinking(msg.id, fullT); } },
+        onToolCall: toolCallHandler(msg)
       });
       msg.content = result.content;
+      if (result.toolCalls && result.toolCalls.length) msg.toolCalls = result.toolCalls;
+      settleToolCalls(msg);
       UI.finishMsg(msg.id, msg.content);
       return result.content;
     } catch (e) {
+      settleToolCalls(msg);
       if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); throw new Error('__stopped__'); }
       msg.error = e.message;
       UI.setMsgError(msg.id, e.message);
@@ -474,18 +501,22 @@ const Chat = (() => {
       Store.save();
       UI.renderChat();
       sending = true; stopFlag = false; UI.setSending(true);
-      const newMsg = { id: genId(), role: 'assistant', modelId: msg.modelId, batchId: msg.batchId, content: '', thinking: '', ts: Date.now() };
+      const newMsg = { id: genId(), role: 'assistant', modelId: msg.modelId, batchId: msg.batchId, content: '', thinking: '', toolCalls: [], ts: Date.now() };
       chat.messages.splice(idx, 0, newMsg);
       UI.renderChat();
       const msgs = API.buildMessages(chat, userMsg.content, {}).filter(m => !(m.role === 'assistant' && !m.content));
       try {
         const r = await API.chat({
           modelId: newMsg.modelId, messages: msgs,
-          onChunk: (c, full) => { if (!stopFlag) { newMsg.content = full; UI.setMsgContent(newMsg.id, full); } }
+          onChunk: (c, full) => { if (!stopFlag) { newMsg.content = full; UI.setMsgContent(newMsg.id, full); } },
+          onToolCall: toolCallHandler(newMsg)
         });
         newMsg.content = r.content;
+        if (r.toolCalls && r.toolCalls.length) newMsg.toolCalls = r.toolCalls;
+        settleToolCalls(newMsg);
         UI.finishMsg(newMsg.id, newMsg.content);
       } catch (e) {
+        settleToolCalls(newMsg);
         if (!(stopFlag || e.name === 'AbortError')) { newMsg.error = e.message; UI.setMsgError(newMsg.id, e.message); }
       }
       sending = false; UI.setSending(false); Store.save();

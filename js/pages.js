@@ -7,6 +7,11 @@ const Pages = (() => {
     return models.slice().sort((a, b) => (a.status === 'deprecated' ? 1 : 0) - (b.status === 'deprecated' ? 1 : 0));
   }
 
+  /* 「不可用」模型：已下架，或标注需内测/审核资格（无法直接调用），统一进折叠区 */
+  function isUnavailableModel(m) {
+    return m.status === 'deprecated' || (!!m.note && (m.note.indexOf('内测') >= 0 || m.note.indexOf('审核') >= 0));
+  }
+
   function modelCardHtml(m) {
     const dep = m.status === 'deprecated';
     const nonChat = !isChatModel(m);
@@ -19,7 +24,7 @@ const Pages = (() => {
     if (m.ctx >= 512) tags += '<span class="tag long">' + I18n.t('tag.long') + '</span>';
     if (!nonChat && m.stream !== false) tags += '<span class="tag stream">' + I18n.t('tag.stream') + '</span>';
     if (nonChat) tags += '<span class="tag">' + esc(m.type) + '</span>';
-    const cls = dep ? ' deprecated' : (nonChat ? ' special' : '');
+    const cls = isUnavailableModel(m) ? ' deprecated' : (nonChat ? ' special' : '');
     return '<button class="model-card' + cls + '" data-model="' + m.id + '">' +
       providerIconHtml(m.provider, 34) +
       '<span class="model-card-info"><span class="model-card-name">' + esc(m.name) + '</span>' +
@@ -36,8 +41,8 @@ const Pages = (() => {
       const models = getProviderModels(p).filter(m =>
         !kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
       if (!models.length) return;
-      const active = sortModels(models.filter(m => m.status !== 'deprecated'));
-      const dep = sortModels(models.filter(m => m.status === 'deprecated'));
+      const active = sortModels(models.filter(m => !isUnavailableModel(m)));
+      const dep = sortModels(models.filter(isUnavailableModel));
       const keySet = !!getKeyForModel({ provider: p });
       html += '<div class="provider-section">' +
         '<div class="provider-head">' + providerIconHtml(p, 26) +
@@ -49,7 +54,7 @@ const Pages = (() => {
         '</div><div class="model-grid">' +
         active.map(modelCardHtml).join('') + '</div>' +
         (dep.length
-          ? '<button class="dep-fold" data-depfold>' + icon('chevronDown', 13) + ' 已下架 ' + dep.length + ' 个模型（点击展开）</button>' +
+          ? '<button class="dep-fold" data-depfold>' + icon('chevronDown', 13) + ' 已下架 / 无法使用 ' + dep.length + ' 个模型（点击展开）</button>' +
             '<div class="model-grid dep-grid" hidden>' + dep.map(modelCardHtml).join('') + '</div>'
           : '') +
         '</div>';
@@ -63,20 +68,26 @@ const Pages = (() => {
   const RANK_COLORS = ['#6366F1', '#F59E0B', '#10B981', '#EC4899', '#0EA5E9'];
 
   function renderRankSection() {
+    const expanded = !!Store.state.rankExpanded;
     const tab = Store.state.rankTab || 'overall';
     const chart = Store.state.rankChart || 'bar';
-    return '<div class="rank-section" id="rankSection">' +
-      '<div class="rank-head">' +
-        '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
-        '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期</span>' +
-        '<span class="rank-controls">' +
+    // 头部整张可点击：折叠时仅显示标题栏，展开后显示控制条 + 图表 + 榜单
+    const head = '<div class="rank-head rank-toggle" id="rankToggle" title="' + (expanded ? '点击收起' : '点击展开') + '">' +
+      '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
+      '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期' + (expanded ? '' : '（点击展开）') + '</span>' +
+      (expanded
+        ? '<span class="rank-controls">' +
           '<span class="seg-btns" id="rankTabs">' +
             '<button class="seg-btn' + (tab === 'overall' ? ' active' : '') + '" data-ranktab="overall">综合榜</button>' +
             '<button class="seg-btn' + (tab === 'coding' ? ' active' : '') + '" data-ranktab="coding">代码榜</button></span>' +
           '<span class="seg-btns" id="rankChartToggle">' +
             '<button class="seg-btn' + (chart === 'bar' ? ' active' : '') + '" data-rankchart="bar" title="柱状图">' + icon('barChart', 14) + '</button>' +
             '<button class="seg-btn' + (chart === 'radar' ? ' active' : '') + '" data-rankchart="radar" title="雷达图">' + icon('radar', 14) + '</button></span>' +
-        '</span></div>' +
+        '</span>'
+        : '') +
+      '<span class="rank-caret">' + icon('chevronDown', 15) + '</span></div>';
+    if (!expanded) return '<div class="rank-section collapsed" id="rankSection">' + head + '</div>';
+    return '<div class="rank-section" id="rankSection">' + head +
       '<div class="rank-chart" id="rankChart"></div>' +
       '<div class="rank-list" id="rankList"></div></div>';
   }
@@ -149,6 +160,8 @@ const Pages = (() => {
       if (tabBtn) { Store.state.rankTab = tabBtn.dataset.ranktab; Store.save(); renderModels(); return; }
       const chBtn = e.target.closest('[data-rankchart]');
       if (chBtn) { Store.state.rankChart = chBtn.dataset.rankchart; Store.save(); renderModels(); return; }
+      const toggle = e.target.closest('#rankToggle');
+      if (toggle) { Store.state.rankExpanded = !Store.state.rankExpanded; Store.save(); renderModels(); return; }
       const row = e.target.closest('[data-rankmodel]');
       if (row && !row.disabled) { openModelInfo(row.dataset.rankmodel); return; }
       const fold = e.target.closest('[data-depfold]');
@@ -157,7 +170,7 @@ const Pages = (() => {
         const open = grid.hidden;
         grid.hidden = !open;
         fold.classList.toggle('open', open);
-        fold.innerHTML = icon('chevronDown', 13) + (open ? ' 收起已下架模型' : ' 已下架 ' + grid.querySelectorAll('.model-card').length + ' 个模型（点击展开）');
+        fold.innerHTML = icon('chevronDown', 13) + (open ? ' 收起' : ' 已下架 / 无法使用 ' + grid.querySelectorAll('.model-card').length + ' 个模型（点击展开）');
         return;
       }
       const keyLink = e.target.closest('[data-keylink]');
@@ -219,6 +232,9 @@ const Pages = (() => {
       const target = (m.type || '').startsWith('tts') || m.type === 'voiceclone' || m.type === 'voicedesign' ? 'studio' : 'asr';
       actionHtml = '<button class="btn btn-primary btn-block" id="miAction" data-target="' + target + '">' +
         icon(target === 'studio' ? 'mic' : 'waveform', 16) + (target === 'studio' ? ' 打开语音工坊使用' : ' 去使用语音识别') + '</button>';
+    } else if (isUnavailableModel(m)) {
+      // 需内测/审核资格的对话模型：不出「开始使用」，避免选了也无法调用
+      actionHtml = '<div class="mi-note-bar warn">' + icon('info', 15) + ' 该模型' + esc(m.note) + '，暂无法直接对话，需到厂商平台申请开通</div>';
     } else if (!keySet) {
       actionHtml = '<div class="mi-note-bar warn">' + icon('key', 15) + ' 尚未配置 ' + esc(m.provider) + ' 的 API Key</div>' +
         '<div class="mi-btns"><button class="btn btn-secondary" id="miGoKey">' + icon('key', 15) + ' 去配置 Key</button>' +
@@ -963,7 +979,7 @@ const Pages = (() => {
 
   function renderHelp() {
     const faqs = [
-      { q: '这个平台是什么？', a: '一个纯前端的 AI 对话聚合平台：填入各家厂商的 API Key，就能在一个界面里使用 23 家厂商的 150+ 大模型。支持单模型、多模型对比、辩论、协同四种对话模式，以及语音、绘画、联网搜索等工具。数据只存储在你自己的浏览器里。' },
+      { q: '这个平台是什么？', a: '一个纯前端的 AI 对话聚合平台：填入各家厂商的 API Key，就能在一个界面里使用 23 家厂商的 270+ 大模型。支持单模型、多模型对比、辩论、协同四种对话模式，以及语音、绘画、联网搜索等工具。数据只存储在你自己的浏览器里。' },
       { q: '如何开始使用？', a: '<ol><li>进入「我的 → API Key 管理」</li><li>展开任意厂商，粘贴从该厂商控制台申请的 Key（下方有各厂商申请入口）</li><li>回到对话页，顶部选择模型即可开始聊天</li></ol>只需填写 Key 即可，接口地址、请求格式、参数均已按各厂商官方文档内置适配。' },
       { q: '四种对话模式有什么区别？', a: '<ul><li><b>单模型</b>：与任意一个模型对话</li><li><b>多模型</b>：同一个问题同时发给多个模型，并排对比回答</li><li><b>辩论</b>：正方、反方多轮交锋，裁判模型总结点评</li><li><b>协同</b>：多个模型分工协作（提案 → 汇总），完成复杂任务</li></ul>' },
       { q: '语音输入 / 语音朗读怎么用？', a: '<ul><li>点击输入框左侧麦克风开始语音输入，说完再点一次结束</li><li>在「我的 → 语音识别」可切换识别引擎：浏览器内置（免费）、小米 MiMo（支持中文、英语及粤语/吴语/闽南语/四川话等方言）、OpenAI / Groq Whisper</li><li>AI 回复卡片上的喇叭图标可朗读该条回复</li><li>在「我的 → 播报声音」可切换朗读引擎与音色</li></ul>' },

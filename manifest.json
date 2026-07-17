@@ -1,7 +1,7 @@
 {
   "name": "第三方科技 · AI 智能聚合平台",
   "short_name": "第三方AI",
-  "description": "150+ 模型一站通达：单模型/多模型/辩论/协同，支持语音、文件、绘画、联网搜索",
+  "description": "270+ 模型一站通达：单模型/多模型/辩论/协同，支持语音、文件、绘画、联网搜索",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

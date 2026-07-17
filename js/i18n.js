@@ -19,7 +19,7 @@ const I18n = (() => {
   const DICT = {
     'zh-CN': {
       'app.name': '第三方科技', 'app.sub': 'AI 智能聚合平台',
-      'login.sub': '150+ 模型一站通达', 'login.tab': '登录', 'login.reg': '注册',
+      'login.sub': '270+ 模型一站通达', 'login.tab': '登录', 'login.reg': '注册',
       'login.account': '账号', 'login.accountPh': '请输入账号', 'login.pass': '密码', 'login.passPh': '请输入密码',
       'login.btn': '登 录', 'login.hint': '演示模式：首次登录自动创建账号', 'login.footer': '数据存储在本机浏览器 · 可安装为 App 离线使用',
       'login.name': '昵称', 'login.namePh': '你的昵称', 'login.regAccountPh': '登录账号（手机号/用户名）',
@@ -34,7 +34,7 @@ const I18n = (() => {
       'mode.debate': '辩论模式', 'mode.debateD': '正反交锋 · 裁判点评',
       'mode.collab': '协同合作', 'mode.collabD': '多 AI 分工协作完成任务',
       'welcome.title': '第三方科技 · AI 聚合平台',
-      'welcome.sub': '150+ 模型一站通达 · 四种对话模式 · 支持语音 / 文件 / 联网 / 绘画',
+      'welcome.sub': '270+ 模型一站通达 · 四种对话模式 · 支持语音 / 文件 / 联网 / 绘画',
       'welcome.c1t': '开始对话', 'welcome.c1d': '与任意 AI 模型聊天',
       'welcome.c2t': '多模型对比', 'welcome.c2d': '多个模型同题竞技',
       'welcome.c3t': '辩论模式', 'welcome.c3d': '正反交锋，裁判点评',
@@ -89,7 +89,7 @@ const I18n = (() => {
 
     'zh-TW': {
       'app.name': '第三方科技', 'app.sub': 'AI 智能聚合平台',
-      'login.sub': '150+ 模型一站通達', 'login.tab': '登入', 'login.reg': '註冊',
+      'login.sub': '270+ 模型一站通達', 'login.tab': '登入', 'login.reg': '註冊',
       'login.account': '帳號', 'login.accountPh': '請輸入帳號', 'login.pass': '密碼', 'login.passPh': '請輸入密碼',
       'login.btn': '登 入', 'login.hint': '演示模式：首次登入自動建立帳號', 'login.footer': '資料儲存在本機瀏覽器 · 可安裝為 App 離線使用',
       'login.name': '暱稱', 'login.namePh': '你的暱稱', 'login.regAccountPh': '登入帳號（手機號/用戶名）',
@@ -104,7 +104,7 @@ const I18n = (() => {
       'mode.debate': '辯論模式', 'mode.debateD': '正反交鋒 · 裁判點評',
       'mode.collab': '協同合作', 'mode.collabD': '多 AI 分工協作完成任務',
       'welcome.title': '第三方科技 · AI 聚合平台',
-      'welcome.sub': '150+ 模型一站通達 · 四種對話模式 · 支援語音 / 檔案 / 聯網 / 繪畫',
+      'welcome.sub': '270+ 模型一站通達 · 四種對話模式 · 支援語音 / 檔案 / 聯網 / 繪畫',
       'welcome.c1t': '開始對話', 'welcome.c1d': '與任意 AI 模型聊天',
       'welcome.c2t': '多模型對比', 'welcome.c2d': '多個模型同題競技',
       'welcome.c3t': '辯論模式', 'welcome.c3d': '正反交鋒，裁判點評',
@@ -159,7 +159,7 @@ const I18n = (() => {
 
     'en': {
       'app.name': 'ThirdParty Tech', 'app.sub': 'AI Aggregation Platform',
-      'login.sub': '150+ models in one place', 'login.tab': 'Sign in', 'login.reg': 'Sign up',
+      'login.sub': '270+ models in one place', 'login.tab': 'Sign in', 'login.reg': 'Sign up',
       'login.account': 'Account', 'login.accountPh': 'Enter account', 'login.pass': 'Password', 'login.passPh': 'Enter password',
       'login.btn': 'Sign in', 'login.hint': 'Demo: account is created on first sign-in', 'login.footer': 'Data stays in your browser · Installable as an app',
       'login.name': 'Nickname', 'login.namePh': 'Your nickname', 'login.regAccountPh': 'Account (phone / username)',
@@ -174,7 +174,7 @@ const I18n = (() => {
       'mode.debate': 'Debate', 'mode.debateD': 'Pro vs con · judge review',
       'mode.collab': 'Collab', 'mode.collabD': 'AIs collaborate on tasks',
       'welcome.title': 'ThirdParty Tech · AI Platform',
-      'welcome.sub': '150+ models · 4 chat modes · Voice / Files / Web / Painting',
+      'welcome.sub': '270+ models · 4 chat modes · Voice / Files / Web / Painting',
       'welcome.c1t': 'Start chatting', 'welcome.c1d': 'Chat with any AI model',
       'welcome.c2t': 'Model compare', 'welcome.c2d': 'Same question, many models',
       'welcome.c3t': 'Debate mode', 'welcome.c3d': 'Pro vs con, judge review',
@@ -244,7 +244,7 @@ const I18n = (() => {
       'mode.debate': 'Débat', 'mode.debateD': 'Pour / contre · arbitre',
       'mode.collab': 'Collab', 'mode.collabD': 'Les IA collaborent',
       'welcome.title': 'ThirdParty Tech · Plateforme IA',
-      'welcome.sub': '150+ modèles · 4 modes · Voix / Fichiers / Web / Peinture',
+      'welcome.sub': '270+ modèles · 4 modes · Voix / Fichiers / Web / Peinture',
       'welcome.c1t': 'Discuter', 'welcome.c1d': 'Chatter avec n’importe quel modèle',
       'welcome.c2t': 'Comparer', 'welcome.c2d': 'Même question, plusieurs modèles',
       'welcome.c3t': 'Débat', 'welcome.c3d': 'Pour / contre, arbitrage',
@@ -314,7 +314,7 @@ const I18n = (() => {
       'mode.debate': 'Debate', 'mode.debateD': 'Pro / contra · juez',
       'mode.collab': 'Colaboración', 'mode.collabD': 'Las IA colaboran',
       'welcome.title': 'ThirdParty Tech · Plataforma IA',
-      'welcome.sub': '150+ modelos · 4 modos · Voz / Archivos / Web / Pintura',
+      'welcome.sub': '270+ modelos · 4 modos · Voz / Archivos / Web / Pintura',
       'welcome.c1t': 'Empezar a chatear', 'welcome.c1d': 'Chatea con cualquier modelo',
       'welcome.c2t': 'Comparar modelos', 'welcome.c2d': 'Misma pregunta, varios modelos',
       'welcome.c3t': 'Modo debate', 'welcome.c3d': 'Pro y contra, con juez',
@@ -369,7 +369,7 @@ const I18n = (() => {
 
     'ru': {
       'app.name': 'ThirdParty Tech', 'app.sub': 'Платформа агрегации ИИ',
-      'login.sub': '150+ моделей в одном месте', 'login.tab': 'Вход', 'login.reg': 'Регистрация',
+      'login.sub': '270+ моделей в одном месте', 'login.tab': 'Вход', 'login.reg': 'Регистрация',
       'login.account': 'Аккаунт', 'login.accountPh': 'Введите аккаунт', 'login.pass': 'Пароль', 'login.passPh': 'Введите пароль',
       'login.btn': 'Войти', 'login.hint': 'Демо: аккаунт создаётся при первом входе', 'login.footer': 'Данные хранятся локально · Можно установить как приложение',
       'login.name': 'Имя', 'login.namePh': 'Ваше имя', 'login.regAccountPh': 'Аккаунт (телефон / логин)',
@@ -384,7 +384,7 @@ const I18n = (() => {
       'mode.debate': 'Дебаты', 'mode.debateD': 'За / против · судья',
       'mode.collab': 'Коллаб', 'mode.collabD': 'ИИ работают вместе',
       'welcome.title': 'ThirdParty Tech · ИИ Платформа',
-      'welcome.sub': '150+ моделей · 4 режима · Голос / Файлы / Веб / Рисование',
+      'welcome.sub': '270+ моделей · 4 режима · Голос / Файлы / Веб / Рисование',
       'welcome.c1t': 'Начать чат', 'welcome.c1d': 'Общайтесь с любой моделью',
       'welcome.c2t': 'Сравнение', 'welcome.c2d': 'Один вопрос, много моделей',
       'welcome.c3t': 'Дебаты', 'welcome.c3d': 'За и против, судья',
@@ -454,7 +454,7 @@ const I18n = (() => {
       'mode.debate': 'مناظرة', 'mode.debateD': 'مع / ضد · حكم',
       'mode.collab': 'تعاون', 'mode.collabD': 'النماذج تتعاون على المهام',
       'welcome.title': 'ثيرد بارتي تك · منصة الذكاء',
-      'welcome.sub': '150+ نموذجًا · 4 أوضاع · صوت / ملفات / ويب / رسم',
+      'welcome.sub': '270+ نموذجًا · 4 أوضاع · صوت / ملفات / ويب / رسم',
       'welcome.c1t': 'ابدأ المحادثة', 'welcome.c1d': 'تحدث مع أي نموذج',
       'welcome.c2t': 'مقارنة النماذج', 'welcome.c2d': 'نفس السؤال لعدة نماذج',
       'welcome.c3t': 'وضع المناظرة', 'welcome.c3d': 'مع وضد مع حكم',

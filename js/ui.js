@@ -432,6 +432,7 @@ const UI = (() => {
       '<span class="msg-time">' + fmtTime(m.ts) + '</span></div>' +
       (m.stage ? '<div class="debate-stage">' + esc(m.stage) + '</div>' : '') +
       '<div class="thinking-slot">' + (m.thinking ? thinkingHtml(m.thinking, false) : '') + '</div>' +
+      '<div class="toolcalls-slot">' + (m.toolCalls && m.toolCalls.length ? toolCallsHtml(m.toolCalls, false) : '') + '</div>' +
       '<div class="msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? MD.render(m.content) : '')) + '</div>' +
       '<div class="msg-actions">' +
       '<button class="msg-action" data-act="copy" title="复制">' + icon('copy', 14) + '</button>' +
@@ -453,6 +454,7 @@ const UI = (() => {
           '<button class="msg-action" data-act="regen" title="重新生成">' + icon('refresh', 13) + '</button>' +
           '</div></div>' +
           '<div class="thinking-slot">' + (m.thinking ? thinkingHtml(m.thinking, false) : '') + '</div>' +
+          '<div class="toolcalls-slot">' + (m.toolCalls && m.toolCalls.length ? toolCallsHtml(m.toolCalls, false) : '') + '</div>' +
           '<div class="multi-card-body msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? MD.render(m.content) : '')) + '</div>' +
           '</div>';
       }).join('') + '</div></div></div>';
@@ -460,21 +462,197 @@ const UI = (() => {
 
   function thinkingHtml(text, live) {
     return '<div class="thinking-box' + (live ? ' live' : '') + '">' +
-      '<button class="thinking-toggle">' + icon('brain', 14) + '<span>思考过程</span><span class="chevron">' + icon('chevronDown', 13) + '</span></button>' +
+      '<button class="thinking-toggle">' +
+      '<span class="thinking-brain">' + icon('brain', 14) + '</span>' +
+      '<span class="thinking-label">' + (live ? '思考中…' : '思考已完成') + '</span>' +
+      '<span class="thinking-copy" title="复制思考内容">' + icon('copy', 12) + '<span>复制</span></span>' +
+      '<span class="chevron">' + icon('chevronDown', 13) + '</span></button>' +
       '<div class="thinking-content">' + esc(text) + '</div></div>';
+  }
+
+  /* 思考盒事件绑定：折叠切换 + 复制（阻止冒泡，点复制不触发折叠） */
+  function bindThinking(toggle) {
+    if (!toggle || toggle.dataset.bound) return;
+    toggle.dataset.bound = '1';
+    toggle.addEventListener('click', e => {
+      if (e.target.closest('.thinking-copy')) return;
+      toggle.closest('.thinking-box').classList.toggle('open');
+    });
+    const copyBtn = $('.thinking-copy', toggle);
+    if (copyBtn) {
+      copyBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const box = toggle.closest('.thinking-box');
+        const content = box && $('.thinking-content', box);
+        copyText(content ? content.textContent : '').then(() => {
+          copyBtn.classList.add('copied');
+          copyBtn.innerHTML = icon('check', 12) + '<span>已复制</span>';
+          setTimeout(() => { copyBtn.classList.remove('copied'); copyBtn.innerHTML = icon('copy', 12) + '<span>复制</span>'; }, 1600);
+        }).catch(() => {});
+      });
+    }
+  }
+
+  /* ==================== 工具调用卡片 ==================== */
+  /* 按 function.name 智能匹配卡片类型（忽略大小写、包含匹配） */
+  const TC_TYPES = [
+    { type: 'terminal', re: /terminal|shell|bash|run_command|exec/i, icon: 'terminal', label: '运行终端' },
+    { type: 'edit', re: /edit_file|write_file|apply_patch|str_replace|patch/i, icon: 'edit', label: '编辑文件' },
+    { type: 'read', re: /read_file|open_file|view_file|cat/i, icon: 'fileText', label: '读取文件' },
+    { type: 'search', re: /search|web_search|browser|google/i, icon: 'search', label: '搜索' }
+  ];
+
+  function tcType(name) {
+    const hit = TC_TYPES.find(t => t.re.test(name || ''));
+    return hit || { type: 'generic', icon: 'wand', label: '工具调用' };
+  }
+
+  /* arguments 为 JSON 字符串，流式时可能不完整，容错解析 */
+  function tcParseArgs(tc) {
+    if (!tc || !tc.arguments) return null;
+    try { return JSON.parse(tc.arguments); } catch (e) { return null; }
+  }
+
+  function tcStatusHtml(live) {
+    return live
+      ? '<span class="toolcall-status running"><span class="tc-dot"></span>执行中…</span>'
+      : '<span class="toolcall-status done">' + icon('check', 12) + '已完成</span>';
+  }
+
+  function toolCallsHtml(toolCalls, live) {
+    return toolCalls.map((tc, i) => toolCardHtml(tc, live, tc.id || ('idx' + i))).join('');
+  }
+
+  function toolCardHtml(tc, live, key) {
+    const meta = tcType(tc.name);
+    return '<div class="toolcall-card tc-' + meta.type + (live ? ' live' : '') + '" data-tc="' + esc(key) + '">' +
+      '<div class="toolcall-head">' + icon(meta.icon, 14) +
+      '<span class="toolcall-name">' + esc(meta.label) + '</span>' +
+      (tc.name ? '<span class="toolcall-fname">' + esc(tc.name) + '</span>' : '') +
+      tcStatusHtml(live) +
+      '</div>' +
+      '<div class="toolcall-body">' + toolCardBodyHtml(tc, meta.type) + '</div>' +
+      '<button class="tc-expand-btn" hidden>展开</button>' +
+      '</div>';
+  }
+
+  function toolCardBodyHtml(tc, type) {
+    const args = tcParseArgs(tc);
+    const raw = '<pre class="tc-raw">' + esc(tc.arguments || '') + '</pre>';
+    const resultNote = tc.result ? '<div class="tc-note">' + esc(tc.result) + '</div>' : '';
+    const pathOf = a => a && (a.path || a.file_path || a.file || a.filename || a.target_file);
+    const pathHtml = p => p ? '<div class="tc-path">' + icon('fileText', 12) + '<span>' + esc(p) + '</span></div>' : '';
+
+    if (type === 'terminal') {
+      let html = '<div class="tc-terminal">';
+      const cmd = args && (args.command || args.cmd || args.script || args.code);
+      html += '<div class="tc-cmd"><span class="tc-prompt">$</span> ' + esc(cmd != null ? String(cmd) : (tc.arguments || '')) + '</div>';
+      if (args) {
+        Object.keys(args).forEach(k => {
+          if (/^(command|cmd|script|code)$/i.test(k)) return;
+          const isErr = /^(stderr|error)$/i.test(k) || (/^exit_?code$/i.test(k) && +args[k] !== 0);
+          const val = typeof args[k] === 'string' ? args[k] : JSON.stringify(args[k]);
+          html += '<div class="tc-out' + (isErr ? ' tc-err' : '') + '">' + esc(k + ': ' + val) + '</div>';
+        });
+      }
+      if (tc.result) html += '<div class="tc-out">' + esc(tc.result) + '</div>';
+      return html + '</div>';
+    }
+
+    if (type === 'edit') {
+      let html = pathHtml(pathOf(args));
+      let diffText = '';
+      if (args) {
+        if (args.old_str != null || args.new_str != null || args.old_string != null || args.new_string != null) {
+          const oldS = String(args.old_str != null ? args.old_str : (args.old_string || ''));
+          const newS = String(args.new_str != null ? args.new_str : (args.new_string || ''));
+          diffText = oldS.split('\n').map(l => '- ' + l).join('\n') + '\n' + newS.split('\n').map(l => '+ ' + l).join('\n');
+        } else {
+          diffText = String(args.content != null ? args.content : (args.patch != null ? args.patch : (args.diff != null ? args.diff : '')));
+        }
+      }
+      if (diffText) html += '<div class="tc-diff">' + diffLinesHtml(diffText) + '</div>';
+      else html += args ? '<pre class="tc-raw">' + esc(JSON.stringify(args, null, 2)) + '</pre>' : raw;
+      return html + resultNote;
+    }
+
+    if (type === 'read') {
+      let html = pathHtml(pathOf(args));
+      const content = tc.result || (args && (args.content != null ? String(args.content) : '')) || '';
+      if (content) html += '<div class="tc-code">' + codeLinesHtml(content) + '</div>';
+      else if (!args) html += raw;
+      return html;
+    }
+
+    if (type === 'search') {
+      let html = '';
+      const q = args && (args.query || args.keyword || args.keywords || args.q);
+      if (q) html += '<div class="tc-query">' + icon('search', 12) + '<span>' + esc(q) + '</span></div>';
+      else if (!args) html += raw;
+      let list = null;
+      if (tc.result) {
+        try {
+          const r = JSON.parse(tc.result);
+          if (Array.isArray(r)) list = r;
+          else if (r && Array.isArray(r.results)) list = r.results;
+        } catch (e) {}
+      }
+      if (list && list.length) {
+        html += '<div class="tc-results">' + list.slice(0, 8).map(r =>
+          '<div class="tc-result-item">' +
+          '<div class="tc-result-title">' + esc(r.title || r.name || r.url || '（无标题）') + '</div>' +
+          (r.url ? '<div class="tc-result-url">' + esc(r.url) + '</div>' : '') +
+          ((r.snippet || r.content) ? '<div class="tc-result-snippet">' + esc(String(r.snippet || r.content).slice(0, 160)) + '</div>' : '') +
+          '</div>').join('') + '</div>';
+      } else if (tc.result) {
+        html += '<div class="tc-note">' + esc(tc.result) + '</div>';
+      }
+      return html;
+    }
+
+    // 未知工具：通用卡片，格式化 JSON（2 空格缩进）
+    return (args ? '<pre class="tc-raw">' + esc(JSON.stringify(args, null, 2)) + '</pre>' : raw) + resultNote;
+  }
+
+  /* diff 渲染：+ 开头绿底、- 开头红底 */
+  function diffLinesHtml(text) {
+    return String(text).split('\n').map(line => {
+      const cls = line.startsWith('+') ? ' diff-add' : line.startsWith('-') ? ' diff-del' : '';
+      return '<span class="tc-diff-line' + cls + '">' + (esc(line) || ' ') + '</span>';
+    }).join('');
+  }
+
+  /* 带行号代码块（读取文件卡片用，超长截断防卡顿） */
+  function codeLinesHtml(text) {
+    const lines = String(text).split('\n');
+    const MAX = 400;
+    const shown = lines.slice(0, MAX);
+    let html = shown.map((l, i) =>
+      '<div class="tc-code-line"><span class="tc-lno">' + (i + 1) + '</span><span class="tc-ltxt">' + (esc(l) || ' ') + '</span></div>').join('');
+    if (lines.length > MAX) html += '<div class="tc-code-line"><span class="tc-lno">…</span><span class="tc-ltxt">（其余 ' + (lines.length - MAX) + ' 行省略）</span></div>';
+    return html;
+  }
+
+  /* 超长内容默认折叠（>200px 显示「展开/收起」） */
+  function syncTcCollapse(card) {
+    const body = $('.toolcall-body', card);
+    const btn = $('.tc-expand-btn', card);
+    if (!body || !btn) return;
+    const expanded = card.classList.contains('expanded');
+    const need = body.scrollHeight > 210;
+    btn.hidden = !need;
+    card.classList.toggle('collapsed', need && !expanded);
+    btn.textContent = expanded ? '收起' : '展开';
   }
 
   function errorHtml(err) {
     return '<div class="msg-error">' + icon('zap', 16) + '<span>' + esc(err) + '</span></div>';
   }
 
-  /* 渲染后处理：思考折叠、数学公式、灯箱 */
+  /* 渲染后处理：思考折叠、工具卡片折叠、数学公式、灯箱 */
   function afterRender(root) {
-    $$('.thinking-toggle', root).forEach(t => {
-      if (t.dataset.bound) return;
-      t.dataset.bound = '1';
-      t.addEventListener('click', () => t.closest('.thinking-box').classList.toggle('open'));
-    });
+    $$('.thinking-toggle', root).forEach(bindThinking);
+    $$('.toolcall-card', root).forEach(syncTcCollapse);
     $$('.msg-content-slot', root).forEach(el => MD.renderMath(el));
     $$('.msg-image', root).forEach(img => {
       if (img.dataset.bound) return;
@@ -527,7 +705,7 @@ const UI = (() => {
       '<button class="msg-action" data-act="copy" title="复制">' + icon('copy', 13) + '</button>' +
       '<button class="msg-action" data-act="regen" title="重新生成">' + icon('refresh', 13) + '</button>' +
       '</div></div>' +
-      '<div class="thinking-slot"></div><div class="multi-card-body msg-content-slot"><span class="loading-dots"><span></span><span></span><span></span></span></div></div>';
+      '<div class="thinking-slot"></div><div class="toolcalls-slot"></div><div class="multi-card-body msg-content-slot"><span class="loading-dots"><span></span><span></span><span></span></span></div></div>';
   }
 
   function setMsgContent(id, text) {
@@ -549,10 +727,45 @@ const UI = (() => {
       $('.thinking-content', existing).textContent = text;
     } else {
       slot.innerHTML = thinkingHtml(text, true);
-      const toggle = $('.thinking-toggle', slot);
-      toggle.addEventListener('click', () => toggle.closest('.thinking-box').classList.toggle('open'));
+      bindThinking($('.thinking-toggle', slot));
     }
     scrollToBottom();
+  }
+
+  /* 流式更新工具调用卡片：已存在则局部更新内容与状态，不存在则创建 */
+  function setMsgToolCalls(id, toolCalls, live) {
+    const slot = $('#chatContainer [data-id="' + id + '"] .toolcalls-slot');
+    if (!slot || !toolCalls || !toolCalls.length) return;
+    toolCalls.forEach((tc, i) => {
+      const key = tc.id || ('idx' + i);
+      const existing = $$('.toolcall-card', slot).find(c => c.dataset.tc === key);
+      if (existing) {
+        existing.classList.toggle('live', !!live);
+        const st = $('.toolcall-status', existing);
+        if (st) st.outerHTML = tcStatusHtml(live);
+        const nameEl = $('.toolcall-fname', existing);
+        if (nameEl && tc.name) nameEl.textContent = tc.name;
+        const body = $('.toolcall-body', existing);
+        if (body) {
+          body.innerHTML = toolCardBodyHtml(tc, tcType(tc.name).type);
+          syncTcCollapse(existing);
+        }
+      } else {
+        slot.insertAdjacentHTML('beforeend', toolCardHtml(tc, live, key));
+        const card = $$('.toolcall-card', slot).find(c => c.dataset.tc === key);
+        if (card) syncTcCollapse(card);
+      }
+    });
+    scrollToBottom();
+  }
+
+  /* 工具卡片定态：移除执行中样式，状态置为已完成 */
+  function settleToolCards(card) {
+    $$('.toolcall-card.live', card).forEach(c => {
+      c.classList.remove('live');
+      const st = $('.toolcall-status', c);
+      if (st) st.outerHTML = tcStatusHtml(false);
+    });
   }
 
   function finishMsg(id, content) {
@@ -566,14 +779,29 @@ const UI = (() => {
       $$('.msg-image', slot).forEach(img => img.addEventListener('click', () => openLightbox(img.src)));
     }
     const think = $('.thinking-box', card);
-    if (think) think.classList.remove('live');
+    if (think) {
+      think.classList.remove('live');
+      const label = $('.thinking-label', think);
+      if (label) label.textContent = '思考已完成';
+    }
+    settleToolCards(card);
     scrollToBottom();
   }
 
   function setMsgError(id, err) {
     delete scheduleRender[id];
-    const slot = $('#chatContainer [data-id="' + id + '"] .msg-content-slot');
+    const card = $('#chatContainer [data-id="' + id + '"]');
+    const slot = card && $('.msg-content-slot', card);
     if (slot) slot.innerHTML = errorHtml(err);
+    if (card) {
+      const think = $('.thinking-box', card);
+      if (think) {
+        think.classList.remove('live');
+        const label = $('.thinking-label', think);
+        if (label) label.textContent = '思考已完成';
+      }
+      settleToolCards(card);
+    }
     scrollToBottom();
   }
 
@@ -582,6 +810,17 @@ const UI = (() => {
     const box = $('#chatContainer');
     MD.bindCopy(box);
     box.addEventListener('click', e => {
+      // 工具卡片「展开/收起」
+      const tcBtn = e.target.closest('.tc-expand-btn');
+      if (tcBtn) {
+        const tcCard = tcBtn.closest('.toolcall-card');
+        if (tcCard) {
+          const open = tcCard.classList.toggle('expanded');
+          tcCard.classList.toggle('collapsed', !open);
+          tcBtn.textContent = open ? '收起' : '展开';
+        }
+        return;
+      }
       const btn = e.target.closest('.msg-action');
       if (!btn) return;
       const card = btn.closest('[data-id]');
@@ -847,7 +1086,7 @@ const UI = (() => {
   return {
     showLogin, showApp, navigate, init,
     renderSidebar, renderChat, renderWelcome, appendMsg,
-    setMsgContent, setMsgThinking, finishMsg, setMsgError,
+    setMsgContent, setMsgThinking, setMsgToolCalls, finishMsg, setMsgError,
     updateModelSel, updateModeSel, renderModeConfig, renderChips, syncAttachBtn,
     setSending, renderAttachments, updateMicBtn, updateWebSearchBtn, updateSpeakButtons,
     scrollToBottom, applyTheme, userAvatarHtml, AVATAR_GRADS, openLightbox

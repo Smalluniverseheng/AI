@@ -236,8 +236,11 @@ function getModel(id) { return ModelCatalog.get(id); }
 /* 对话类模型（tts/asr/voiceclone/voicedesign 等为专用模型，不可对话） */
 function isChatModel(m) { return m && (m.type || 'chat') === 'chat'; }
 
-/* 可被选择对话的模型：对话类且未下架 */
-function isSelectableModel(m) { return isChatModel(m) && m.status !== 'deprecated'; }
+/* 可被选择对话的模型：对话类、未下架，且非内测/审核资格（需资格无法直接调用的不列入选择器） */
+function isSelectableModel(m) {
+  return isChatModel(m) && m.status !== 'deprecated' &&
+    !(m.note && (m.note.indexOf('内测') >= 0 || m.note.indexOf('审核') >= 0));
+}
 
 /* 厂商内置联网搜索（服务端执行，无需客户端回环） */
 const NATIVE_SEARCH_PROVIDERS = ['通义千问', '智谱AI', 'Google', 'xAI'];
@@ -258,7 +261,7 @@ function getKeyForModel(model) {
 }
 
 /* 应用信息（更新日志数据在 js/changelog.js，添加式维护） */
-const APP_VERSION = '5.4.0';
+const APP_VERSION = '5.5.0';
 
 const MODE_META = {
   single: { icon: 'message', label: '单模型', desc: '与单个 AI 对话' },

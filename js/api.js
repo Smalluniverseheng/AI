@@ -81,12 +81,18 @@ const API = (() => {
   }
 
   /* ---------- SSE 流式解析 ---------- */
-  async function streamSSE(resp, format, onChunk, onThinking) {
+  /* onToolCall：可选第 5 参，OpenAI 格式 tool_calls 更新时回调（参数为快照数组） */
+  async function streamSSE(resp, format, onChunk, onThinking, onToolCall) {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder('utf-8');
     let buffer = '';
     let full = '';
     let fullThink = '';
+    // tool_calls 累加器：OpenAI 流式按 index 分片，arguments 为增量字符串
+    const toolCallsAcc = [];
+    const notifyToolCalls = () => {
+      if (typeof onToolCall === 'function') onToolCall(toolCallsAcc.map(t => Object.assign({}, t)));
+    };
 
     const handleData = (data) => {
       if (!data || data === '[DONE]') return;
@@ -112,7 +118,30 @@ const API = (() => {
         if (delta) {
           const think = delta.reasoning_content || delta.reasoning;
           if (think && onThinking) { fullThink += think; onThinking(think, fullThink); }
-          if (delta.content) { full += delta.content; onChunk(delta.content, full); }
+          // role:'tool' 的 delta 是工具结果回传，不计入正文
+          if (delta.content && delta.role !== 'tool') { full += delta.content; onChunk(delta.content, full); }
+          // 工具调用分片：首片带 function.name，后续 function.arguments 为增量
+          if (delta.tool_calls && delta.tool_calls.length) {
+            delta.tool_calls.forEach(dtc => {
+              const idx = dtc.index != null ? dtc.index : toolCallsAcc.length;
+              let acc = toolCallsAcc[idx];
+              if (!acc) acc = toolCallsAcc[idx] = { id: '', name: '', arguments: '', result: null, status: 'running' };
+              if (dtc.id) acc.id = dtc.id;
+              const fn = dtc.function || {};
+              if (fn.name) acc.name += fn.name;
+              if (fn.arguments != null) acc.arguments += typeof fn.arguments === 'string' ? fn.arguments : JSON.stringify(fn.arguments);
+            });
+            notifyToolCalls();
+          }
+          // 工具结果回传（部分厂商服务端执行工具后会随流返回 role:'tool'）
+          if (delta.role === 'tool' && delta.tool_call_id) {
+            const hit = toolCallsAcc.find(t => t.id === delta.tool_call_id);
+            if (hit) {
+              hit.result = (hit.result || '') + (delta.content || '');
+              hit.status = 'done';
+              notifyToolCalls();
+            }
+          }
         }
       }
     };
@@ -131,7 +160,12 @@ const API = (() => {
       }
     }
     if (buffer.trim().startsWith('data:')) handleData(buffer.trim().slice(5).trim());
-    return { content: full, thinking: fullThink };
+    // 流结束：未收到结果回传的工具调用一律置为已完成
+    if (toolCallsAcc.length) {
+      toolCallsAcc.forEach(t => { t.status = 'done'; });
+      notifyToolCalls();
+    }
+    return { content: full, thinking: fullThink, toolCalls: toolCallsAcc };
   }
 
   /* ---------- 厂商原生参数：联网搜索 / 深度思考开关 ----------
@@ -222,10 +256,19 @@ const API = (() => {
     applyProviderExtras(body, model);
     return fetchJSON(cfg.base() + '/v1/chat/completions', { method: 'POST', headers: cfg.headers(key), body: JSON.stringify(body) }, ac)
       .then(resp => {
-        if (streaming) return streamSSE(resp, 'openai', onChunk, onThinking);
+        if (streaming) return streamSSE(resp, 'openai', onChunk, onThinking, opts.onToolCall);
         return resp.json().then(d => {
           const m = d.choices && d.choices[0] && d.choices[0].message || {};
-          return { content: m.content || '', thinking: m.reasoning_content || '' };
+          const toolCalls = (m.tool_calls || []).map(tc => ({
+            id: tc.id || '',
+            name: (tc.function && tc.function.name) || '',
+            arguments: tc.function && tc.function.arguments != null
+              ? (typeof tc.function.arguments === 'string' ? tc.function.arguments : JSON.stringify(tc.function.arguments))
+              : '',
+            result: null,
+            status: 'done'
+          }));
+          return { content: m.content || '', thinking: m.reasoning_content || '', toolCalls };
         });
       })
       .finally(() => { controllers = controllers.filter(c => c !== ac); });

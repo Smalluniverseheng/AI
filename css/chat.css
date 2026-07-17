@@ -209,7 +209,7 @@
   border-top: 1px dashed var(--border);
 }
 .thinking-box.open .thinking-content { display: block; }
-.thinking-box.live .thinking-toggle .icon { animation: pulse 1.4s infinite; }
+.thinking-box.live .thinking-brain .icon { animation: pulse 1.4s infinite; }
 
 /* 打字机光标 */
 .stream-cursor {
@@ -523,3 +523,219 @@
 .pd-btns .btn.danger { color: var(--danger); flex: 0 0 auto; }
 .p-custom { font-style: normal; font-size: 10px; background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 1px 5px; vertical-align: 1px; }
 .preset-card.create { border-style: dashed; }
+
+/* ==================== v5.5 思考面板升级 ==================== */
+.thinking-brain { display: inline-flex; }
+.thinking-box.live { border-color: var(--accent); animation: thinkBreath 1.6s infinite; }
+@keyframes thinkBreath {
+  0%, 100% { box-shadow: inset 2.5px 0 0 var(--accent); }
+  50% { box-shadow: inset 2.5px 0 0 var(--accent-3); }
+}
+.thinking-copy {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  transition: background var(--dur), color var(--dur);
+  flex-shrink: 0;
+}
+.thinking-copy:hover { background: var(--bg-hover); color: var(--text); }
+.thinking-copy.copied { color: var(--success); }
+.thinking-copy .icon { width: 12px; height: 12px; color: inherit; }
+.thinking-toggle .chevron { margin-left: 4px; }
+
+/* ==================== v5.5 工具调用卡片 ==================== */
+.toolcalls-slot { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.toolcalls-slot:empty { display: none; }
+
+.toolcall-card {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  background: var(--bg-elev);
+  overflow: hidden;
+  font-size: 13px;
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+  animation: fadeUp .25s var(--ease);
+}
+.toolcall-card.tc-terminal { border-left-color: #10B981; }
+.toolcall-card.tc-edit { border-left-color: #F59E0B; }
+.toolcall-card.tc-read { border-left-color: #3B82F6; }
+.toolcall-card.tc-search { border-left-color: #8B5CF6; }
+
+.toolcall-head {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 12px;
+  background: var(--bg-soft);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.toolcall-head > .icon { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+.tc-terminal .toolcall-head > .icon { color: #10B981; }
+.tc-edit .toolcall-head > .icon { color: #F59E0B; }
+.tc-read .toolcall-head > .icon { color: #3B82F6; }
+.tc-search .toolcall-head > .icon { color: #8B5CF6; }
+.toolcall-name { flex-shrink: 0; }
+.toolcall-fname {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.toolcall-status {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.toolcall-status.running { color: var(--warning); }
+.toolcall-status.done { color: var(--success); }
+.toolcall-status .icon { width: 12px; height: 12px; color: inherit; }
+.tc-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 1.1s infinite; }
+
+.toolcall-body { padding: 10px 12px; color: var(--text-2); }
+.toolcall-card.collapsed .toolcall-body {
+  max-height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+.toolcall-card.collapsed .toolcall-body::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 42px;
+  background: linear-gradient(to bottom, transparent, var(--bg-elev));
+  pointer-events: none;
+}
+.tc-expand-btn {
+  width: 100%;
+  padding: 5px 0 7px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--accent);
+  transition: background var(--dur);
+}
+.tc-expand-btn:hover { background: var(--bg-hover); }
+
+/* 终端卡片：明暗主题下终端本体保持深色 */
+.tc-terminal {
+  background: #1A1B26;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+.tc-cmd { color: #9ECE6A; white-space: pre-wrap; word-break: break-all; }
+.tc-cmd .tc-prompt { color: #7AA2F7; font-weight: 700; }
+.tc-out { color: #A9B1D6; white-space: pre-wrap; word-break: break-all; }
+.tc-out.tc-err { color: #F7768E; }
+
+/* 文件路径行 */
+.tc-path {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.tc-path .icon { width: 12px; height: 12px; color: var(--accent); flex-shrink: 0; }
+
+/* diff 渲染：+ 绿底 / - 红底 */
+.tc-diff {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+.tc-diff-line { display: block; padding: 0 10px; white-space: pre-wrap; word-break: break-all; color: var(--text-2); }
+.tc-diff-line.diff-add { background: var(--success-soft); color: var(--success); }
+.tc-diff-line.diff-del { background: var(--danger-soft); color: var(--danger); }
+
+/* 读取文件代码块（带行号） */
+.tc-code {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 0;
+  overflow-x: auto;
+}
+.tc-code-line { display: flex; }
+.tc-lno {
+  flex: 0 0 2.8em;
+  text-align: right;
+  padding-right: 10px;
+  color: var(--text-3);
+  user-select: none;
+}
+.tc-ltxt { flex: 1; min-width: 0; padding-right: 12px; white-space: pre-wrap; word-break: break-all; color: var(--text-2); }
+
+/* 搜索卡片 */
+.tc-query {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-2);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.tc-query .icon { width: 12px; height: 12px; color: var(--accent); flex-shrink: 0; }
+.tc-results { display: flex; flex-direction: column; gap: 8px; }
+.tc-result-item {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px 11px;
+}
+.tc-result-title { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.tc-result-url { font-size: 11px; color: var(--accent); overflow-wrap: anywhere; }
+.tc-result-snippet { font-size: 12px; color: var(--text-3); margin-top: 2px; line-height: 1.55; }
+
+/* 通用卡片：格式化参数 / 结果 */
+.tc-raw {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 12px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+  color: var(--text-2);
+}
+.tc-note {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.tc-note:first-child { margin-top: 0; }
+
+/* 小屏/手表防溢出 */
+@media (max-width: 640px) {
+  .toolcall-body { padding: 8px 10px; }
+  .toolcall-fname { display: none; }
+}

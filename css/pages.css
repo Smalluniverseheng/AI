@@ -523,3 +523,15 @@ button.badge.key-link:hover { background: var(--accent-soft); color: var(--accen
 .tool-result { border-top: 1px solid var(--border); padding-top: 12px; }
 .tool-result-body { font-size: 14px; line-height: 1.75; color: var(--text); max-height: 46dvh; overflow-y: auto; }
 .tool-result-body > :first-child { margin-top: 0; }
+
+/* ==================== v5.5 排行榜折叠卡片 ==================== */
+.rank-toggle { cursor: pointer; user-select: none; }
+.rank-section.collapsed .rank-toggle { margin-bottom: 0; }
+.rank-section.collapsed { transition: border-color var(--dur); }
+.rank-section.collapsed:hover { border-color: var(--accent); }
+.rank-caret { display: inline-flex; align-items: center; color: var(--text-3); flex-shrink: 0; }
+.rank-caret .icon { transition: transform var(--dur); }
+.rank-section:not(.collapsed) .rank-caret .icon { transform: rotate(180deg); }
+
+/* 修复：hidden 属性被 .model-grid 的 display:grid 覆盖，导致「已下架/无法使用」折叠失效 */
+.model-grid[hidden] { display: none !important; }
