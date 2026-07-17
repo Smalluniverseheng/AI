@@ -6,7 +6,7 @@
 <!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
 <meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
-<script src="js/device.js?v=5.3.0"></script>
+<script src="js/device.js?v=5.4.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：150+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -19,13 +19,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.3.0">
-<link rel="stylesheet" href="css/layout.css?v=5.3.0">
-<link rel="stylesheet" href="css/components.css?v=5.3.0">
-<link rel="stylesheet" href="css/chat.css?v=5.3.0">
-<link rel="stylesheet" href="css/login.css?v=5.3.0">
-<link rel="stylesheet" href="css/pages.css?v=5.3.0">
-<link rel="stylesheet" href="css/watch.css?v=5.3.0">
+<link rel="stylesheet" href="css/base.css?v=5.4.0">
+<link rel="stylesheet" href="css/layout.css?v=5.4.0">
+<link rel="stylesheet" href="css/components.css?v=5.4.0">
+<link rel="stylesheet" href="css/chat.css?v=5.4.0">
+<link rel="stylesheet" href="css/login.css?v=5.4.0">
+<link rel="stylesheet" href="css/pages.css?v=5.4.0">
+<link rel="stylesheet" href="css/watch.css?v=5.4.0">
 </head>
 <body>
 
@@ -36,13 +36,14 @@
     <div class="login-subtitle">AI 智能聚合平台 v<span id="loginVersion">5</span> · 150+ 模型一站通达</div>
     <div class="login-tabs">
       <button class="login-tab active" data-tab="login">登录</button>
-      <button class="login-tab" data-tab="register">注册</button>
+      <button class="login-tab disabled" data-tab="register" title="网站后端服务器已关闭">注册</button>
     </div>
 
     <div id="loginFormSection">
       <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="请输入账号" autocomplete="username"></div>
       <div class="login-field"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password"></div>
       <button class="login-btn" id="loginBtn">登 录</button>
+      <button class="login-btn guest" id="guestBtn">游客登录 · 本地浏览使用</button>
       <div class="login-hint">演示模式：首次登录自动创建账号 <code>1234 / 1234</code></div>
     </div>
 
@@ -51,8 +52,9 @@
       <div class="login-field"><label>账号</label><input type="text" id="regAccount" placeholder="登录账号（手机号/用户名）" autocomplete="username"></div>
       <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="至少 4 位" autocomplete="new-password"></div>
       <div class="login-field"><label>确认密码</label><input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="new-password"></div>
-      <div class="login-field"><label>备注（可选）</label><input type="text" id="regRemark" placeholder="例如：海口中学3班" autocomplete="off"></div>
-      <button class="login-btn" id="registerBtn">注册并登录</button>
+      <div class="login-field"><label>备注（可选）</label><input type="text" id="regRemark" placeholder="备注信息" autocomplete="off"></div>
+      <button class="login-btn" id="registerBtn" disabled style="opacity:.5;cursor:not-allowed">注册并登录</button>
+      <div class="login-hint" id="regClosedHint" style="color:var(--warning)">网站后端服务器已关闭，无法在线登录或注册；待后续接入后端后开放。</div>
     </div>
 
     <div class="login-error" id="loginError"></div>
@@ -194,11 +196,12 @@
               </div>
             </div>
           </div>
-          <!-- 模型挑选浮层 -->
-          <div class="dropdown" id="modelPickerDD" style="position:absolute;top:calc(100% - 6px);left:18px">
-            <div class="dropdown-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelPickerSearch" placeholder="搜索模型…"></div></div>
-            <div class="dropdown-body" id="modelPickerBody"></div>
-          </div>
+        </div>
+
+        <!-- 模型挑选浮层（固定定位，避免被 mode-config 压缩） -->
+        <div class="dropdown" id="modelPickerDD">
+          <div class="dropdown-search"><div class="search-box"><span data-icon="search"></span><input type="text" id="modelPickerSearch" placeholder="搜索模型…"></div></div>
+          <div class="dropdown-body" id="modelPickerBody"></div>
         </div>
 
         <!-- 消息区 -->
@@ -209,11 +212,17 @@
         <!-- 输入区 -->
         <div class="input-area">
           <div class="input-wrap">
+            <div class="preset-banner" id="presetBanner" hidden>
+              <span class="pb-icon" id="presetBannerIcon"></span>
+              <span class="pb-text">当前角色：<b id="presetBannerName"></b></span>
+              <button class="pb-clear" id="presetBannerClear" title="清除角色">×</button>
+            </div>
             <div class="attach-preview-bar" id="attachPreview"></div>
             <div class="input-box">
               <button class="input-btn" id="attachBtn" title="上传图片 / 文件（PDF、Word、文本、代码）"></button>
               <button class="input-btn" id="micBtn" title="语音输入"></button>
               <button class="input-btn" id="webSearchBtn" title="联网搜索开关"></button>
+              <button class="input-btn" id="thinkBtn" title="深度思考开关" style="display:none"></button>
               <input type="file" id="fileInput" class="sr-only" multiple accept="image/*,.pdf,.doc,.docx,.txt,.md,.markdown,.json,.csv,.log,.xml,.yaml,.yml,.js,.ts,.jsx,.tsx,.py,.java,.c,.cpp,.h,.cs,.go,.rs,.rb,.php,.html,.css,.scss,.sql,.sh,.ini,.toml,.vue">
               <textarea id="chatInput" rows="1" placeholder="输入消息… (Enter 发送, Shift+Enter 换行)"></textarea>
               <button class="send-btn" id="sendBtn" title="发送"></button>
@@ -255,9 +264,31 @@
             </div>
           </div>
           <div class="settings-card">
+            <div class="settings-row clickable" id="toolTranslate">
+              <span class="row-icon" data-icon="translate"></span>
+              <span class="row-label"><span class="row-title">万能翻译</span><span class="row-desc">多语互译 · 地道表达 · 可选风格</span></span>
+              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgTranslate" checked><span class="track"></span></label>
+            </div>
+            <div class="settings-row clickable" id="toolPolish">
+              <span class="row-icon" data-icon="wand"></span>
+              <span class="row-label"><span class="row-title">文本润色</span><span class="row-desc">病句修改 · 表达升级 · 保留原意</span></span>
+              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgPolish" checked><span class="track"></span></label>
+            </div>
+            <div class="settings-row clickable" id="toolSummary">
+              <span class="row-icon" data-icon="fileText"></span>
+              <span class="row-label"><span class="row-title">文章摘要</span><span class="row-desc">长文提炼 · 要点罗列 · 一句话总结</span></span>
+              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgSummary" checked><span class="track"></span></label>
+            </div>
+            <div class="settings-row clickable" id="toolCodeExplain">
+              <span class="row-icon" data-icon="code"></span>
+              <span class="row-label"><span class="row-title">代码解释</span><span class="row-desc">逐行讲解 · 原理分析 · 优化建议</span></span>
+              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgCodeExplain" checked><span class="track"></span></label>
+            </div>
+          </div>
+          <div class="settings-card">
             <div class="settings-row clickable" id="toolPresets">
               <span class="row-icon" data-icon="sparkles"></span>
-              <span class="row-label"><span class="row-title" data-i18n-text="more.presets">角色助手</span><span class="row-desc" data-i18n-text="more.presetsD">12 个精品预设，一键开启</span></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.presets">角色助手</span><span class="row-desc" data-i18n-text="more.presetsD">精品预设角色，一键开启</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
             <div class="settings-row clickable" id="toolWebSearch">
@@ -571,6 +602,35 @@
   </div>
 </div>
 
+<!-- ==================== 模型详情弹窗 ==================== -->
+<div class="modal-overlay" id="modelInfoModal">
+  <div class="modal">
+    <div class="modal-header"><h3><span data-icon="cpu"></span>模型详情</h3><button class="modal-close" id="modelInfoClose" data-icon-btn="x"></button></div>
+    <div class="modal-body" id="modelInfoBody"></div>
+  </div>
+</div>
+
+<!-- ==================== 角色详情弹窗 ==================== -->
+<div class="modal-overlay" id="presetDetailModal">
+  <div class="modal">
+    <div class="modal-header"><h3><span data-icon="sparkles"></span>角色详情</h3><button class="modal-close" id="presetDetailClose" data-icon-btn="x"></button></div>
+    <div class="modal-body" id="presetDetailBody"></div>
+  </div>
+</div>
+
+<!-- ==================== 创建角色弹窗 ==================== -->
+<div class="modal-overlay" id="presetCreateModal">
+  <div class="modal">
+    <div class="modal-header"><h3><span data-icon="plus"></span>创建角色</h3><button class="modal-close" id="presetCreateClose" data-icon-btn="x"></button></div>
+    <div class="modal-body">
+      <div class="field"><label>角色名称</label><input class="input" id="pcName" placeholder="例：刑法案例分析师" maxlength="20"></div>
+      <div class="field"><label>一句话介绍</label><input class="input" id="pcDesc" placeholder="这个角色能帮你做什么" maxlength="40"></div>
+      <div class="field"><label>角色提示词（System Prompt）</label><textarea class="textarea" id="pcSystem" rows="6" placeholder="详细描述角色的身份、能力边界、回答规则与输出格式…"></textarea></div>
+      <button class="btn btn-primary btn-block" id="pcSave">保存角色</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== AI 绘画弹窗 ==================== -->
 <div class="modal-overlay" id="paintModal">
   <div class="modal">
@@ -593,28 +653,43 @@
   </div>
 </div>
 
+<!-- ==================== 效率工具工作台弹窗 ==================== -->
+<div class="modal-overlay" id="toolModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3><span id="toolModalIcon"></span><span id="toolModalTitle">工具</span></h3><button class="modal-close" id="toolModalClose" data-icon-btn="x"></button></div>
+    <div class="modal-body">
+      <div class="field"><label id="toolInputLabel">输入内容</label><textarea class="textarea" id="toolInput" rows="6" placeholder=""></textarea></div>
+      <div class="tool-actions">
+        <button class="btn btn-primary" id="toolRun"></button>
+        <button class="btn btn-secondary" id="toolSendChat" style="display:none">发到对话继续讨论</button>
+      </div>
+      <div class="tool-result" id="toolResult"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.3.0"></script>
-<script src="js/models.js?v=5.3.0"></script>
-<script src="js/providers.js?v=5.3.0"></script>
-<script src="js/changelog.js?v=5.3.0"></script>
-<script src="js/modelsync.js?v=5.3.0"></script>
-<script src="js/store.js?v=5.3.0"></script>
-<script src="js/i18n.js?v=5.3.0"></script>
-<script src="js/util.js?v=5.3.0"></script>
-<script src="js/markdown.js?v=5.3.0"></script>
-<script src="js/api.js?v=5.3.0"></script>
-<script src="js/voice.js?v=5.3.0"></script>
-<script src="js/files.js?v=5.3.0"></script>
-<script src="js/presets.js?v=5.3.0"></script>
-<script src="js/auth.js?v=5.3.0"></script>
-<script src="js/chat.js?v=5.3.0"></script>
-<script src="js/ui.js?v=5.3.0"></script>
-<script src="js/pages.js?v=5.3.0"></script>
-<script src="js/app.js?v=5.3.0"></script>
+<script src="js/icons.js?v=5.4.0"></script>
+<script src="js/models.js?v=5.4.0"></script>
+<script src="js/providers.js?v=5.4.0"></script>
+<script src="js/changelog.js?v=5.4.0"></script>
+<script src="js/modelsync.js?v=5.4.0"></script>
+<script src="js/store.js?v=5.4.0"></script>
+<script src="js/i18n.js?v=5.4.0"></script>
+<script src="js/util.js?v=5.4.0"></script>
+<script src="js/markdown.js?v=5.4.0"></script>
+<script src="js/api.js?v=5.4.0"></script>
+<script src="js/voice.js?v=5.4.0"></script>
+<script src="js/files.js?v=5.4.0"></script>
+<script src="js/presets.js?v=5.4.0"></script>
+<script src="js/auth.js?v=5.4.0"></script>
+<script src="js/chat.js?v=5.4.0"></script>
+<script src="js/ui.js?v=5.4.0"></script>
+<script src="js/pages.js?v=5.4.0"></script>
+<script src="js/app.js?v=5.4.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {
@@ -629,6 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fill('attachBtn', 'paperclip', 19);
   fill('micBtn', 'mic', 19);
   fill('webSearchBtn', 'globe', 19);
+  fill('thinkBtn', 'brain', 19);
   fill('sendBtn', 'send', 18);
   fill('themeBtn', 'moon', 19);
   fill('loginShieldIcon', 'shield', 13);

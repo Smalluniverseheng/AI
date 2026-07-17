@@ -7,43 +7,269 @@ const Pages = (() => {
     return models.slice().sort((a, b) => (a.status === 'deprecated' ? 1 : 0) - (b.status === 'deprecated' ? 1 : 0));
   }
 
+  function modelCardHtml(m) {
+    const dep = m.status === 'deprecated';
+    const nonChat = !isChatModel(m);
+    let tags = '';
+    if (m.status === 'new') tags += '<span class="tag new">' + I18n.t('models.new') + '</span>';
+    if (dep) tags += '<span class="tag deprecated">' + I18n.t('models.dep') + '</span>';
+    if (m.note) tags += '<span class="tag beta">' + esc(m.note) + '</span>';
+    if (m.vision) tags += '<span class="tag vision">' + I18n.t('tag.vision') + '</span>';
+    if (m.thinking) tags += '<span class="tag thinking">' + I18n.t('tag.thinking') + '</span>';
+    if (m.ctx >= 512) tags += '<span class="tag long">' + I18n.t('tag.long') + '</span>';
+    if (!nonChat && m.stream !== false) tags += '<span class="tag stream">' + I18n.t('tag.stream') + '</span>';
+    if (nonChat) tags += '<span class="tag">' + esc(m.type) + '</span>';
+    const cls = dep ? ' deprecated' : (nonChat ? ' special' : '');
+    return '<button class="model-card' + cls + '" data-model="' + m.id + '">' +
+      providerIconHtml(m.provider, 34) +
+      '<span class="model-card-info"><span class="model-card-name">' + esc(m.name) + '</span>' +
+      '<span class="model-card-tags">' + tags + '</span></span>' +
+      icon('arrowRight', 15) + '</button>';
+  }
+
   function renderModels() {
     const kw = ($('#modelsSearchInput').value || '').trim().toLowerCase();
     const box = $('#modelsList');
     let html = '';
+    if (!kw && typeof MODEL_RANK !== "undefined") html += renderRankSection();
     getProvidersInOrder().forEach(p => {
-      const models = sortModels(getProviderModels(p)).filter(m =>
+      const models = getProviderModels(p).filter(m =>
         !kw || m.name.toLowerCase().includes(kw) || m.id.toLowerCase().includes(kw) || p.toLowerCase().includes(kw));
       if (!models.length) return;
+      const active = sortModels(models.filter(m => m.status !== 'deprecated'));
+      const dep = sortModels(models.filter(m => m.status === 'deprecated'));
       const keySet = !!getKeyForModel({ provider: p });
       html += '<div class="provider-section">' +
         '<div class="provider-head">' + providerIconHtml(p, 26) +
         '<span class="provider-name">' + esc(p) + '</span>' +
         '<span class="provider-count">' + models.length + ' 个模型</span>' +
-        '<span class="badge ' + (keySet ? 'success' : '') + '">' + (keySet ? 'Key 已配置' : 'Key 未配置') + '</span>' +
+        (keySet
+          ? '<span class="badge success">Key 已配置</span>'
+          : '<button class="badge key-link" data-keylink="' + esc(p) + '" title="点击去配置">Key 未配置 →</button>') +
         '</div><div class="model-grid">' +
-        models.map(m => {
-          const dep = m.status === 'deprecated';
-          const nonChat = !isChatModel(m);
-          let tags = '';
-          if (m.status === 'new') tags += '<span class="tag new">' + I18n.t('models.new') + '</span>';
-          if (dep) tags += '<span class="tag deprecated">' + I18n.t('models.dep') + '</span>';
-          if (m.vision) tags += '<span class="tag vision">' + I18n.t('tag.vision') + '</span>';
-          if (m.thinking) tags += '<span class="tag thinking">' + I18n.t('tag.thinking') + '</span>';
-          if (m.ctx >= 512) tags += '<span class="tag long">' + I18n.t('tag.long') + '</span>';
-          if (!nonChat && m.stream !== false) tags += '<span class="tag stream">' + I18n.t('tag.stream') + '</span>';
-          if (nonChat) tags += '<span class="tag">' + esc(m.type) + '</span>';
-          // 已下架仅供欣赏不可点击；专用模型点击进对应工具
-          const cls = dep ? ' deprecated disabled' : (nonChat ? ' special' : '');
-          return '<button class="model-card' + cls + '" data-model="' + m.id + '"' + (dep ? ' disabled' : '') + '>' +
-            providerIconHtml(p, 34) +
-            '<span class="model-card-info"><span class="model-card-name">' + esc(m.name) + '</span>' +
-            '<span class="model-card-tags">' + tags + '</span></span>' +
-            icon('arrowRight', 15) + '</button>';
-        }).join('') + '</div></div>';
+        active.map(modelCardHtml).join('') + '</div>' +
+        (dep.length
+          ? '<button class="dep-fold" data-depfold>' + icon('chevronDown', 13) + ' 已下架 ' + dep.length + ' 个模型（点击展开）</button>' +
+            '<div class="model-grid dep-grid" hidden>' + dep.map(modelCardHtml).join('') + '</div>'
+          : '') +
+        '</div>';
     });
     box.innerHTML = html || '<div class="empty-state">' + icon('search', 44) + '<div class="empty-title">没有找到匹配的模型</div></div>';
+    if (!kw && typeof MODEL_RANK !== "undefined") drawRankChart();
     updateSyncHint();
+  }
+
+  /* ==================== 模型排行榜（置顶，柱状/雷达可切换） ==================== */
+  const RANK_COLORS = ['#6366F1', '#F59E0B', '#10B981', '#EC4899', '#0EA5E9'];
+
+  function renderRankSection() {
+    const tab = Store.state.rankTab || 'overall';
+    const chart = Store.state.rankChart || 'bar';
+    return '<div class="rank-section" id="rankSection">' +
+      '<div class="rank-head">' +
+        '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
+        '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期</span>' +
+        '<span class="rank-controls">' +
+          '<span class="seg-btns" id="rankTabs">' +
+            '<button class="seg-btn' + (tab === 'overall' ? ' active' : '') + '" data-ranktab="overall">综合榜</button>' +
+            '<button class="seg-btn' + (tab === 'coding' ? ' active' : '') + '" data-ranktab="coding">代码榜</button></span>' +
+          '<span class="seg-btns" id="rankChartToggle">' +
+            '<button class="seg-btn' + (chart === 'bar' ? ' active' : '') + '" data-rankchart="bar" title="柱状图">' + icon('barChart', 14) + '</button>' +
+            '<button class="seg-btn' + (chart === 'radar' ? ' active' : '') + '" data-rankchart="radar" title="雷达图">' + icon('radar', 14) + '</button></span>' +
+        '</span></div>' +
+      '<div class="rank-chart" id="rankChart"></div>' +
+      '<div class="rank-list" id="rankList"></div></div>';
+  }
+
+  function drawRankChart() {
+    const tab = Store.state.rankTab || 'overall';
+    const chart = Store.state.rankChart || 'bar';
+    const list = MODEL_RANK[tab] || [];
+    const chartBox = $('#rankChart'), listBox = $('#rankList');
+    if (!chartBox || !listBox) return;
+    const inCatalog = id => !!getModel(id);
+
+    if (chart === 'bar' || tab === 'coding') {
+      // —— 横向柱状图（代码榜无六维数据，始终用柱状） ——
+      const top = list.slice(0, 10);
+      const min = Math.min.apply(null, top.map(e => e.score)) - 12;
+      const max = Math.max.apply(null, top.map(e => e.score)) + 4;
+      const W = 640, rowH = 30, labelW = 150, scoreW = 52;
+      const barW = s => Math.max(6, (s - min) / (max - min) * (W - labelW - scoreW));
+      let svg = '<svg viewBox="0 0 ' + W + ' ' + (top.length * rowH + 8) + '" class="rank-svg">';
+      top.forEach((e, i) => {
+        const y = i * rowH + 5;
+        svg += '<text x="' + (labelW - 8) + '" y="' + (y + 16) + '" class="rk-label" text-anchor="end">' + esc(e.name) + '</text>' +
+          '<rect x="' + labelW + '" y="' + (y + 3) + '" width="' + barW(e.score) + '" height="17" rx="4" fill="' + RANK_COLORS[i % 5] + '" fill-opacity="' + (0.95 - i * 0.055) + '"></rect>' +
+          '<text x="' + (labelW + barW(e.score) + 7) + '" y="' + (y + 16) + '" class="rk-score">' + e.score + '</text>';
+      });
+      chartBox.innerHTML = svg + '</svg>';
+    } else {
+      // —— 雷达图（综合榜 Top5 六维对比） ——
+      const top = list.filter(e => e.dims).slice(0, 5);
+      const C = 150, R = 96, cx = C, cy = 128, axes = MODEL_RANK.axes, n = axes.length;
+      const pt = (i, v) => {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / n;
+        return [cx + Math.cos(a) * R * v / 100, cy + Math.sin(a) * R * v / 100];
+      };
+      let svg = '<svg viewBox="0 0 300 260" class="rank-svg radar">';
+      [25, 50, 75, 100].forEach(r => {
+        svg += '<polygon points="' + axes.map((_, i) => pt(i, r).join(',')).join(' ') + '" class="rk-ring"></polygon>';
+      });
+      axes.forEach((ax, i) => {
+        const p = pt(i, 100), lp = pt(i, 118);
+        svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" class="rk-axis"></line>' +
+          '<text x="' + lp[0] + '" y="' + lp[1] + '" class="rk-axlabel" text-anchor="middle" dominant-baseline="middle">' + ax + '</text>';
+      });
+      top.forEach((e, k) => {
+        svg += '<polygon points="' + e.dims.map((v, i) => pt(i, v).join(',')).join(' ') +
+          '" fill="' + RANK_COLORS[k] + '" fill-opacity="0.10" stroke="' + RANK_COLORS[k] + '" stroke-width="1.8"></polygon>';
+      });
+      svg += '</svg>';
+      chartBox.innerHTML = svg +
+        '<div class="rk-legend">' + top.map((e, k) =>
+          '<span class="rk-legend-item"><i style="background:' + RANK_COLORS[k] + '"></i>' + esc(e.name) + '</span>').join('') + '</div>';
+    }
+
+    // —— 榜单行（点击进详情） ——
+    listBox.innerHTML = list.map((e, i) => {
+      const m = inCatalog(e.id);
+      return '<button class="rank-row" data-rankmodel="' + e.id + '"' + (m ? '' : ' disabled') + ' title="' + (m ? '点击查看详情' : '本站暂未收录') + '">' +
+        '<span class="rk-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>' +
+        providerIconHtml(e.provider, 20) +
+        '<span class="rk-name">' + esc(e.name) + '</span>' +
+        '<span class="rk-provider">' + esc(e.provider) + '</span>' +
+        '<span class="rk-score-badge">' + e.score + '</span></button>';
+    }).join('');
+  }
+
+  function bindRankEvents() {
+    $('#modelsList').addEventListener('click', e => {
+      const tabBtn = e.target.closest('[data-ranktab]');
+      if (tabBtn) { Store.state.rankTab = tabBtn.dataset.ranktab; Store.save(); renderModels(); return; }
+      const chBtn = e.target.closest('[data-rankchart]');
+      if (chBtn) { Store.state.rankChart = chBtn.dataset.rankchart; Store.save(); renderModels(); return; }
+      const row = e.target.closest('[data-rankmodel]');
+      if (row && !row.disabled) { openModelInfo(row.dataset.rankmodel); return; }
+      const fold = e.target.closest('[data-depfold]');
+      if (fold) {
+        const grid = fold.nextElementSibling;
+        const open = grid.hidden;
+        grid.hidden = !open;
+        fold.classList.toggle('open', open);
+        fold.innerHTML = icon('chevronDown', 13) + (open ? ' 收起已下架模型' : ' 已下架 ' + grid.querySelectorAll('.model-card').length + ' 个模型（点击展开）');
+        return;
+      }
+      const keyLink = e.target.closest('[data-keylink]');
+      if (keyLink) {
+        const p = keyLink.dataset.keylink;
+        UI.navigate('profile');
+        setTimeout(() => {
+          openSub('subKeys');
+          setTimeout(() => {
+            const block = document.querySelector('.key-provider-block[data-provider="' + p + '"]');
+            if (block) {
+              block.classList.add('open');
+              block.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              block.classList.add('flash');
+              setTimeout(() => block.classList.remove('flash'), 1600);
+            }
+          }, 80);
+        }, 120);
+      }
+    });
+  }
+
+  /* ==================== 模型详情弹窗 ==================== */
+  function openModelInfo(id) {
+    const m = getModel(id);
+    if (!m) return;
+    const dep = m.status === 'deprecated';
+    const nonChat = !isChatModel(m);
+    const keySet = !!getKeyForModel(m);
+    // 榜单名次
+    let rankHtml = '';
+    if (typeof MODEL_RANK !== "undefined") {
+      const oi = MODEL_RANK.overall.findIndex(e => e.id === id);
+      const ci = MODEL_RANK.coding.findIndex(e => e.id === id);
+      const parts = [];
+      if (oi >= 0) parts.push('综合榜 #' + (oi + 1) + '（' + MODEL_RANK.overall[oi].score + ' 分）');
+      if (ci >= 0) parts.push('代码榜 #' + (ci + 1) + '（' + MODEL_RANK.coding[ci].score + ' 分）');
+      if (parts.length) rankHtml = '<div class="mi-rank">' + icon('trophy', 14) + ' ' + parts.join(' · ') + '</div>';
+    }
+    // 能力网格
+    const caps = [
+      { k: '上下文', v: (m.ctx >= 1024 ? (m.ctx / 1024).toFixed(m.ctx % 1024 ? 1 : 0) + 'M' : m.ctx + 'K') + ' tokens' },
+      { k: '识图', v: m.vision ? '支持' : '不支持', on: !!m.vision },
+      { k: '深度思考', v: m.thinking ? '支持' : '不支持', on: !!m.thinking },
+      { k: '流式输出', v: m.stream === false ? '不支持' : '支持', on: m.stream !== false },
+      { k: '类型', v: nonChat ? ({ tts: '语音合成', asr: '语音识别', voiceclone: '声音克隆', voicedesign: '音色设计' }[m.type] || m.type) : '文本对话' },
+      { k: '状态', v: dep ? '已下架' : (m.status === 'new' ? '新上线' : '在售'), on: !dep }
+    ];
+    let tags = '';
+    if (m.status === 'new') tags += '<span class="tag new">新上线</span>';
+    if (dep) tags += '<span class="tag deprecated">已下架</span>';
+    if (m.note) tags += '<span class="tag beta">' + esc(m.note) + '</span>';
+
+    // 主按钮
+    let actionHtml = '';
+    if (dep) {
+      actionHtml = '<div class="mi-note-bar">' + icon('info', 15) + ' 该模型已下架，仅供欣赏</div>';
+    } else if (nonChat) {
+      const target = (m.type || '').startsWith('tts') || m.type === 'voiceclone' || m.type === 'voicedesign' ? 'studio' : 'asr';
+      actionHtml = '<button class="btn btn-primary btn-block" id="miAction" data-target="' + target + '">' +
+        icon(target === 'studio' ? 'mic' : 'waveform', 16) + (target === 'studio' ? ' 打开语音工坊使用' : ' 去使用语音识别') + '</button>';
+    } else if (!keySet) {
+      actionHtml = '<div class="mi-note-bar warn">' + icon('key', 15) + ' 尚未配置 ' + esc(m.provider) + ' 的 API Key</div>' +
+        '<div class="mi-btns"><button class="btn btn-secondary" id="miGoKey">' + icon('key', 15) + ' 去配置 Key</button>' +
+        '<button class="btn btn-primary" id="miAction" data-target="chat">' + icon('message', 16) + ' 仍要开始对话</button></div>';
+    } else {
+      actionHtml = '<button class="btn btn-primary btn-block" id="miAction" data-target="chat">' + icon('message', 16) + ' 开始使用</button>';
+    }
+
+    $('#modelInfoBody').innerHTML =
+      '<div class="mi-head">' + providerIconHtml(m.provider, 52) +
+        '<div class="mi-title"><div class="mi-name">' + esc(m.name) + '</div>' +
+        '<div class="mi-provider">' + esc(m.provider) + '</div>' +
+        (tags ? '<div class="mi-tags">' + tags + '</div>' : '') + '</div></div>' +
+      (m.note ? '<div class="mi-note-bar warn">' + icon('zap', 15) + ' 该模型' + esc(m.note) + '，需到厂商平台申请开通后才能调用</div>' : '') +
+      (m.desc ? '<p class="mi-desc">' + esc(m.desc) + '</p>' : '') +
+      rankHtml +
+      '<div class="mi-caps">' + caps.map(c =>
+        '<div class="mi-cap' + (c.on === false ? ' off' : '') + '"><span class="mi-cap-k">' + c.k + '</span><span class="mi-cap-v">' + c.v + '</span></div>').join('') + '</div>' +
+      actionHtml;
+
+    $('#modelInfoModal').classList.add('show');
+    const act = $('#miAction');
+    if (act) act.addEventListener('click', () => {
+      $('#modelInfoModal').classList.remove('show');
+      const t = act.dataset.target;
+      if (t === 'chat') {
+        Chat.new();
+        Chat.selectModel(m.id);
+        Chat.selectMode('single');
+        UI.navigate('chat');
+        setTimeout(() => $('#chatInput').focus(), 250);
+      } else if (t === 'studio') {
+        openVoiceStudio(m.type === 'voiceclone' ? 'clone' : (m.type === 'voicedesign' ? 'design' : 'preset'));
+      } else {
+        UI.navigate('profile');
+        setTimeout(() => openSub('subAsr'), 120);
+        Toast.info('语音识别模型已就绪，在输入框点麦克风即可使用');
+      }
+    });
+    const goKey = $('#miGoKey');
+    if (goKey) goKey.addEventListener('click', () => {
+      $('#modelInfoModal').classList.remove('show');
+      UI.navigate('profile');
+      setTimeout(() => {
+        openSub('subKeys');
+        setTimeout(() => {
+          const block = document.querySelector('.key-provider-block[data-provider="' + m.provider + '"]');
+          if (block) { block.classList.add('open'); block.scrollIntoView({ behavior: 'smooth', block: 'center' }); block.classList.add('flash'); setTimeout(() => block.classList.remove('flash'), 1600); }
+        }, 80);
+      }, 120);
+    });
   }
 
   /* 同步按钮下方显示最后同步时间 */
@@ -88,22 +314,14 @@ const Pages = (() => {
   function bindModelsEvents() {
     $('#modelsSearchInput').addEventListener('input', debounce(renderModels, 160));
     $('#modelsSyncBtn').addEventListener('click', runModelSync);
+    bindRankEvents();
     $('#modelsList').addEventListener('click', e => {
       const card = e.target.closest('[data-model]');
-      if (!card || card.disabled) return; // 已下架：仅供欣赏
-      const m = getModel(card.dataset.model);
-      if (m && !isChatModel(m)) {
-        // 专用模型（语音类）：进入对应工具
-        if ((m.type || '').startsWith('tts')) openVoiceStudio(m.type === 'tts-voiceclone' ? 'clone' : (m.type === 'tts-voicedesign' ? 'design' : 'preset'));
-        else if (m.type === 'asr') { UI.navigate('profile'); setTimeout(() => openSub('subAsr'), 120); Toast.info('语音识别模型已就绪，在输入框点麦克风即可使用'); }
-        return;
-      }
-      Chat.new();
-      Chat.selectModel(card.dataset.model);
-      Chat.selectMode('single');
-      UI.navigate('chat');
-      setTimeout(() => $('#chatInput').focus(), 250);
+      if (!card) return;
+      openModelInfo(card.dataset.model); // 先进入详情页，再决定是否开始使用
     });
+    $('#modelInfoClose').addEventListener('click', () => $('#modelInfoModal').classList.remove('show'));
+    $('#modelInfoModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
   }
 
   /* ==================== 其他页（微信发现式条目） ==================== */
@@ -113,6 +331,105 @@ const Pages = (() => {
     if (row) row.textContent = Store.state.webSearch.tavilyKey
       ? (Store.state.webSearch.enabled ? '已开启 · 点击管理' : '已配置 · 点击开启')
       : I18n.t('more.websearchD');
+  }
+
+  /* ==================== 效率工具（翻译/润色/摘要/代码解释，可开关） ==================== */
+  const TOOLS = {
+    translate: { name: '万能翻译', icon: 'translate', btn: '开始翻译', ph: '输入要翻译的文字（自动识别中英方向）…',
+      sys: '你是一位专业翻译。规则：1）自动识别语言方向（中↔英为主，其他语言亦可）；2）译文准确地道；3）对关键用词给出 2-3 个备选并简述差异；4）直接给译文与备选，无需寒暄。' },
+    polish: { name: '文本润色', icon: 'wand', btn: '开始润色', ph: '粘贴需要润色的文字…',
+      sys: '你是一位文字润色专家。1）在保留原意与个人风格的前提下修改病句、优化表达；2）先给出润色后的全文；3）再用列表说明每处重要修改的理由。不要过度改写。' },
+    summary: { name: '文章摘要', icon: 'fileText', btn: '生成摘要', ph: '粘贴长文（文章/报告/论文…）…',
+      sys: '你是一位摘要专家。输出格式：1）「一句话总结」；2）「核心要点」3-7 条（每条一行，附关键数据）；3）「值得注意的细节」（可选）。忠实原文，不添加原文没有的观点。' },
+    codeExplain: { name: '代码解释', icon: 'code', btn: '开始解释', ph: '粘贴代码片段…',
+      sys: '你是一位代码讲解专家。1）先用一两句话概括这段代码的作用；2）分块逐行讲解关键逻辑；3）指出潜在问题与优化建议；4）涉及的概念简要科普。使用 Markdown 排版。' }
+  };
+  let currentTool = null;
+
+  function openTool(id) {
+    const t = TOOLS[id];
+    if (!t) return;
+    currentTool = id;
+    $('#toolModalTitle').textContent = t.name;
+    $('#toolModalIcon').innerHTML = icon(t.icon, 17);
+    $('#toolInput').placeholder = t.ph;
+    $('#toolInput').value = '';
+    $('#toolResult').innerHTML = '';
+    $('#toolSendChat').style.display = 'none';
+    $('#toolRun').innerHTML = icon(t.icon, 15) + ' ' + t.btn;
+    $('#toolModal').classList.add('show');
+    setTimeout(() => $('#toolInput').focus(), 150);
+  }
+
+  async function runTool() {
+    const t = TOOLS[currentTool];
+    const input = $('#toolInput').value.trim();
+    if (!input) return Toast.warning('请先输入内容');
+    const model = getModel(Store.state.currentModelId);
+    if (!model) return Toast.warning('请先在对话页选择一个模型');
+    if (!getKeyForModel(model)) return Toast.warning('请先配置 ' + model.provider + ' 的 API Key（我的 → API Key）');
+    const btn = $('#toolRun');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> 处理中…';
+    const box = $('#toolResult');
+    box.innerHTML = '<div class="tool-result-body msg-content-slot"><span class="loading-dots"><span></span><span></span><span></span></span></div>';
+    const body = box.firstElementChild;
+    let full = '';
+    try {
+      const r = await API.chat({
+        modelId: model.id,
+        messages: [{ role: 'system', content: t.sys + '\n\n' + I18n.langHintForModel() }, { role: 'user', content: input }],
+        onChunk: (c, f) => { full = f; body.innerHTML = MD.render(full); }
+      });
+      full = r.content || full;
+      body.innerHTML = MD.render(full || '（无返回内容）');
+      MD.renderMath(body);
+      $('#toolSendChat').style.display = '';
+    } catch (e) {
+      body.innerHTML = '<div class="msg-error">' + icon('zap', 16) + '<span>' + esc(e.message) + '</span></div>';
+    }
+    btn.disabled = false;
+    btn.innerHTML = icon(t.icon, 15) + ' ' + t.btn;
+  }
+
+  function bindToolEvents() {
+    const map = { toolTranslate: 'translate', toolPolish: 'polish', toolSummary: 'summary', toolCodeExplain: 'codeExplain' };
+    const tgMap = { translate: 'tgTranslate', polish: 'tgPolish', summary: 'tgSummary', codeExplain: 'tgCodeExplain' };
+    Object.keys(map).forEach(rowId => {
+      const row = $('#' + rowId);
+      const tid = map[rowId];
+      // 开关状态同步
+      const tg = $('#' + tgMap[tid]);
+      const enabled = () => (Store.state.toolsEnabled || {})[tid] !== false;
+      tg.checked = enabled();
+      row.classList.toggle('tool-off', !enabled());
+      tg.addEventListener('click', e => e.stopPropagation());
+      tg.addEventListener('change', () => {
+        Store.state.toolsEnabled = Store.state.toolsEnabled || {};
+        Store.state.toolsEnabled[tid] = tg.checked;
+        Store.save();
+        row.classList.toggle('tool-off', !tg.checked);
+        Toast.info(tg.checked ? '「' + TOOLS[tid].name + '」已开启' : '「' + TOOLS[tid].name + '」已停用');
+      });
+      row.addEventListener('click', e => {
+        if (e.target.closest('.switch')) return; // 点击开关区域不打开工具
+        if (!enabled()) return Toast.info('该工具已停用，点击右侧开关重新启用');
+        openTool(tid);
+      });
+    });
+    $('#toolModalClose').addEventListener('click', () => $('#toolModal').classList.remove('show'));
+    $('#toolModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
+    $('#toolRun').addEventListener('click', runTool);
+    $('#toolSendChat').addEventListener('click', () => {
+      const t = TOOLS[currentTool];
+      const text = $('#toolInput').value.trim();
+      $('#toolModal').classList.remove('show');
+      Chat.new({ title: t.name, mode: 'single' });
+      UI.navigate('chat');
+      $('#chatInput').value = '【' + t.name + '】\n' + text;
+      autoResize($('#chatInput'));
+      setTimeout(() => $('#chatInput').focus(), 250);
+    });
   }
 
   function bindDiscoverEvents() {
@@ -125,25 +442,101 @@ const Pages = (() => {
     $('#toolWebSearch').addEventListener('click', () => openSub('subPlugin'));
     $('#presetsClose').addEventListener('click', () => $('#presetsModal').classList.remove('show'));
     $('#presetsModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
+    $('#presetDetailClose').addEventListener('click', () => $('#presetDetailModal').classList.remove('show'));
+    $('#presetDetailModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
+    $('#presetCreateClose').addEventListener('click', () => $('#presetCreateModal').classList.remove('show'));
+    $('#presetCreateModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
     $('#presetGrid').addEventListener('click', e => {
+      const createCard = e.target.closest('[data-preset-create]');
+      if (createCard) { $('#presetCreateModal').classList.add('show'); setTimeout(() => $('#pcName').focus(), 120); return; }
       const card = e.target.closest('[data-preset]');
       if (!card) return;
-      const preset = PRESETS.find(p => p.id === card.dataset.preset);
+      const preset = findPreset(card.dataset.preset);
       if (!preset) return;
-      $('#presetsModal').classList.remove('show');
-      Chat.new({ title: preset.name, system: preset.system, presetId: preset.id, mode: 'single' });
-      Chat.selectMode('single');
-      UI.navigate('chat');
-      Toast.success('已开启「' + preset.name + '」对话');
-      setTimeout(() => $('#chatInput').focus(), 250);
+      openPresetDetail(preset);
     });
+    $('#pcSave').addEventListener('click', saveCustomPreset);
   }
 
   function renderPresetGrid() {
-    $('#presetGrid').innerHTML = PRESETS.map(p =>
-      '<button class="preset-card" data-preset="' + p.id + '">' +
+    const customs = Store.state.customPresets || [];
+    $('#presetGrid').innerHTML =
+      PRESETS.map(p => presetCardHtml(p)).join('') +
+      customs.map(p => presetCardHtml(p, true)).join('') +
+      '<button class="preset-card create" data-preset-create>' +
+      '<span class="p-icon" style="background:var(--bg);color:var(--text-3);border:1px dashed var(--border)">' + icon('plus', 21) + '</span>' +
+      '<span><span class="p-name">创建角色</span><span class="p-desc">自定义提示词，打造专属助手</span></span></button>';
+  }
+
+  function presetCardHtml(p, custom) {
+    return '<button class="preset-card" data-preset="' + p.id + '">' +
       '<span class="p-icon" style="background:' + p.grad + '">' + icon(p.icon, 21) + '</span>' +
-      '<span><span class="p-name">' + esc(p.name) + '</span><span class="p-desc">' + esc(p.desc) + '</span></span></button>').join('');
+      '<span><span class="p-name">' + esc(p.name) + (custom ? ' <em class="p-custom">自建</em>' : '') + '</span><span class="p-desc">' + esc(p.desc) + '</span></span></button>';
+  }
+
+  /* 角色详情：介绍 + 完整提示词 + 追加提示词（本地保存）+ 开启对话 */
+  function openPresetDetail(p) {
+    const extra = (Store.state.presetExtra || {})[p.id] || '';
+    $('#presetDetailBody').innerHTML =
+      '<div class="pd-head"><span class="p-icon" style="background:' + p.grad + '">' + icon(p.icon, 24) + '</span>' +
+        '<div><div class="pd-name">' + esc(p.name) + '</div><div class="pd-desc">' + esc(p.desc) + '</div></div></div>' +
+      '<div class="pd-how">' + icon('info', 14) + ' <b>角色如何起作用：</b>开启对话后，下方提示词会作为「系统提示」随每条消息一起发给模型，' +
+        '模型会始终扮演该角色并按规则回答；你之后追加的要求会与原提示词合并生效。</div>' +
+      '<div class="pd-label">角色提示词（System Prompt）</div>' +
+      '<div class="pd-system">' + esc(p.system) + '</div>' +
+      '<div class="pd-label">追加提示词（可选，仅保存在本机，与原提示词合并生效）</div>' +
+      '<textarea class="textarea" id="pdExtra" rows="3" placeholder="例：回答尽量简短；每次结尾给我出一道练习题…">' + esc(extra) + '</textarea>' +
+      '<div class="pd-btns">' +
+        (p.custom ? '<button class="btn btn-secondary danger" id="pdDelete">' + icon('trash', 14) + ' 删除角色</button>' : '') +
+        '<button class="btn btn-primary" id="pdStart">' + icon('message', 15) + ' 开启对话</button></div>';
+
+    $('#presetDetailModal').classList.add('show');
+
+    $('#pdStart').addEventListener('click', () => {
+      const ex = $('#pdExtra').value.trim();
+      Store.state.presetExtra = Store.state.presetExtra || {};
+      if (ex) Store.state.presetExtra[p.id] = ex; else delete Store.state.presetExtra[p.id];
+      Store.save();
+      const system = p.system + (ex ? '\n\n【用户追加要求】\n' + ex : '');
+      $('#presetDetailModal').classList.remove('show');
+      $('#presetsModal').classList.remove('show');
+      Chat.new({ title: p.name, system, presetId: p.id, mode: 'single' });
+      Chat.selectMode('single');
+      UI.navigate('chat');
+      Toast.success('已开启「' + p.name + '」对话' + (ex ? '（含追加提示词）' : ''));
+      setTimeout(() => $('#chatInput').focus(), 250);
+    });
+
+    const del = $('#pdDelete');
+    if (del) del.addEventListener('click', () => {
+      Store.state.customPresets = (Store.state.customPresets || []).filter(x => x.id !== p.id);
+      Store.save();
+      $('#presetDetailModal').classList.remove('show');
+      renderPresetGrid();
+      Toast.success('角色已删除');
+    });
+  }
+
+  const PC_GRADS = ['linear-gradient(135deg,#6366F1,#8B5CF6)', 'linear-gradient(135deg,#0EA5E9,#38BDF8)', 'linear-gradient(135deg,#10B981,#34D399)', 'linear-gradient(135deg,#F59E0B,#F97316)', 'linear-gradient(135deg,#EC4899,#F472B6)', 'linear-gradient(135deg,#14B8A6,#2DD4BF)'];
+  const PC_ICONS = ['sparkles', 'bot', 'star', 'lightbulb', 'wand', 'heart'];
+
+  function saveCustomPreset() {
+    const name = $('#pcName').value.trim();
+    const desc = $('#pcDesc').value.trim();
+    const system = $('#pcSystem').value.trim();
+    if (!name) return Toast.warning('请填写角色名称');
+    if (system.length < 10) return Toast.warning('提示词太短了，请详细描述角色（至少 10 字）');
+    const i = (Store.state.customPresets || []).length;
+    const preset = {
+      id: 'custom-' + Date.now(), name, desc: desc || '自定义角色', system,
+      icon: PC_ICONS[i % PC_ICONS.length], grad: PC_GRADS[i % PC_GRADS.length], custom: true
+    };
+    Store.state.customPresets = (Store.state.customPresets || []).concat(preset);
+    Store.save();
+    $('#pcName').value = ''; $('#pcDesc').value = ''; $('#pcSystem').value = '';
+    $('#presetCreateModal').classList.remove('show');
+    renderPresetGrid();
+    Toast.success('角色「' + name + '」已创建');
   }
 
   /* ==================== 设置子页管理 ==================== */
@@ -555,7 +948,7 @@ const Pages = (() => {
 
   /* ---- 帮助中心 ---- */
   const CONSOLE_LINKS = {
-    '小米MiMo': 'https://platform.xiaomimimo.com', 'OpenAI': 'https://platform.openai.com/api-keys',
+    '小米 MiMo': 'https://platform.xiaomimimo.com', 'OpenAI': 'https://platform.openai.com/api-keys',
     'Anthropic': 'https://console.anthropic.com', 'Google': 'https://aistudio.google.com/apikey',
     'DeepSeek': 'https://platform.deepseek.com/api_keys', 'Kimi': 'https://platform.moonshot.cn/console/api-keys',
     '通义千问': 'https://bailian.console.aliyun.com', '智谱AI': 'https://open.bigmodel.cn/usercenter/apikeys',
@@ -669,7 +1062,7 @@ const Pages = (() => {
 
   function openVoiceStudio(mode) {
     vsMode = mode || 'preset';
-    const key = getKeyForModel({ provider: '小米MiMo' });
+    const key = getKeyForModel({ provider: '小米 MiMo' });
     $('#vsNoKey').style.display = key ? 'none' : 'block';
     if (!key) $('#vsNoKey').innerHTML = I18n.t('vs.needMimo') +
       '<br><button class="btn btn-secondary btn-sm" id="vsGoKeys" style="margin-top:8px">' + icon('key', 14) + ' 去配置 Key</button>';
@@ -704,7 +1097,7 @@ const Pages = (() => {
   async function runVoiceStudio() {
     const text = $('#vsText').value.trim();
     if (!text) return Toast.warning('请输入要合成的文本');
-    const key = getKeyForModel({ provider: '小米MiMo' });
+    const key = getKeyForModel({ provider: '小米 MiMo' });
     if (!key) return Toast.warning('请先配置小米 MiMo Key');
     const btn = $('#vsGen');
     btn.disabled = true;
@@ -778,6 +1171,7 @@ const Pages = (() => {
     bindDiscoverEvents();
     bindPaintEvents();
     bindProfileEvents();
+    bindToolEvents();
     // 语言切换时重渲染动态内容
     document.addEventListener('langchange', () => {
       renderRowDescs();
@@ -786,5 +1180,5 @@ const Pages = (() => {
     });
   }
 
-  return { init, renderModels, renderDiscover, renderProfile, syncThemeCards, openSub, closeSubs, openVoiceStudio };
+  return { init, renderModels, renderDiscover, renderProfile, syncThemeCards, openSub, closeSubs, openVoiceStudio, openModelInfo };
 })();

@@ -149,6 +149,7 @@ const UI = (() => {
     const m = getModel(Store.state.currentModelId);
     $('#modelSelIcon').innerHTML = m ? providerIconHtml(m.provider, 19) : icon('cpu', 19);
     $('#modelSelLabel').textContent = m ? m.name : '选择模型';
+    syncAttachBtn();
   }
 
   function renderModelDD(filter) {
@@ -274,6 +275,7 @@ const UI = (() => {
       return '<span class="chip">' + providerIconHtml(m.provider, 16) + esc(m.name) +
         '<button class="chip-x" data-role="' + role + '" data-model="' + id + '" title="移除">' + icon('x', 10) + '</button></span>';
     }).join('');
+    syncAttachBtn();
   }
 
   let pickerRole = null;
@@ -348,14 +350,31 @@ const UI = (() => {
     }));
   }
 
+  /* 预设角色横幅：显示当前会话的角色，可清除 */
+  function syncPresetBanner() {
+    const bar = $('#presetBanner');
+    if (!bar) return;
+    const chat = Chat.getCurrentChat();
+    const preset = chat && chat.presetId && typeof findPreset === 'function' ? findPreset(chat.presetId) : null;
+    if (!preset) { bar.hidden = true; return; }
+    bar.hidden = false;
+    $('#presetBannerIcon').innerHTML = icon(preset.icon, 14);
+    $('#presetBannerIcon').style.background = preset.grad;
+    $('#presetBannerName').textContent = preset.name;
+  }
+
   function renderChat() {
     const box = $('#chatContainer');
     const chat = Chat.getCurrentChat();
+    syncPresetBanner();
     Object.keys(scheduleRender).forEach(k => delete scheduleRender[k]);
-    if (!chat || !chat.messages || !chat.messages.length) { renderWelcome(); return; }
+    if (!chat || !chat.messages || !chat.messages.length) { box.className = 'chat-container'; renderWelcome(); return; }
 
+    const chatMode = chat.mode || 'single';
+    box.className = 'chat-container mode-' + chatMode;
     let html = '';
     let i = 0;
+    let lastStage = '';
     const msgs = chat.messages;
     while (i < msgs.length) {
       const m = msgs[i];
@@ -368,10 +387,16 @@ const UI = (() => {
         i = j;
         continue;
       }
+      // 辩论/协同：阶段变化时插入分隔条
+      if ((chatMode === 'debate' || chatMode === 'collab') && m.role === 'assistant' && m.stage && m.stage !== lastStage) {
+        html += '<div class="stage-divider"><span>' + icon(chatMode === 'debate' ? 'sword' : 'handshake', 13) + ' ' + esc(m.stage) + '</span></div>';
+        lastStage = m.stage;
+      }
       html += msgHtml(m);
       i++;
     }
     box.innerHTML = html;
+    box.dataset.lastStage = lastStage;
     afterRender(box);
     scrollToBottom(true);
   }
@@ -399,8 +424,9 @@ const UI = (() => {
     if (m.debateRole === 'judge') sideTag = '<span class="side-tag judge">裁判</span>';
     if (m.collabRole === 'leader') sideTag = '<span class="side-tag judge">主持</span>';
     if (m.collabRole === 'worker') sideTag = '<span class="side-tag pro">协作者</span>';
+    const roleCls = m.debateRole ? ' debate-' + m.debateRole : (m.collabRole ? ' collab-' + m.collabRole : '');
 
-    return '<div class="msg assistant" data-id="' + m.id + '">' +
+    return '<div class="msg assistant' + roleCls + '" data-id="' + m.id + '">' +
       '<div class="msg-avatar">' + (model ? providerIconHtml(model.provider, 22) : icon('bot', 18)) + '</div>' +
       '<div class="msg-body"><div class="msg-head"><span class="msg-author">' + esc(name) + '</span>' + sideTag +
       '<span class="msg-time">' + fmtTime(m.ts) + '</span></div>' +
@@ -478,7 +504,16 @@ const UI = (() => {
       }
       grid.insertAdjacentHTML('beforeend', multiCardHtml(m));
     } else {
-      $('#chatContainer').insertAdjacentHTML('beforeend', msgHtml(m));
+      // 辩论/协同：流式追加时同步插入阶段分隔条
+      const box = $('#chatContainer');
+      if (m.role === 'assistant' && m.stage && box.dataset.lastStage !== m.stage) {
+        const cm = (Chat.getCurrentChat() || {}).mode || 'single';
+        if (cm === 'debate' || cm === 'collab') {
+          box.insertAdjacentHTML('beforeend', '<div class="stage-divider"><span>' + icon(cm === 'debate' ? 'sword' : 'handshake', 13) + ' ' + esc(m.stage) + '</span></div>');
+          box.dataset.lastStage = m.stage;
+        }
+      }
+      box.insertAdjacentHTML('beforeend', msgHtml(m));
     }
     scrollToBottom();
   }
@@ -628,18 +663,65 @@ const UI = (() => {
       if (ok) updateMicBtn();
     });
 
-    // 联网开关
+    // 联网开关（支持 Tavily 或厂商原生联网）
     $('#webSearchBtn').addEventListener('click', () => {
       const ws = Store.state.webSearch;
-      if (!ws.enabled && !ws.tavilyKey) {
-        Toast.warning('请先在「我的 → 插件」中配置 Tavily 搜索 Key');
+      const native = hasNativeSearch(getModel(Store.state.currentModelId));
+      if (!ws.enabled && !ws.tavilyKey && !native) {
+        Toast.warning('当前模型不支持厂商内置联网，请在「我的 → 插件」中配置 Tavily 搜索 Key');
         return;
       }
       ws.enabled = !ws.enabled;
       Store.save();
       updateWebSearchBtn();
-      Toast.info(ws.enabled ? '联网搜索已开启' : '联网搜索已关闭');
+      Toast.info(ws.enabled ? (ws.tavilyKey ? '联网搜索已开启' : '已开启厂商内置联网搜索') : '联网搜索已关闭');
     });
+
+    // 深度思考开关（仅支持思考的模型显示）
+    $('#thinkBtn').addEventListener('click', () => {
+      Store.state.thinkingOn = !(Store.state.thinkingOn !== false);
+      Store.save();
+      syncThinkBtn();
+      Toast.info(Store.state.thinkingOn ? '深度思考已开启' : '深度思考已关闭（响应更快）');
+    });
+
+    // 预设角色横幅：清除角色
+    $('#presetBannerClear').addEventListener('click', () => {
+      const chat = Chat.getCurrentChat();
+      if (!chat) return;
+      chat.presetId = '';
+      chat.system = '';
+      Store.save();
+      syncPresetBanner();
+      Toast.info('已清除角色设定，恢复为普通对话');
+    });
+  }
+
+  /* 当前选择是否支持识图（决定附件按钮显隐） */
+  function currentVisionOk() {
+    const mode = Store.state.currentMode;
+    const anyVision = ids => (ids || []).map(getModel).some(m => m && m.vision);
+    if (mode === 'multi') return anyVision(Store.state.multiModels);
+    if (mode === 'debate') return anyVision((Store.state.debatePro || []).concat(Store.state.debateCon || [], Store.state.debateJudge || []));
+    if (mode === 'collab') return anyVision(Store.state.collabModels);
+    const m = getModel(Store.state.currentModelId);
+    return !!(m && m.vision);
+  }
+
+  function syncAttachBtn() {
+    const btn = $('#attachBtn');
+    if (btn) btn.style.display = currentVisionOk() ? '' : 'none';
+    syncThinkBtn();
+  }
+
+  function syncThinkBtn() {
+    const btn = $('#thinkBtn');
+    if (!btn) return;
+    const m = getModel(Store.state.currentModelId);
+    const show = (Store.state.currentMode === 'single') && !!(m && m.thinking);
+    btn.style.display = show ? '' : 'none';
+    btn.classList.toggle('think-on', show && Store.state.thinkingOn !== false);
+    btn.title = show ? (Store.state.thinkingOn !== false ? '深度思考：开（点击关闭）' : '深度思考：关（点击开启）') : '深度思考开关';
   }
 
   function updateMicBtn() {
@@ -766,7 +848,7 @@ const UI = (() => {
     showLogin, showApp, navigate, init,
     renderSidebar, renderChat, renderWelcome, appendMsg,
     setMsgContent, setMsgThinking, finishMsg, setMsgError,
-    updateModelSel, updateModeSel, renderModeConfig, renderChips,
+    updateModelSel, updateModeSel, renderModeConfig, renderChips, syncAttachBtn,
     setSending, renderAttachments, updateMicBtn, updateWebSearchBtn, updateSpeakButtons,
     scrollToBottom, applyTheme, userAvatarHtml, AVATAR_GRADS, openLightbox
   };

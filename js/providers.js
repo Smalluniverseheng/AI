@@ -239,19 +239,26 @@ function isChatModel(m) { return m && (m.type || 'chat') === 'chat'; }
 /* 可被选择对话的模型：对话类且未下架 */
 function isSelectableModel(m) { return isChatModel(m) && m.status !== 'deprecated'; }
 
+/* 厂商内置联网搜索（服务端执行，无需客户端回环） */
+const NATIVE_SEARCH_PROVIDERS = ['通义千问', '智谱AI', 'Google', 'xAI'];
+function hasNativeSearch(m) { return !!m && NATIVE_SEARCH_PROVIDERS.indexOf(m.provider) >= 0; }
+
 function getKeyForModel(model) {
   const k = Store.state.apiKeys;
   const cfg = PROVIDERS[model.provider];
   if (!cfg) return k.general || '';
   if (cfg.dualKey) {
     const plan = k.mimoPlan || 'tokenPlan';
-    return plan === 'tokenPlan' ? (k.mimoTokenPlan || '') : (k.mimoPayAsYouGo || '');
+    // 当前方案无 Key 时回退到另一方案的 Key
+    const primary = plan === 'tokenPlan' ? k.mimoTokenPlan : k.mimoPayAsYouGo;
+    const fallback = plan === 'tokenPlan' ? k.mimoPayAsYouGo : k.mimoTokenPlan;
+    return primary || fallback || k.general || '';
   }
   return k[cfg.keySlug] || k.general || '';
 }
 
 /* 应用信息（更新日志数据在 js/changelog.js，添加式维护） */
-const APP_VERSION = '5.3.0';
+const APP_VERSION = '5.4.0';
 
 const MODE_META = {
   single: { icon: 'message', label: '单模型', desc: '与单个 AI 对话' },

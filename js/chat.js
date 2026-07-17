@@ -36,6 +36,7 @@ const Chat = (() => {
     Store.save();
     UI.renderSidebar();
     UI.renderChat();
+    UI.syncAttachBtn();
     return chat;
   }
 
@@ -52,6 +53,7 @@ const Chat = (() => {
     Store.save();
     UI.renderSidebar();
     UI.renderChat();
+    UI.syncAttachBtn();
   }
 
   function del(id) {
@@ -86,10 +88,21 @@ const Chat = (() => {
       Toast.info('手表端仅支持单模型对话');
       return;
     }
-    Store.state.currentMode = mode;
-    Store.save();
+    const cur = getCurrentChat();
+    // 已有内容的会话切换模式：开启新会话承载新模式，原会话完整保留
+    if (cur && cur.messages && cur.messages.length && (cur.mode || 'single') !== mode) {
+      Store.state.currentMode = mode;
+      create({ mode });
+      Toast.info('已在新会话中开启「' + I18n.t('mode.' + mode) + '」，原会话已保留');
+    } else {
+      Store.state.currentMode = mode;
+      if (cur && (!cur.messages || !cur.messages.length)) cur.mode = mode;
+      Store.save();
+      UI.renderChat();
+    }
     UI.updateModeSel();
     UI.renderModeConfig();
+    UI.syncAttachBtn();
   }
 
   function addToRole(role, modelId) {

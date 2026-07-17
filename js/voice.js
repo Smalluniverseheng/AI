@@ -244,14 +244,14 @@ const Voice = (() => {
       return false;
     }
     speakingMsgId = msgId || null;
-    if (window.UI) UI.updateSpeakButtons();
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
     try {
       const url = eng === 'mimo' ? await mimoTtsUrl(clean, key) : await openaiTtsUrl(clean, key);
       playUrl(url, msgId);
       return true;
     } catch (e) {
       speakingMsgId = null;
-      if (window.UI) UI.updateSpeakButtons();
+      if (typeof UI !== "undefined") UI.updateSpeakButtons();
       Toast.error('语音合成失败：' + e.message);
       return false;
     }
@@ -266,9 +266,9 @@ const Voice = (() => {
     u.rate = vs().rate || 1;
     currentUtter = u;
     speakingMsgId = msgId || null;
-    u.onend = u.onerror = () => { currentUtter = null; speakingMsgId = null; if (window.UI) UI.updateSpeakButtons(); };
+    u.onend = u.onerror = () => { currentUtter = null; speakingMsgId = null; if (typeof UI !== "undefined") UI.updateSpeakButtons(); };
     speechSynthesis.speak(u);
-    if (window.UI) UI.updateSpeakButtons();
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
     return true;
   }
 
@@ -312,13 +312,13 @@ const Voice = (() => {
     speakingMsgId = msgId || null;
     audioEl.onended = audioEl.onerror = () => {
       speakingMsgId = null; audioEl = null;
-      if (window.UI) UI.updateSpeakButtons();
+      if (typeof UI !== "undefined") UI.updateSpeakButtons();
     };
     audioEl.play().catch(() => {
       speakingMsgId = null;
-      if (window.UI) UI.updateSpeakButtons();
+      if (typeof UI !== "undefined") UI.updateSpeakButtons();
     });
-    if (window.UI) UI.updateSpeakButtons();
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
   }
 
   function stopSpeak() {
@@ -326,7 +326,7 @@ const Voice = (() => {
     if (audioEl) { try { audioEl.pause(); } catch (e) {} audioEl = null; }
     currentUtter = null;
     speakingMsgId = null;
-    if (window.UI) UI.updateSpeakButtons();
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
   }
 
   function isSpeaking(msgId) {

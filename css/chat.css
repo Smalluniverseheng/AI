@@ -480,3 +480,46 @@
   .input-footer { display: none; }
   #chatInput { font-size: 14px; }
 }
+
+/* ==================== v5.4 辩论/协同消息格式差异化 ==================== */
+.stage-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 6px; color: var(--text-3); }
+.stage-divider::before, .stage-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.stage-divider span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; background: var(--bg-card); border: 1px solid var(--border); border-radius: 999px; padding: 5px 14px; }
+
+/* 正方绿 / 反方红 / 裁判金 / 协同蓝 */
+.mode-debate .msg.assistant.debate-pro .msg-body { border-left: 3px solid #10B981; }
+.mode-debate .msg.assistant.debate-pro .msg-avatar { box-shadow: 0 0 0 2px rgba(16,185,129,.35); border-radius: 50%; }
+.mode-debate .msg.assistant.debate-con .msg-body { border-left: 3px solid #EF4444; }
+.mode-debate .msg.assistant.debate-con .msg-avatar { box-shadow: 0 0 0 2px rgba(239,68,68,.35); border-radius: 50%; }
+.mode-debate .msg.assistant.debate-judge .msg-body { border-left: 3px solid #F59E0B; background: rgba(245,158,11,.05); border-radius: 0 12px 12px 0; }
+.mode-debate .msg.assistant.debate-judge .msg-avatar { box-shadow: 0 0 0 2px rgba(245,158,11,.4); border-radius: 50%; }
+.mode-collab .msg.assistant.collab-leader .msg-body { border-left: 3px solid #F59E0B; }
+.mode-collab .msg.assistant.collab-worker .msg-body { border-left: 3px solid #6366F1; }
+.mode-debate .msg.assistant .msg-body, .mode-collab .msg.assistant .msg-body { padding-left: 12px; }
+
+/* 思考开关按钮 */
+.input-btn.think-on { color: var(--accent); background: var(--accent-soft); }
+
+/* ==================== v5.4 预设角色横幅 ==================== */
+.preset-banner { display: flex; align-items: center; gap: 8px; padding: 7px 12px; margin-bottom: 7px; background: var(--accent-soft); border-radius: 10px; font-size: 12.5px; color: var(--text-2); }
+.preset-banner[hidden] { display: none; }
+.pb-icon { width: 22px; height: 22px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.pb-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pb-text b { color: var(--text); }
+.pb-clear { border: none; background: none; color: var(--text-3); font-size: 17px; cursor: pointer; padding: 0 4px; line-height: 1; }
+.pb-clear:hover { color: var(--danger); }
+
+/* ==================== v5.4 角色详情/创建 ==================== */
+.pd-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.pd-head .p-icon { width: 46px; height: 46px; border-radius: 13px; display: inline-flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+.pd-name { font-size: 17px; font-weight: 800; color: var(--text); }
+.pd-desc { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+.pd-how { font-size: 12.5px; line-height: 1.7; color: var(--text-2); background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.pd-how .icon { vertical-align: -2px; color: var(--accent); }
+.pd-label { font-size: 12px; font-weight: 700; color: var(--text-2); margin: 12px 0 6px; }
+.pd-system { font-size: 12.5px; line-height: 1.75; color: var(--text-2); background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; max-height: 180px; overflow-y: auto; white-space: pre-wrap; }
+.pd-btns { display: flex; gap: 10px; margin-top: 14px; }
+.pd-btns .btn { flex: 1; }
+.pd-btns .btn.danger { color: var(--danger); flex: 0 0 auto; }
+.p-custom { font-style: normal; font-size: 10px; background: var(--accent-soft); color: var(--accent); border-radius: 5px; padding: 1px 5px; vertical-align: 1px; }
+.preset-card.create { border-style: dashed; }

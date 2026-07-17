@@ -447,3 +447,79 @@ input[type="file"].vs-file { font-size: 13px; color: var(--text-2); }
 [dir="rtl"] .chev .icon, [dir="rtl"] .settings-row .chev { transform: rotate(180deg); }
 [dir="rtl"] .chat-item, [dir="rtl"] .sidebar-menu button { text-align: right; }
 [dir="rtl"] .faq-q { text-align: right; }
+
+/* ==================== v5.4 模型排行榜 ==================== */
+.rank-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; }
+.rank-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.rank-title { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 700; color: var(--text); }
+.rank-title .icon { color: #F59E0B; }
+.rank-updated { font-size: 11px; color: var(--text-3); flex: 1; }
+.rank-controls { display: inline-flex; gap: 8px; }
+.seg-btns { display: inline-flex; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+.seg-btn { border: none; background: transparent; color: var(--text-2); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-family: inherit; transition: all var(--dur); }
+.seg-btn.active { background: var(--accent); color: #fff; }
+.rank-chart { display: flex; flex-direction: column; align-items: center; padding: 4px 0 2px; }
+.rank-svg { width: 100%; max-width: 640px; height: auto; }
+.rank-svg.radar { max-width: 300px; }
+.rk-label { font-size: 10.5px; fill: var(--text-2); font-weight: 600; }
+.rk-score { font-size: 10.5px; fill: var(--text-3); font-weight: 700; }
+.rk-ring { fill: none; stroke: var(--border); stroke-width: 1; }
+.rk-axis { stroke: var(--border); stroke-width: 1; }
+.rk-axlabel { font-size: 10px; fill: var(--text-3); font-weight: 600; }
+.rk-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin-top: 4px; }
+.rk-legend-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--text-2); font-weight: 600; }
+.rk-legend-item i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.rank-list { margin-top: 8px; border-top: 1px solid var(--border); }
+.rank-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 6px; border: none; background: transparent; cursor: pointer; font-family: inherit; border-bottom: 1px solid var(--border); transition: background var(--dur); text-align: left; }
+.rank-row:last-child { border-bottom: none; }
+.rank-row:hover:not(:disabled) { background: var(--bg-hover); }
+.rank-row:disabled { cursor: default; opacity: .55; }
+.rk-no { width: 22px; height: 22px; border-radius: 7px; background: var(--bg); color: var(--text-3); font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rk-no.top { background: linear-gradient(135deg,#F59E0B,#F97316); color: #fff; }
+.rk-name { font-size: 13.5px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rk-provider { font-size: 11.5px; color: var(--text-3); }
+.rk-score-badge { font-size: 12px; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: 7px; padding: 3px 8px; }
+
+/* 已下架折叠按钮 */
+.dep-fold { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; padding: 9px; border: 1px dashed var(--border); border-radius: 10px; background: transparent; color: var(--text-3); font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all var(--dur); }
+.dep-fold:hover { background: var(--bg-hover); color: var(--text-2); }
+.dep-fold .icon { transition: transform var(--dur); }
+.dep-fold.open .icon { transform: rotate(180deg); }
+.dep-grid { margin-top: 8px; }
+
+/* Key 未配置可点击 badge */
+button.badge.key-link { cursor: pointer; border: 1px solid var(--border); font-family: inherit; transition: all var(--dur); }
+button.badge.key-link:hover { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.key-provider-block.flash { animation: keyFlash 1.5s ease; }
+@keyframes keyFlash { 0%, 60% { box-shadow: 0 0 0 3px var(--accent); border-radius: var(--radius); } 100% { box-shadow: none; } }
+
+/* 内测资格标签 */
+.tag.beta { background: rgba(245,158,11,.14); color: #D97706; }
+
+/* ==================== v5.4 模型详情弹窗 ==================== */
+.mi-head { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+.mi-title { min-width: 0; }
+.mi-name { font-size: 18px; font-weight: 800; color: var(--text); }
+.mi-provider { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+.mi-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+.mi-desc { font-size: 13.5px; line-height: 1.7; color: var(--text-2); margin: 0 0 12px; }
+.mi-rank { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: #D97706; background: rgba(245,158,11,.10); border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; }
+.mi-caps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+.mi-cap { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px; text-align: center; }
+.mi-cap-k { display: block; font-size: 11px; color: var(--text-3); margin-bottom: 3px; }
+.mi-cap-v { display: block; font-size: 13px; font-weight: 700; color: var(--text); }
+.mi-cap.off .mi-cap-v { color: var(--text-3); font-weight: 500; }
+.mi-note-bar { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--text-2); background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; margin-bottom: 12px; }
+.mi-note-bar.warn { color: #B45309; background: rgba(245,158,11,.08); border-color: rgba(245,158,11,.25); }
+.mi-btns { display: flex; gap: 10px; }
+.mi-btns .btn { flex: 1; }
+@media (max-width: 640px) { .mi-caps { grid-template-columns: repeat(2, 1fr); } .mi-btns { flex-direction: column; } }
+
+/* ==================== v5.4 效率工具 ==================== */
+.settings-row.tool-off .row-title, .settings-row.tool-off .row-desc { opacity: .45; }
+.settings-row.tool-off .row-icon { opacity: .45; }
+.tool-actions { display: flex; gap: 10px; margin: 10px 0 12px; }
+.tool-result:empty { display: none; }
+.tool-result { border-top: 1px solid var(--border); padding-top: 12px; }
+.tool-result-body { font-size: 14px; line-height: 1.75; color: var(--text); max-height: 46dvh; overflow-y: auto; }
+.tool-result-body > :first-child { margin-top: 0; }

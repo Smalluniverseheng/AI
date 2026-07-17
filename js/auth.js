@@ -53,6 +53,12 @@ const Auth = (() => {
     return { ok: true };
   }
 
+  /* 游客登录：不创建账号，仅本地浏览使用 */
+  function guest() {
+    const user = { account: 'guest', name: '游客', remark: '本地浏览模式', guest: true, createdAt: Date.now() };
+    Store.patch({ loggedIn: true, user: 'guest', userInfo: user });
+  }
+
   function logout() {
     API.abortAll();
     Voice.stopSpeak();
@@ -66,11 +72,12 @@ const Auth = (() => {
   function checkSession() {
     const s = Store.state;
     if (s.loggedIn && s.user) {
+      if (s.user === 'guest') return !!(s.userInfo && s.userInfo.guest); // 游客会话
       const users = Store.getUsers();
       if (users[s.user]) { Store.patch({ userInfo: users[s.user] }); return true; }
     }
     return false;
   }
 
-  return { ensureDefaultUser, login, register, logout, checkSession };
+  return { ensureDefaultUser, login, register, guest, logout, checkSession };
 })();

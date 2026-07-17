@@ -62,12 +62,20 @@
   /* ---------- 登录/注册 ---------- */
   function bindAuthEvents() {
     const switchTab = tab => {
+      if (tab === 'register') { Toast.info('网站后端服务器已关闭，无法在线登录或注册；待后续接入后端后开放'); return; }
       $$('.login-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       $('#loginFormSection').style.display = tab === 'login' ? 'block' : 'none';
       $('#registerFormSection').style.display = tab === 'register' ? 'block' : 'none';
       hideError();
     };
     $$('.login-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+    // 游客登录：本地浏览使用，无需账号
+    $('#guestBtn').addEventListener('click', () => {
+      Auth.guest();
+      UI.showApp();
+      Toast.success('已进入游客模式，数据仅保存在本机浏览器');
+    });
 
     const showError = msg => {
       const box = $('#loginError');

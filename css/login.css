@@ -170,3 +170,8 @@
   color: var(--text-3);
 }
 .login-footer .icon { width: 13px; height: 13px; }
+
+/* v5.4 注册关闭 + 游客登录 */
+.login-tab.disabled { opacity: .45; cursor: not-allowed; }
+.login-btn.guest { background: transparent; border: 1px solid var(--border); color: var(--text-2); margin-top: 10px; box-shadow: none; }
+.login-btn.guest:hover { background: var(--bg-hover); color: var(--text); }

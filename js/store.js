@@ -29,6 +29,12 @@ const Store = (() => {
     lang: 'zh-CN',         // 界面语言（zh-CN/zh-TW/en/fr/es/ru/ar）
     voiceSettings: { enabled: true, voiceURI: '', rate: 1, ttsEngine: 'browser', ttsVoice: 'mimo_default', asrEngine: 'browser' },
     webSearch: { enabled: false, tavilyKey: '' },
+    thinkingOn: true,       // 深度思考开关（支持的模型生效）
+    presetExtra: {},        // 预设角色追加提示词 { presetId: text }
+    customPresets: [],      // 用户自建角色 [{id,name,icon,grad,desc,system,custom:true}]
+    rankTab: 'overall',     // 模型排行榜页签 overall|coding
+    rankChart: 'bar',       // 排行榜图型 bar|radar
+    toolsEnabled: { translate: true, polish: true, summary: true, codeExplain: true },  // 其他页效率工具开关
     sidebarCollapsed: false,
     recentModels: []
   };

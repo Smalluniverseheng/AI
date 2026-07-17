@@ -44,7 +44,7 @@
     timer = setTimeout(() => {
       const before = document.documentElement.dataset.device;
       const after = detect();
-      if (before !== after && window.UI && Store.state.loggedIn) UI.showApp();
+      if (before !== after && typeof UI !== "undefined" && Store.state.loggedIn) UI.showApp();
     }, 200);
   });
 })();

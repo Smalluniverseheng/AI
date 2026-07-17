@@ -47,7 +47,7 @@ const API = (() => {
     // 系统提示 = 角色预设 + 用户界面语言提示（确保模型按用户语言回复）
     const sysParts = [];
     if (chat.system) sysParts.push(chat.system);
-    if (window.I18n) sysParts.push(I18n.langHintForModel());
+    if (typeof I18n !== 'undefined') sysParts.push(I18n.langHintForModel());
     if (sysParts.length) msgs.push({ role: 'system', content: sysParts.join('\n\n') });
 
     // excludeId：调用方刚 push 的当前用户消息（已由参数重建），避免重复注入
@@ -134,6 +134,32 @@ const API = (() => {
     return { content: full, thinking: fullThink };
   }
 
+  /* ---------- 厂商原生参数：联网搜索 / 深度思考开关 ----------
+   * 依据各厂商官方文档注入对应参数；均为服务端执行，无需客户端回环。 */
+  function applyProviderExtras(body, model) {
+    const searchOn = !!(Store.state.webSearch && Store.state.webSearch.enabled);
+    const thinkOn = Store.state.thinkingOn !== false;
+    switch (model.provider) {
+      case '通义千问': // DashScope 兼容模式
+        if (searchOn) body.enable_search = true;
+        if (model.thinking) body.enable_thinking = thinkOn;
+        break;
+      case '智谱AI':
+        if (model.thinking) body.thinking = { type: thinkOn ? 'enabled' : 'disabled' };
+        if (searchOn) body.tools = [{ type: 'web_search', web_search: { enable: true } }];
+        break;
+      case 'xAI':
+        if (searchOn) body.search_parameters = { mode: 'on' };
+        break;
+      case '火山引擎': // 豆包
+        if (model.thinking) body.thinking = { type: thinkOn ? 'enabled' : 'disabled' };
+        break;
+      case '腾讯混元':
+        if (model.thinking) body.enable_thinking = thinkOn;
+        break;
+    }
+  }
+
   /* ---------- 聊天调用 ---------- */
   function chat(opts) {
     const { modelId, messages, onChunk, onThinking } = opts;
@@ -159,6 +185,8 @@ const API = (() => {
       }));
       const body = { contents };
       if (sys) body.systemInstruction = { parts: [{ text: sys.content }] };
+      // Gemini 原生联网搜索（google_search 工具，服务端执行）
+      if (Store.state.webSearch && Store.state.webSearch.enabled) body.tools = [{ google_search: {} }];
       const url = cfg.base() + '/v1beta/models/' + encodeURIComponent(modelId) + (streaming ? ':streamGenerateContent?alt=sse&key=' : ':generateContent?key=') + encodeURIComponent(key);
       return fetchJSON(url, { method: 'POST', headers: cfg.headers(key), body: JSON.stringify(body) }, ac)
         .then(resp => {
@@ -191,6 +219,7 @@ const API = (() => {
     // —— OpenAI 兼容格式（默认） ——
     let body = { model: modelId, messages, stream: streaming };
     if (cfg.transform) body = cfg.transform(body, model) || body;
+    applyProviderExtras(body, model);
     return fetchJSON(cfg.base() + '/v1/chat/completions', { method: 'POST', headers: cfg.headers(key), body: JSON.stringify(body) }, ac)
       .then(resp => {
         if (streaming) return streamSSE(resp, 'openai', onChunk, onThinking);
