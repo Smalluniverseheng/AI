@@ -741,3 +741,128 @@
   .toolcall-body { padding: 8px 10px; }
   .toolcall-fname { display: none; }
 }
+
+/* ==================== v5.6 回到底部悬浮按钮（Kimi 式） ==================== */
+.jump-bottom-btn {
+  position: absolute;
+  right: 20px;
+  bottom: 112px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg-elev) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  opacity: 0;
+  transform: translateY(12px) scale(.88);
+  pointer-events: none;
+  transition: opacity .22s var(--ease), transform .22s var(--ease), color var(--dur), border-color var(--dur);
+  z-index: 46;
+}
+.jump-bottom-btn.show { opacity: 1; transform: none; pointer-events: auto; }
+.jump-bottom-btn:hover { color: var(--accent); border-color: var(--accent); }
+.jump-bottom-btn .icon { width: 20px; height: 20px; }
+
+@media (max-width: 640px) {
+  .jump-bottom-btn { right: 14px; bottom: 80px; }
+}
+
+/* ==================== v5.6 用户消息内联编辑（Kimi 式） ==================== */
+.msg.user.editing .msg-actions { display: none; }
+.msg.user.editing .msg-content {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 0;
+}
+.msg-edit-area {
+  width: 100%;
+  min-height: 88px;
+  max-height: 260px;
+  background: var(--bg-elev);
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  outline: none;
+  resize: vertical;
+  box-shadow: 0 0 0 3px var(--accent-softer);
+}
+.msg-edit-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* ==================== v5.6 github-write 指令卡片 ==================== */
+.gh-write-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 2px 0 12px;
+  padding: 9px 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  animation: fadeUp .25s var(--ease);
+}
+.gh-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.gh-file .icon { width: 15px; height: 15px; color: var(--accent); flex-shrink: 0; }
+.gh-path { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.gh-push-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 9px;
+  background: var(--accent-grad);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, .3);
+  transition: all var(--dur);
+  flex-shrink: 0;
+}
+.gh-push-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(99, 102, 241, .42); }
+.gh-push-btn .icon { width: 14px; height: 14px; }
+.gh-push-btn[disabled] { opacity: .7; pointer-events: none; }
+.gh-push-btn.gh-done { background: var(--success); box-shadow: none; }
+.gh-push-btn.gh-error { background: var(--danger-soft); color: var(--danger); box-shadow: none; font-weight: 500; flex-shrink: 1; }
+.gh-push-btn.gh-error .icon { flex-shrink: 0; }
+.gh-spinner {
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ghSpin .8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes ghSpin { to { transform: rotate(360deg); } }
+
+/* ==================== v5.6 粘贴附件 chip 大小 / 顶栏按钮 ==================== */
+.attach-item-size { color: var(--text-3); font-size: 11px; font-weight: 400; flex-shrink: 0; }
+
+/* 手表端不显示顶栏「自动播报 / 新对话」按钮 */
+html[data-device="watch"] #autoSpeakBtn,
+html[data-device="watch"] #newChatTopBtn { display: none !important; }

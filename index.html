@@ -6,7 +6,7 @@
 <!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
 <meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
-<script src="js/device.js?v=5.6.0"></script>
+<script src="js/device.js?v=5.7.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：270+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -19,15 +19,24 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.6.0">
-<link rel="stylesheet" href="css/layout.css?v=5.6.0">
-<link rel="stylesheet" href="css/components.css?v=5.6.0">
-<link rel="stylesheet" href="css/chat.css?v=5.6.0">
-<link rel="stylesheet" href="css/login.css?v=5.6.0">
-<link rel="stylesheet" href="css/pages.css?v=5.6.0">
-<link rel="stylesheet" href="css/watch.css?v=5.6.0">
+<link rel="stylesheet" href="css/base.css?v=5.7.0">
+<link rel="stylesheet" href="css/layout.css?v=5.7.0">
+<link rel="stylesheet" href="css/components.css?v=5.7.0">
+<link rel="stylesheet" href="css/chat.css?v=5.7.0">
+<link rel="stylesheet" href="css/login.css?v=5.7.0">
+<link rel="stylesheet" href="css/pages.css?v=5.7.0">
+<link rel="stylesheet" href="css/watch.css?v=5.7.0">
 </head>
 <body>
+
+<!-- ==================== 开屏页（番茄小说式 splash，每会话一次，app.js 控制淡出） ==================== -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-inner">
+    <div class="splash-logo"><img src="assets/brand.jpg" alt="第三方科技"></div>
+    <div class="splash-slogan">纵横四海<span class="splash-dot">·</span>引领无限</div>
+    <div class="splash-brand">第三方科技</div>
+  </div>
+</div>
 
 <!-- ==================== 登录页 ==================== -->
 <div id="loginPage" class="login-page hidden">
@@ -269,21 +278,8 @@
               <span class="row-label"><span class="row-title" data-i18n-text="tr.name">万能翻译</span><span class="row-desc" data-i18n-text="tr.nameD">多语互译 · 一对多同时译 · 独立翻译空间</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
-            <div class="settings-row clickable" id="toolPolish">
-              <span class="row-icon" data-icon="wand"></span>
-              <span class="row-label"><span class="row-title">文本润色</span><span class="row-desc">病句修改 · 表达升级 · 右侧开关启用/停用</span></span>
-              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgPolish" checked><span class="track"></span></label>
-            </div>
-            <div class="settings-row clickable" id="toolSummary">
-              <span class="row-icon" data-icon="fileText"></span>
-              <span class="row-label"><span class="row-title">文章摘要</span><span class="row-desc">长文提炼 · 要点罗列 · 右侧开关启用/停用</span></span>
-              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgSummary" checked><span class="track"></span></label>
-            </div>
-            <div class="settings-row clickable" id="toolCodeExplain">
-              <span class="row-icon" data-icon="code"></span>
-              <span class="row-label"><span class="row-title">代码解释</span><span class="row-desc">逐行讲解 · 原理分析 · 右侧开关启用/停用</span></span>
-              <label class="switch" title="启用/停用该工具"><input type="checkbox" id="tgCodeExplain" checked><span class="track"></span></label>
-            </div>
+            <!-- 效率工具区：动态渲染（js/skills.js 数据源，Pages.renderDiscoverTools） -->
+            <div id="toolList"></div>
           </div>
           <div class="settings-card">
             <div class="settings-row clickable" id="toolPresets">
@@ -291,9 +287,9 @@
               <span class="row-label"><span class="row-title" data-i18n-text="more.presets">角色助手</span><span class="row-desc" data-i18n-text="more.presetsD">精品预设角色，一键开启</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
-            <div class="settings-row clickable" id="toolWebSearch">
-              <span class="row-icon" data-icon="globe"></span>
-              <span class="row-label"><span class="row-title" data-i18n-text="more.websearch">联网搜索</span><span class="row-desc" data-i18n-text="more.websearchD">Tavily 检索，回答附真实来源</span></span>
+            <div class="settings-row clickable" id="toolPlugins">
+              <span class="row-icon" data-icon="package"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="more.plugins">插件库</span><span class="row-desc" data-i18n-text="more.pluginsD">联网搜索 · GitHub 连接器 · 更多能力</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
@@ -356,9 +352,14 @@
 
           <div class="settings-group-title" data-i18n-text="pf.pluginData">插件与数据</div>
           <div class="settings-card">
-            <div class="settings-row clickable" data-sub="subPlugin">
-              <span class="row-icon" data-icon="globe"></span>
-              <span class="row-label"><span class="row-title" data-i18n-text="pf.plugin">联网搜索</span><span class="row-desc" data-i18n-text="pf.pluginD">Tavily 插件配置</span></span>
+            <div class="settings-row clickable" data-sub="subPlugins">
+              <span class="row-icon" data-icon="package"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.plugins">插件库</span><span class="row-desc" data-i18n-text="pf.pluginsD">联网搜索 · GitHub 连接器 · 更多能力</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" data-sub="subSkills">
+              <span class="row-icon" data-icon="wand"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="pf.skills">技能库</span><span class="row-desc" data-i18n-text="pf.skillsD">Prompt 技能模板 · 自定义增删</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
             <div class="settings-row clickable" data-sub="subData">
@@ -495,6 +496,28 @@
             <div style="width:100%;padding-left:46px"><input type="password" class="input" id="tavilyKeyInput" placeholder="tvly-..." autocomplete="off"></div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- 插件库（动态渲染：js/pages.js renderPlugins） -->
+    <div class="subpage" id="subPlugins">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.plugins">插件库</h2></div>
+      <div class="subpage-body">
+        <div class="plg-head" data-i18n-text="plg.head">安装与配置平台能力插件</div>
+        <div id="pluginList"></div>
+      </div>
+    </div>
+
+    <!-- 技能库（动态渲染：js/pages.js renderSkills） -->
+    <div class="subpage" id="subSkills">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="sub.skills">技能库</h2></div>
+      <div class="subpage-body">
+        <div class="seg-tabs" id="skillTabs">
+          <button class="seg-tab active" data-sktab="mine" data-i18n-text="skl.mine">我的技能</button>
+          <button class="seg-tab" data-sktab="lib" data-i18n-text="skl.discover">发现更多</button>
+        </div>
+        <div id="skillMine"></div>
+        <div id="skillLib" style="display:none"></div>
       </div>
     </div>
 
@@ -717,25 +740,27 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.6.0"></script>
-<script src="js/models.js?v=5.6.0"></script>
-<script src="js/providers.js?v=5.6.0"></script>
-<script src="js/changelog.js?v=5.6.0"></script>
-<script src="js/modelsync.js?v=5.6.0"></script>
-<script src="js/store.js?v=5.6.0"></script>
-<script src="js/token.js?v=5.6.0"></script>
-<script src="js/i18n.js?v=5.6.0"></script>
-<script src="js/util.js?v=5.6.0"></script>
-<script src="js/markdown.js?v=5.6.0"></script>
-<script src="js/api.js?v=5.6.0"></script>
-<script src="js/voice.js?v=5.6.0"></script>
-<script src="js/files.js?v=5.6.0"></script>
-<script src="js/presets.js?v=5.6.0"></script>
-<script src="js/auth.js?v=5.6.0"></script>
-<script src="js/chat.js?v=5.6.0"></script>
-<script src="js/ui.js?v=5.6.0"></script>
-<script src="js/pages.js?v=5.6.0"></script>
-<script src="js/app.js?v=5.6.0"></script>
+<script src="js/icons.js?v=5.7.0"></script>
+<script src="js/models.js?v=5.7.0"></script>
+<script src="js/providers.js?v=5.7.0"></script>
+<script src="js/changelog.js?v=5.7.0"></script>
+<script src="js/modelsync.js?v=5.7.0"></script>
+<script src="js/store.js?v=5.7.0"></script>
+<script src="js/plugins.js?v=5.7.0"></script>
+<script src="js/skills.js?v=5.7.0"></script>
+<script src="js/token.js?v=5.7.0"></script>
+<script src="js/i18n.js?v=5.7.0"></script>
+<script src="js/util.js?v=5.7.0"></script>
+<script src="js/markdown.js?v=5.7.0"></script>
+<script src="js/api.js?v=5.7.0"></script>
+<script src="js/voice.js?v=5.7.0"></script>
+<script src="js/files.js?v=5.7.0"></script>
+<script src="js/presets.js?v=5.7.0"></script>
+<script src="js/auth.js?v=5.7.0"></script>
+<script src="js/chat.js?v=5.7.0"></script>
+<script src="js/ui.js?v=5.7.0"></script>
+<script src="js/pages.js?v=5.7.0"></script>
+<script src="js/app.js?v=5.7.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {

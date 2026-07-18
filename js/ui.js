@@ -433,7 +433,7 @@ const UI = (() => {
       (m.stage ? '<div class="debate-stage">' + esc(m.stage) + '</div>' : '') +
       '<div class="thinking-slot">' + (m.thinking ? thinkingHtml(m.thinking, false) : '') + '</div>' +
       '<div class="toolcalls-slot">' + (m.toolCalls && m.toolCalls.length ? toolCallsHtml(m.toolCalls, false) : '') + '</div>' +
-      '<div class="msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? MD.render(m.content) : '')) + '</div>' +
+      '<div class="msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? renderMd(m.content) : '')) + '</div>' +
       '<div class="msg-actions">' +
       '<button class="msg-action" data-act="copy" title="复制">' + icon('copy', 14) + '</button>' +
       '<button class="msg-action" data-act="regen" title="重新生成">' + icon('refresh', 14) + '</button>' +
@@ -455,7 +455,7 @@ const UI = (() => {
           '</div></div>' +
           '<div class="thinking-slot">' + (m.thinking ? thinkingHtml(m.thinking, false) : '') + '</div>' +
           '<div class="toolcalls-slot">' + (m.toolCalls && m.toolCalls.length ? toolCallsHtml(m.toolCalls, false) : '') + '</div>' +
-          '<div class="multi-card-body msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? MD.render(m.content) : '')) + '</div>' +
+          '<div class="multi-card-body msg-content-slot">' + (m.error ? errorHtml(m.error) : (m.content ? renderMd(m.content) : '')) + '</div>' +
           '</div>';
       }).join('') + '</div></div></div>';
   }
@@ -649,7 +649,7 @@ const UI = (() => {
     return '<div class="msg-error">' + icon('zap', 16) + '<span>' + esc(err) + '</span></div>';
   }
 
-  /* 渲染后处理：思考折叠、工具卡片折叠、数学公式、灯箱 */
+  /* 渲染后处理：思考折叠、工具卡片折叠、数学公式、灯箱、GitHub 推送卡片 */
   function afterRender(root) {
     $$('.thinking-toggle', root).forEach(bindThinking);
     $$('.toolcall-card', root).forEach(syncTcCollapse);
@@ -659,6 +659,106 @@ const UI = (() => {
       img.dataset.bound = '1';
       img.addEventListener('click', () => openLightbox(img.src));
     });
+    scanGhWrite(root);
+  }
+
+  /* ==================== github-write 指令卡片 ====================
+   * AI 回复中的 ```github-write 代码块：第一行 `path: 仓库内路径`，其余为文件内容。
+   * GitHub 插件已启用时在代码块下方渲染推送操作卡片；未启用则代码块原样保留。
+   * 注：MD 渲染器的围栏语言名不支持连字符（```github-write 无法成块），
+   * 故渲染前先把该块抽出为占位符，MD 渲染后换回等价代码块 HTML。
+   * 占位符必须纯字母（MD 行内代码占位符会吞掉数字）。 */
+  const GHWRITE_RE = /(^|\n)```github-write[ \t]*\n([\s\S]*?)(?:\n[ \t]*```[ \t]*(\n|$)|$(?![\s\S]))/g;
+
+  function ghLetters(n) {
+    let s = '';
+    do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
+    return s;
+  }
+  function ghLettersNum(s) {
+    let n = 0;
+    for (let i = 0; i < s.length; i++) n = n * 26 + (s.charCodeAt(i) - 64);
+    return n - 1;
+  }
+
+  /* 替代 MD.render：额外支持 github-write 指令块 */
+  function renderMd(content) {
+    const src0 = String(content == null ? '' : content).replace(/\r\n?/g, '\n');
+    if (src0.indexOf('```github-write') < 0) return MD.render(src0);
+    const blocks = [];
+    const src = src0.replace(GHWRITE_RE, (m, lead, raw) => {
+      blocks.push(raw);
+      return lead + '\nGHWRITEBLOCK' + ghLetters(blocks.length - 1) + '\n\n';
+    });
+    return MD.render(src).replace(/<p>GHWRITEBLOCK([A-Z]+)<\/p>|GHWRITEBLOCK([A-Z]+)/g,
+      (m, a, b) => ghWriteBlockHtml(blocks[ghLettersNum(a || b)] || ''));
+  }
+
+  function ghWriteBlockHtml(raw) {
+    return '<div class="code-block gh-write-block"><div class="code-block-head"><span class="code-lang">github-write</span>' +
+      '<button class="code-copy" data-code="' + encodeURIComponent(raw) + '">' + icon('copy', 13) + '<span>复制</span></button></div>' +
+      '<pre><code>' + esc(raw) + '</code></pre></div>';
+  }
+
+  function ghConfig() {
+    if (typeof Plugins === 'undefined' || typeof Plugins.getGithub !== 'function') return null;
+    const cfg = Plugins.getGithub();
+    return cfg && cfg.enabled ? cfg : null;
+  }
+
+  function scanGhWrite(root) {
+    if (!root) return;
+    $$('.code-block', root).forEach(block => {
+      if (block.dataset.ghBound) return;
+      const langEl = $('.code-lang', block);
+      if (!langEl || langEl.textContent.trim().toLowerCase() !== 'github-write') return;
+      const cfg = ghConfig();
+      if (!cfg) return; // 插件未配置：不标记，后续渲染可再触发
+      const copyBtn = $('.code-copy', block);
+      let raw = '';
+      try { raw = decodeURIComponent((copyBtn && copyBtn.dataset.code) || ''); } catch (e) { return; }
+      const lines = raw.split('\n');
+      const pm = (lines[0] || '').match(/^\s*path:\s*(\S+)\s*$/i);
+      if (!pm) return;
+      block.dataset.ghBound = '1';
+      block.insertAdjacentHTML('afterend', ghCardHtml(pm[1], lines.slice(1).join('\n'), cfg.repo));
+    });
+  }
+
+  function ghCardHtml(path, content, repo) {
+    return '<div class="gh-write-card" data-path="' + esc(path) + '" data-content="' + esc(encodeURIComponent(content)) + '">' +
+      '<span class="gh-file">' + icon('fileText', 15) + '<span class="gh-path">' + esc(path) + '</span></span>' +
+      '<button class="gh-push-btn" type="button">' + icon('upload', 14) +
+      '<span>推送到 GitHub' + (repo ? ' (' + esc(repo) + ')' : '') + '</span></button></div>';
+  }
+
+  function doGhPush(cardEl) {
+    const cfg = ghConfig();
+    if (!cfg || typeof Plugins.githubPush !== 'function') { Toast.warning('请先在「我的 → 插件」中配置 GitHub'); return; }
+    let content = '';
+    try { content = decodeURIComponent(cardEl.dataset.content || ''); } catch (e) {}
+    setGhState(cardEl, 'loading');
+    Plugins.githubPush(cardEl.dataset.path, content, 'AI 助手提交')
+      .then(url => setGhState(cardEl, 'done', url))
+      .catch(err => setGhState(cardEl, 'error', null, (err && err.message) || '推送失败'));
+  }
+
+  function setGhState(cardEl, state, url, errMsg) {
+    const btn = $('.gh-push-btn', cardEl);
+    if (!btn) return;
+    btn.disabled = state === 'loading';
+    if (state === 'loading') {
+      btn.innerHTML = '<span class="gh-spinner"></span><span>推送中…</span>';
+    } else if (state === 'done') {
+      btn.className = 'gh-push-btn gh-done';
+      btn.innerHTML = icon('check', 14) + '<span>已推送</span>' + icon('external', 12);
+      btn.title = '在 GitHub 打开';
+      btn.dataset.url = url || '';
+    } else if (state === 'error') {
+      btn.className = 'gh-push-btn gh-error';
+      btn.innerHTML = icon('refresh', 13) + '<span>' + esc(errMsg || '推送失败') + '，点击重试</span>';
+      btn.title = '推送失败，点击重试';
+    }
   }
 
   function openLightbox(src) {
@@ -711,7 +811,7 @@ const UI = (() => {
   function setMsgContent(id, text) {
     if (!scheduleRender[id]) {
       scheduleRender[id] = makeRafScheduler((el, t) => {
-        el.innerHTML = MD.render(t) + '<span class="stream-cursor"></span>';
+        el.innerHTML = renderMd(t) + '<span class="stream-cursor"></span>';
         scrollToBottom();
       });
     }
@@ -774,7 +874,7 @@ const UI = (() => {
     if (!card) return;
     const slot = $('.msg-content-slot', card);
     if (slot) {
-      slot.innerHTML = content ? MD.render(content) : '<span style="color:var(--text-3);font-size:13px">（无内容）</span>';
+      slot.innerHTML = content ? renderMd(content) : '<span style="color:var(--text-3);font-size:13px">（无内容）</span>';
       MD.renderMath(slot);
       $$('.msg-image', slot).forEach(img => img.addEventListener('click', () => openLightbox(img.src)));
     }
@@ -785,6 +885,7 @@ const UI = (() => {
       if (label) label.textContent = '思考已完成';
     }
     settleToolCards(card);
+    scanGhWrite(card);
     scrollToBottom();
   }
 
@@ -821,6 +922,29 @@ const UI = (() => {
         }
         return;
       }
+      // GitHub 推送卡片：推送 / 重试 / 成功后打开链接
+      const ghBtn = e.target.closest('.gh-push-btn');
+      if (ghBtn) {
+        if (ghBtn.disabled) return;
+        if (ghBtn.dataset.url) { window.open(ghBtn.dataset.url, '_blank'); return; }
+        const ghCard = ghBtn.closest('.gh-write-card');
+        if (ghCard) doGhPush(ghCard);
+        return;
+      }
+      // 用户消息内联编辑：保存并重新发送 / 取消
+      const editBtn = e.target.closest('[data-edit-act]');
+      if (editBtn) {
+        const editingEl = editBtn.closest('.msg.user.editing');
+        if (editingEl) {
+          if (editBtn.dataset.editAct === 'save') {
+            const ta = $('.msg-edit-area', editingEl);
+            Chat.editAndResend(editingEl.dataset.id, ta ? ta.value : '');
+          } else {
+            renderChat(); // 取消编辑：数据未变，直接重绘恢复
+          }
+        }
+        return;
+      }
       const btn = e.target.closest('.msg-action');
       if (!btn) return;
       const card = btn.closest('[data-id]');
@@ -834,11 +958,37 @@ const UI = (() => {
       if (act === 'copy') copyText(msg.content || '').then(() => Toast.success('已复制'));
       else if (act === 'del') Chat.delMsg(id);
       else if (act === 'regen') Chat.regenerate(id);
-      else if (act === 'edit') { Chat.editUserMsg(id); updateTokenEst(); }
+      else if (act === 'edit') enterEditMode(card, msg);
       else if (act === 'speak') {
         if (Voice.isSpeaking(id)) Voice.stopSpeak();
         else Voice.speak(msg.content || '', id);
       }
+    });
+  }
+
+  /* 用户消息内联编辑（Kimi 式）：气泡变为 textarea + 保存/取消 */
+  function enterEditMode(card, msg) {
+    if (!card || !msg || msg.role !== 'user') return;
+    if (Chat.isSending()) return Toast.warning('正在生成中，请先停止');
+    if ($('#chatContainer .msg.editing')) renderChat(); // 同时只保留一个编辑器
+    const el = $('#chatContainer [data-id="' + msg.id + '"]');
+    const contentEl = el && $('.msg-content', el);
+    if (!contentEl) return;
+    el.classList.add('editing');
+    contentEl.innerHTML = '<textarea class="msg-edit-area" rows="3" placeholder="编辑消息内容…"></textarea>' +
+      '<div class="msg-edit-btns">' +
+      '<button class="btn btn-sm btn-ghost" data-edit-act="cancel">取消</button>' +
+      '<button class="btn btn-sm btn-primary" data-edit-act="save">保存并重新发送</button>' +
+      '</div>';
+    const ta = $('.msg-edit-area', contentEl);
+    ta.value = msg.content || '';
+    autoResize(ta);
+    ta.focus();
+    ta.setSelectionRange(ta.value.length, ta.value.length);
+    ta.addEventListener('input', () => autoResize(ta));
+    ta.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape') { ev.preventDefault(); renderChat(); }
+      else if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); Chat.editAndResend(msg.id, ta.value); }
     });
   }
 
@@ -887,14 +1037,21 @@ const UI = (() => {
     });
     input.addEventListener('paste', e => {
       const items = e.clipboardData && e.clipboardData.items;
-      if (!items) return;
-      for (const it of items) {
-        if (it.type.startsWith('image/')) {
-          e.preventDefault();
-          const file = it.getAsFile();
-          if (file) Chat.addAttachment(file);
-          break;
+      if (items) {
+        for (const it of items) {
+          if (it.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = it.getAsFile();
+            if (file) Chat.addAttachment(file);
+            return;
+          }
         }
+      }
+      // 长文本自动转文件附件（Kimi 式）：>800 字符，或 >300 字符且含 ≥10 个换行
+      const text = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+      if (text && (text.length > 800 || (text.length > 300 && (text.match(/\n/g) || []).length >= 10))) {
+        e.preventDefault();
+        Chat.addPastedText(text);
       }
     });
 
@@ -1013,6 +1170,7 @@ const UI = (() => {
     }
     at.files.forEach((f, i) => {
       html += '<div class="attach-item">' + icon('fileText', 16) + '<span class="attach-item-name">' + esc(f.name) + '</span>' +
+        (f.size ? '<span class="attach-item-size">' + fmtBytes(f.size) + '</span>' : '') +
         '<button class="attach-item-x" data-remove="file:' + i + '">' + icon('x', 10) + '</button></div>';
     });
     bar.innerHTML = html;
@@ -1021,18 +1179,51 @@ const UI = (() => {
 
   /* ==================== 滚动 ==================== */
   let userScrolledUp = false;
+  let jumpBtn = null; // 回到底部悬浮按钮（Kimi 式）
   function bindScroll() {
-    $('#chatScroll').addEventListener('scroll', () => {
-      const el = $('#chatScroll');
+    const el = $('#chatScroll');
+    el.addEventListener('scroll', () => {
       userScrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 120;
+      syncJumpBtn();
     }, { passive: true });
+    ensureJumpBtn();
+  }
+
+  /* 回到底部悬浮按钮：距底部 >400px 时浮出，点击平滑回底并恢复跟随 */
+  function ensureJumpBtn() {
+    if (jumpBtn || !$('#pageChat')) return;
+    jumpBtn = document.createElement('button');
+    jumpBtn.id = 'jumpBottomBtn';
+    jumpBtn.className = 'jump-bottom-btn';
+    jumpBtn.title = '回到底部';
+    jumpBtn.innerHTML = icon('chevronDown', 20);
+    jumpBtn.addEventListener('click', () => {
+      userScrolledUp = false;
+      jumpBtn.classList.remove('show');
+      const el = $('#chatScroll');
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    });
+    $('#pageChat').appendChild(jumpBtn);
+  }
+
+  function syncJumpBtn() {
+    const el = $('#chatScroll');
+    if (!el || !jumpBtn) return;
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+    jumpBtn.classList.toggle('show', dist > 400);
   }
 
   function scrollToBottom(force) {
     const el = $('#chatScroll');
     if (!el) return;
     if (force || !userScrolledUp) {
-      requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; });
+      requestAnimationFrame(() => {
+        // 强制回底（渲染/切会话）瞬时到位，避免平滑动画中途误判距离
+        if (force) el.style.scrollBehavior = 'auto';
+        el.scrollTop = el.scrollHeight;
+        if (force) el.style.scrollBehavior = '';
+        syncJumpBtn();
+      });
     }
   }
 
@@ -1143,6 +1334,45 @@ const UI = (() => {
     document.addEventListener('touchcancel', () => { if (tracking) endDrag(0); }, { passive: true });
   }
 
+  /* ==================== 顶栏右侧：自动播报 + 新对话（Kimi 式） ==================== */
+  /* index.html 由其他模块维护，这里用 JS 注入两个圆形图标按钮，保持与现有按钮一致 */
+  function injectTopbarActions() {
+    const right = $('.topbar-right');
+    const themeBtn = $('#themeBtn');
+    if (!right || !themeBtn || $('#autoSpeakBtn')) return;
+
+    const speakBtn = document.createElement('button');
+    speakBtn.className = 'topbar-btn';
+    speakBtn.id = 'autoSpeakBtn';
+    speakBtn.addEventListener('click', () => {
+      Store.state.autoSpeak = !Store.state.autoSpeak;
+      Store.save();
+      syncAutoSpeakBtn();
+      if (!Store.state.autoSpeak) Voice.stopSpeak();
+      Toast.info(Store.state.autoSpeak ? '自动播报已开启：AI 回复完成后自动朗读' : '自动播报已关闭');
+    });
+
+    const newBtn = document.createElement('button');
+    newBtn.className = 'topbar-btn';
+    newBtn.id = 'newChatTopBtn';
+    newBtn.title = '新对话';
+    newBtn.innerHTML = icon('messagePlus', 19);
+    newBtn.addEventListener('click', () => Chat.new());
+
+    right.insertBefore(speakBtn, themeBtn);
+    right.insertBefore(newBtn, themeBtn);
+    syncAutoSpeakBtn();
+  }
+
+  function syncAutoSpeakBtn() {
+    const btn = $('#autoSpeakBtn');
+    if (!btn) return;
+    const on = !!Store.state.autoSpeak;
+    btn.classList.toggle('active', on);
+    btn.innerHTML = icon(on ? 'volume' : 'volumeOff', 19);
+    btn.title = on ? '自动播报：开（点击关闭）' : '自动播报：关（点击开启）';
+  }
+
   /* ==================== 初始化绑定 ==================== */
   function init() {
     bindSidebarEvents();
@@ -1153,6 +1383,7 @@ const UI = (() => {
     bindInputEvents();
     bindScroll();
     bindSwipeGesture();
+    injectTopbarActions();
 
     // 全局点击关闭下拉
     document.addEventListener('click', e => {

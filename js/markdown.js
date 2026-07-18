@@ -19,7 +19,7 @@ const MD = (() => {
     let s = esc(text);
     // 行内代码（先处理，防内部被格式化）
     const codes = [];
-    s = s.replace(/`([^`\n]+)`/g, (m, c) => { codes.push(c); return '' + (codes.length - 1) + ''; });
+    s = s.replace(/`([^`\n]+)`/g, (m, c) => { codes.push(c); return '\u0001' + (codes.length - 1) + '\u0002'; });
     // 图片 / 链接
     s = s.replace(/!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/g, '<img class="msg-image" src="$2" alt="$1" loading="lazy">');
     s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
@@ -29,7 +29,7 @@ const MD = (() => {
     s = s.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
     s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
     // 还原行内代码
-    s = s.replace(/(\d+)/g, (m, i) => '<code>' + esc(codes[+i]) + '</code>');
+    s = s.replace(/\u0001(\d+)\u0002/g, (m, i) => '<code>' + esc(codes[+i]) + '</code>');
     return s;
   }
 

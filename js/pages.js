@@ -342,11 +342,26 @@ const Pages = (() => {
 
   /* ==================== 其他页（微信发现式条目） ==================== */
   function renderDiscover() {
-    // 联网搜索条目描述随状态变化
-    const row = $('#toolWebSearch .row-desc');
-    if (row) row.textContent = Store.state.webSearch.tavilyKey
-      ? (Store.state.webSearch.enabled ? '已开启 · 点击管理' : '已配置 · 点击开启')
-      : I18n.t('more.websearchD');
+    // 插件库条目描述随状态变化
+    const row = $('#toolPlugins .row-desc');
+    if (row) {
+      const n = typeof Plugins !== 'undefined' ? Plugins.list().filter(p => p.enabled).length : 0;
+      row.textContent = n ? n + ' ' + I18n.t('plg.rowOn') : I18n.t('more.pluginsD');
+    }
+    renderDiscoverTools();
+  }
+
+  /* 发现页工具区：动态渲染（数据源 Skills.listEnabled()，开关写回 Skills/toolsEnabled） */
+  function renderDiscoverTools() {
+    const box = $('#toolList');
+    if (!box || typeof Skills === 'undefined') return;
+    box.innerHTML = Skills.listEnabled().map(s =>
+      '<div class="settings-row clickable tool-row' + (s.active ? '' : ' tool-off') + '" data-skill="' + s.id + '">' +
+      '<span class="row-icon">' + icon(s.icon || 'wand', 17) + '</span>' +
+      '<span class="row-label"><span class="row-title">' + esc(s.name) + '</span>' +
+      '<span class="row-desc">' + esc(s.desc) + ' · 右侧开关启用/停用</span></span>' +
+      '<label class="switch" title="启用/停用该工具"><input type="checkbox" data-skill-toggle="' + s.id + '"' + (s.active ? ' checked' : '') + '><span class="track"></span></label>' +
+      '</div>').join('');
   }
 
   /* ==================== 效率工具（润色/摘要/代码解释，可开关；翻译已迁入独立空间） ==================== */
@@ -360,8 +375,18 @@ const Pages = (() => {
   };
   let currentTool = null;
 
+  /* TOOLS 查不到时从 Skills 取（库技能 / 自定义技能走同一弹窗管线） */
+  function getToolDef(id) {
+    if (TOOLS[id]) return TOOLS[id];
+    if (typeof Skills !== 'undefined') {
+      const s = Skills.get(id);
+      if (s) return { name: s.name, icon: s.icon || 'wand', btn: s.btn || '开始生成', ph: s.ph || '输入内容…', sys: s.promptTemplate };
+    }
+    return null;
+  }
+
   function openTool(id) {
-    const t = TOOLS[id];
+    const t = getToolDef(id);
     if (!t) return;
     currentTool = id;
     $('#toolModalTitle').textContent = t.name;
@@ -376,7 +401,8 @@ const Pages = (() => {
   }
 
   async function runTool() {
-    const t = TOOLS[currentTool];
+    const t = getToolDef(currentTool);
+    if (!t) return;
     const input = $('#toolInput').value.trim();
     if (!input) return Toast.warning('请先输入内容');
     const model = getModel(Store.state.currentModelId);
@@ -409,35 +435,30 @@ const Pages = (() => {
   function bindToolEvents() {
     // 万能翻译：点击进入独立翻译空间（无开关）
     $('#toolTranslate').addEventListener('click', () => openSub('subTranslate'));
-    const map = { toolPolish: 'polish', toolSummary: 'summary', toolCodeExplain: 'codeExplain' };
-    const tgMap = { polish: 'tgPolish', summary: 'tgSummary', codeExplain: 'tgCodeExplain' };
-    Object.keys(map).forEach(rowId => {
-      const row = $('#' + rowId);
-      const tid = map[rowId];
-      // 开关状态同步
-      const tg = $('#' + tgMap[tid]);
-      const enabled = () => (Store.state.toolsEnabled || {})[tid] !== false;
-      tg.checked = enabled();
-      row.classList.toggle('tool-off', !enabled());
-      tg.addEventListener('click', e => e.stopPropagation());
-      tg.addEventListener('change', () => {
-        Store.state.toolsEnabled = Store.state.toolsEnabled || {};
-        Store.state.toolsEnabled[tid] = tg.checked;
-        Store.save();
-        row.classList.toggle('tool-off', !tg.checked);
-        Toast.info(tg.checked ? '「' + TOOLS[tid].name + '」已开启' : '「' + TOOLS[tid].name + '」已停用');
-      });
-      row.addEventListener('click', e => {
-        if (e.target.closest('.switch')) return; // 点击开关区域不打开工具
-        if (!enabled()) return Toast.info('该工具已停用，点击右侧开关重新启用');
-        openTool(tid);
-      });
+    // 发现页工具区（动态行，事件委托；行为与原三工具一致）
+    $('#toolList').addEventListener('click', e => {
+      if (e.target.closest('.switch')) return; // 点击开关区域不打开工具
+      const row = e.target.closest('[data-skill]');
+      if (!row || typeof Skills === 'undefined') return;
+      const id = row.dataset.skill;
+      if (!Skills.isEnabled(id)) return Toast.info('该工具已停用，点击右侧开关重新启用');
+      openTool(id);
+    });
+    $('#toolList').addEventListener('change', e => {
+      const tg = e.target.closest('[data-skill-toggle]');
+      if (!tg || typeof Skills === 'undefined') return;
+      const id = tg.dataset.skillToggle;
+      Skills.toggle(id, tg.checked);
+      const s = Skills.get(id);
+      Toast.info(tg.checked ? '「' + s.name + '」已开启' : '「' + s.name + '」已停用' + (s.builtin ? '' : '，可从「技能库」重新添加'));
+      renderDiscoverTools();
     });
     $('#toolModalClose').addEventListener('click', () => $('#toolModal').classList.remove('show'));
     $('#toolModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
     $('#toolRun').addEventListener('click', runTool);
     $('#toolSendChat').addEventListener('click', () => {
-      const t = TOOLS[currentTool];
+      const t = getToolDef(currentTool);
+      if (!t) return;
       const text = $('#toolInput').value.trim();
       $('#toolModal').classList.remove('show');
       Chat.new({ title: t.name, mode: 'single' });
@@ -757,7 +778,7 @@ const Pages = (() => {
       renderPresetGrid();
       $('#presetsModal').classList.add('show');
     });
-    $('#toolWebSearch').addEventListener('click', () => openSub('subPlugin'));
+    $('#toolPlugins').addEventListener('click', () => openSub('subPlugins'));
     $('#presetsClose').addEventListener('click', () => $('#presetsModal').classList.remove('show'));
     $('#presetsModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
     $('#presetDetailClose').addEventListener('click', () => $('#presetDetailModal').classList.remove('show'));
@@ -862,10 +883,16 @@ const Pages = (() => {
     renderSubContent(id);
     $('#' + id).classList.add('show');
   }
-  function closeSubs() { $$('.subpage').forEach(s => s.classList.remove('show')); }
+  function closeSubs() {
+    $$('.subpage').forEach(s => s.classList.remove('show'));
+    // 返回时刷新发现页（插件计数 / 技能列表可能已变）
+    if (Store.state.currentPage === 'discover') renderDiscover();
+  }
 
   function renderSubContent(id) {
     if (id === 'subKeys') renderKeyManagement();
+    else if (id === 'subPlugins') renderPlugins();
+    else if (id === 'subSkills') renderSkills();
     else if (id === 'subPlugin') renderPluginSection();
     else if (id === 'subData') renderDataSection();
     else if (id === 'subVoice') renderVoiceSection();
@@ -1110,6 +1137,215 @@ const Pages = (() => {
     });
   }
 
+  /* ==================== 插件库（subPlugins） ==================== */
+  let openPluginId = null; // 当前展开的插件卡片（展开态不持久化）
+
+  function pluginBadge(p) {
+    if (p.def.backend) return '<span class="plg-badge warn">' + I18n.t('plg.backend') + '</span>';
+    if (p.def.info) return '';
+    return p.enabled
+      ? '<span class="plg-badge on">' + I18n.t('plg.enabled') + '</span>'
+      : '<span class="plg-badge">' + I18n.t('plg.disabled') + '</span>';
+  }
+
+  function pluginBodyHtml(p) {
+    // 开源生态：纯信息卡
+    if (p.def.info) {
+      return '<div class="plg-body"><div class="plg-eco">' +
+        Plugins.ECO_LINKS.map(l =>
+          '<div class="plg-eco-item"><b>' + esc(l.name) + '</b><span>' + esc(l.desc) + '</span>' +
+          '<a href="https://' + l.url + '" target="_blank" rel="noopener">' + esc(l.url) + '</a></div>').join('') +
+        '</div><div class="plg-note">' + icon('info', 14) + ' 后续版本将支持导入开源技能包</div></div>';
+    }
+    return '<div class="plg-body">' +
+      (p.def.note ? '<div class="plg-note">' + icon('info', 14) + ' ' + esc(p.def.note) + '</div>' : '') +
+      p.def.fields.map(f =>
+        '<div class="plg-field"><label>' + esc(f.label) + (f.hint ? '<span class="plg-field-hint"> · ' + esc(f.hint) + '</span>' : '') + '</label>' +
+        (f.secret
+          ? '<div class="key-input-wrap"><input type="password" class="input" data-plg-field="' + f.key + '" value="' + esc(p.config[f.key] || '') + '" placeholder="' + esc(f.ph || '') + '" autocomplete="off"><button class="key-eye" data-eye tabindex="-1">' + icon('eye', 16) + '</button></div>'
+          : '<input class="input" data-plg-field="' + f.key + '" value="' + esc(p.config[f.key] || '') + '" placeholder="' + esc(f.ph || '') + '" autocomplete="off">') +
+        '</div>').join('') +
+      '<div class="plg-actions">' +
+      '<label class="switch"><input type="checkbox" data-plg-toggle="' + p.def.id + '"' + (p.enabled ? ' checked' : '') + '><span class="track"></span></label>' +
+      '<span class="plg-actions-label">' + I18n.t('plg.enable') + '</span>' +
+      '<button class="btn btn-primary btn-sm plg-save" data-plg-save="' + p.def.id + '">' + I18n.t('plg.save') + '</button>' +
+      '</div></div>';
+  }
+
+  function renderPlugins() {
+    if (typeof Plugins === 'undefined') return;
+    $('#pluginList').innerHTML = Plugins.list().map(p =>
+      '<div class="plg-block' + (openPluginId === p.def.id ? ' open' : '') + '" data-plugin="' + p.def.id + '">' +
+      '<button class="plg-head-row" type="button">' +
+      '<span class="row-icon">' + icon(p.def.icon, 17) + '</span>' +
+      '<span class="plg-title"><b>' + esc(p.def.name) + '</b><span>' + esc(p.def.desc) + '</span></span>' +
+      pluginBadge(p) + '<span class="plg-caret">' + icon('chevronDown', 14) + '</span></button>' +
+      pluginBodyHtml(p) + '</div>').join('');
+  }
+
+  /* 收集卡片内表单值并保存（返回配置对象） */
+  function collectPluginCfg(block) {
+    const cfg = {};
+    block.querySelectorAll('[data-plg-field]').forEach(inp => { cfg[inp.dataset.plgField] = inp.value.trim(); });
+    return cfg;
+  }
+
+  function bindPluginLibEvents() {
+    const box = $('#pluginList');
+    box.addEventListener('click', e => {
+      const head = e.target.closest('.plg-head-row');
+      if (head) {
+        const id = head.closest('.plg-block').dataset.plugin;
+        openPluginId = openPluginId === id ? null : id;
+        renderPlugins();
+        return;
+      }
+      const eye = e.target.closest('[data-eye]');
+      if (eye) {
+        const input = eye.parentElement.querySelector('input');
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        eye.innerHTML = icon(show ? 'eyeOff' : 'eye', 16);
+        return;
+      }
+      const save = e.target.closest('[data-plg-save]');
+      if (save) {
+        const id = save.dataset.plgSave;
+        Plugins.setConfig(id, collectPluginCfg(save.closest('.plg-block')));
+        Toast.success(I18n.t('plg.saved'));
+        renderPlugins();
+        if (id === 'tavily-search') UI.updateWebSearchBtn();
+      }
+    });
+    box.addEventListener('change', e => {
+      const tg = e.target.closest('[data-plg-toggle]');
+      if (!tg) return;
+      const id = tg.dataset.plgToggle;
+      // 开关时连同已填写的表单一起保存，再校验
+      const cfg = collectPluginCfg(tg.closest('.plg-block'));
+      cfg.enabled = tg.checked;
+      Plugins.setConfig(id, cfg);
+      if (id === 'tavily-search' && tg.checked && !Plugins.getConfig(id).tavilyKey) {
+        Plugins.toggle(id, false);
+        tg.checked = false;
+        return Toast.warning('请先填写 Tavily API Key（tavily.com 免费获取）');
+      }
+      const def = Plugins.get(id).def;
+      if (tg.checked && def.backend) Toast.info(def.note);
+      Toast.info(tg.checked ? '「' + def.name + '」' + I18n.t('plg.enabled') : '「' + def.name + '」' + I18n.t('plg.disabled'));
+      renderPlugins();
+      if (id === 'tavily-search') UI.updateWebSearchBtn();
+    });
+  }
+
+  /* ==================== 技能库（subSkills） ==================== */
+  function renderSkills() {
+    renderSkillMine();
+    renderSkillLib();
+  }
+
+  function renderSkillMine() {
+    if (typeof Skills === 'undefined') return;
+    const list = Skills.listEnabled();
+    $('#skillMine').innerHTML =
+      '<div class="skl-tip">' + I18n.t('skl.hint') + '</div>' +
+      '<div class="settings-card">' + list.map(s =>
+        '<div class="settings-row clickable skill-row' + (s.active ? '' : ' tool-off') + '" data-skill="' + s.id + '">' +
+        '<span class="row-icon">' + icon(s.icon || 'wand', 17) + '</span>' +
+        '<span class="row-label"><span class="row-title">' + esc(s.name) + (s.custom ? ' <em class="p-custom">' + I18n.t('skl.customTag') + '</em>' : '') + '</span>' +
+        '<span class="row-desc">' + esc(s.desc) + '</span></span>' +
+        (s.custom ? '<button class="skl-del" data-skil-del="' + s.id + '" title="' + I18n.t('skl.del') + '">' + icon('trash', 15) + '</button>' : '') +
+        '<label class="switch"><input type="checkbox" data-skil-toggle="' + s.id + '"' + (s.active ? ' checked' : '') + '><span class="track"></span></label>' +
+        '</div>').join('') + '</div>';
+  }
+
+  function renderSkillLib() {
+    if (typeof Skills === 'undefined') return;
+    $('#skillLib').innerHTML =
+      '<div class="skl-grid">' + Skills.listLibrary().map(s => {
+        const added = Skills.isEnabled(s.id);
+        return '<div class="skl-card">' +
+          '<span class="skl-ic">' + icon(s.icon, 19) + '</span>' +
+          '<span class="skl-name">' + esc(s.name) + '</span>' +
+          '<span class="skl-desc">' + esc(s.desc) + '</span>' +
+          '<button class="btn ' + (added ? 'btn-secondary' : 'btn-primary') + ' btn-sm skl-add" data-skil-add="' + s.id + '"' + (added ? ' disabled' : '') + '>' +
+          (added ? I18n.t('skl.added') : I18n.t('skl.add')) + '</button></div>';
+      }).join('') + '</div>' +
+      '<div class="settings-card skl-form">' +
+      '<div class="skl-form-title">' + icon('plus', 15) + ' ' + I18n.t('skl.customTitle') + '</div>' +
+      '<div class="field"><label>' + I18n.t('skl.name') + '</label><input class="input" id="skcName" maxlength="20" placeholder="' + I18n.t('skl.namePh') + '"></div>' +
+      '<div class="field"><label>' + I18n.t('skl.desc') + '</label><input class="input" id="skcDesc" maxlength="40" placeholder="' + I18n.t('skl.descPh') + '"></div>' +
+      '<div class="field"><label>' + I18n.t('skl.prompt') + '</label><textarea class="textarea" id="skcPrompt" rows="5" placeholder="' + I18n.t('skl.promptPh') + '"></textarea></div>' +
+      '<button class="btn btn-primary btn-block" id="skcSave">' + I18n.t('skl.save') + '</button>' +
+      '</div>';
+  }
+
+  function bindSkillEvents() {
+    // 页签切换
+    $('#skillTabs').addEventListener('click', e => {
+      const tab = e.target.closest('[data-sktab]');
+      if (!tab) return;
+      $$('#skillTabs .seg-tab').forEach(t => t.classList.toggle('active', t === tab));
+      $('#skillMine').style.display = tab.dataset.sktab === 'mine' ? '' : 'none';
+      $('#skillLib').style.display = tab.dataset.sktab === 'lib' ? '' : 'none';
+    });
+    // 我的技能：点击试用 / 删除自定义
+    $('#skillMine').addEventListener('click', e => {
+      const del = e.target.closest('[data-skil-del]');
+      if (del) {
+        const s = Skills.get(del.dataset.skilDel);
+        confirmDialog(I18n.t('skl.del'), I18n.t('skl.delQ') + '「' + (s ? s.name : '') + '」', true).then(ok => {
+          if (!ok) return;
+          Skills.removeCustom(del.dataset.skilDel);
+          renderSkillMine(); renderSkillLib(); renderDiscoverTools();
+          Toast.success(I18n.t('skl.deleted'));
+        });
+        return;
+      }
+      if (e.target.closest('.switch')) return;
+      const row = e.target.closest('[data-skill]');
+      if (!row) return;
+      const id = row.dataset.skill;
+      if (!Skills.isEnabled(id)) return Toast.info('该技能已停用，点击右侧开关重新启用');
+      openTool(id);
+    });
+    $('#skillMine').addEventListener('change', e => {
+      const tg = e.target.closest('[data-skil-toggle]');
+      if (!tg) return;
+      const id = tg.dataset.skilToggle;
+      Skills.toggle(id, tg.checked);
+      const s = Skills.get(id);
+      Toast.info(tg.checked ? '「' + s.name + '」已开启' : '「' + s.name + '」已停用');
+      renderSkillMine(); renderSkillLib(); renderDiscoverTools();
+    });
+    // 发现更多：添加库技能 / 保存自定义技能
+    $('#skillLib').addEventListener('click', e => {
+      const add = e.target.closest('[data-skil-add]');
+      if (add) {
+        const s = Skills.addFromLibrary(add.dataset.skilAdd);
+        if (s) {
+          Toast.success('「' + s.name + '」' + I18n.t('skl.addedToast'));
+          renderSkillLib(); renderSkillMine(); renderDiscoverTools();
+        }
+        return;
+      }
+      if (e.target.closest('#skcSave')) {
+        const name = $('#skcName').value.trim();
+        const desc = $('#skcDesc').value.trim();
+        const prompt = $('#skcPrompt').value.trim();
+        if (!name) return Toast.warning(I18n.t('skl.needName'));
+        if (prompt.length < 10) return Toast.warning(I18n.t('skl.needPrompt'));
+        const s = Skills.addCustom({ name, desc, promptTemplate: prompt });
+        Toast.success('「' + s.name + '」' + I18n.t('skl.createdToast'));
+        renderSkillLib(); renderSkillMine(); renderDiscoverTools();
+        // 切回「我的技能」页签
+        $$('#skillTabs .seg-tab').forEach(t => t.classList.toggle('active', t.dataset.sktab === 'mine'));
+        $('#skillMine').style.display = '';
+        $('#skillLib').style.display = 'none';
+      }
+    });
+  }
+
   /* ---- 播报声音子页 ---- */
   function renderVoiceSection() {
     const vs = Store.state.voiceSettings;
@@ -1316,15 +1552,18 @@ const Pages = (() => {
     });
   }
 
-  /* ---- 更新日志弹窗（时间线） ---- */
+  /* ---- 更新日志弹窗（时间线，默认折叠：仅最新版本展开） ---- */
   function renderChangelogModal() {
-    $('#changelogModalBody').innerHTML = '<div class="timeline">' + CHANGELOG.map(c =>
-      '<div class="tl-item' + (c.major ? ' major' : '') + '">' +
+    $('#changelogModalBody').innerHTML = '<div class="timeline">' + CHANGELOG.map((c, idx) =>
+      '<div class="tl-item' + (c.major ? ' major' : '') + (idx === 0 ? ' open' : '') + '">' +
       '<div class="tl-dot"></div>' +
       '<div class="tl-card">' +
-      '<div class="tl-head"><span class="tl-ver">v' + esc(c.version) + '</span>' +
+      '<button class="tl-head tl-toggle" type="button">' +
+      '<span class="tl-ver">v' + esc(c.version) + '</span>' +
       (c.major ? '<span class="tl-badge">里程碑</span>' : '') +
-      '<span class="tl-date">' + esc(c.date) + '</span></div>' +
+      '<span class="tl-summary">' + c.items.length + ' ' + I18n.t('cl.items') + '</span>' +
+      '<span class="tl-date">' + esc(c.date) + '</span>' +
+      '<span class="tl-caret">' + icon('chevronDown', 14) + '</span></button>' +
       '<ul class="tl-list">' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>' +
       '</div></div>').join('') + '</div>';
   }
@@ -1337,6 +1576,11 @@ const Pages = (() => {
     $('#changelogClose').addEventListener('click', () => $('#changelogModal').classList.remove('show'));
     $('#changelogModal').addEventListener('click', e => {
       if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+    });
+    // 点击版本卡片头展开 / 收起（展开态不持久化）
+    $('#changelogModalBody').addEventListener('click', e => {
+      const head = e.target.closest('.tl-toggle');
+      if (head) head.closest('.tl-item').classList.toggle('open');
     });
   }
 
@@ -1494,6 +1738,9 @@ const Pages = (() => {
     bindToolEvents();
     bindTokenEvents();
     bindTranslateEvents();
+    bindPluginLibEvents();
+    bindSkillEvents();
+    renderDiscoverTools();
     // 语言切换时重渲染动态内容
     document.addEventListener('langchange', () => {
       renderRowDescs();
@@ -1501,6 +1748,8 @@ const Pages = (() => {
       renderDiscover();
       if ($('#subTranslate').classList.contains('show')) renderTranslate();
       if ($('#subTokens').classList.contains('show')) renderTokens();
+      if ($('#subPlugins').classList.contains('show')) renderPlugins();
+      if ($('#subSkills').classList.contains('show')) renderSkills();
     });
   }
 

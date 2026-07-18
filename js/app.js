@@ -59,6 +59,27 @@
     }).catch(() => {});
   }
 
+  /* ---------- 开屏页（splash：品牌展示 ≥1.6s 后淡出，每会话一次，手表跳过） ---------- */
+  function initSplash() {
+    const sp = $('#splash');
+    if (!sp) return;
+    // logo 加载失败时优雅降级（露出渐变底）
+    const img = sp.querySelector('.splash-logo img');
+    if (img) img.addEventListener('error', () => { img.style.display = 'none'; });
+    let shown = false;
+    try {
+      shown = !!sessionStorage.getItem('splashShown');
+      sessionStorage.setItem('splashShown', '1');
+    } catch (e) {}
+    // 手表模式 / 本会话已播过：直接移除
+    if ((window.DeviceInfo && DeviceInfo.isWatch()) || shown) { sp.remove(); return; }
+    // 到时淡出（CSS 另有兜底动画，JS 失效时也会自动隐藏，不阻塞应用）
+    setTimeout(() => {
+      sp.classList.add('out');
+      setTimeout(() => sp.remove(), 650);
+    }, 1600);
+  }
+
   /* ---------- 登录/注册 ---------- */
   function bindAuthEvents() {
     const switchTab = tab => {
@@ -128,6 +149,7 @@
 
   /* ---------- 启动 ---------- */
   document.addEventListener('DOMContentLoaded', () => {
+    initSplash();
     UI.init();
     Pages.init();
     bindAuthEvents();

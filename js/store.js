@@ -35,6 +35,8 @@ const Store = (() => {
     rankTab: 'overall',     // 模型排行榜页签 overall|coding
     rankChart: 'bar',       // 排行榜图型 bar|radar
     toolsEnabled: { translate: true, polish: true, summary: true, codeExplain: true },  // 其他页效率工具开关
+    plugins: { installed: ['tavily-search'], configs: {} },   // 插件库（js/plugins.js；tavily 配置落在 webSearch，此处存其余插件）
+    skills: { enabled: ['polish', 'summary', 'codeExplain'], custom: [] },  // 技能库（js/skills.js；enabled 与 toolsEnabled 双向同步）
     sidebarCollapsed: false,
     recentModels: [],
     tokenStats: { byModel: {}, updatedAt: 0 }   // Token 用量统计（js/token.js 读写，重置不影响其他字段）
@@ -62,6 +64,13 @@ const Store = (() => {
     // 老数据没有 tokenStats 时补默认（Object.assign(DEFAULTS, parsed) 已覆盖，这里再兜底字段残缺）
     if (!state.tokenStats || typeof state.tokenStats !== 'object') state.tokenStats = { byModel: {}, updatedAt: 0 };
     if (!state.tokenStats.byModel || typeof state.tokenStats.byModel !== 'object') state.tokenStats.byModel = {};
+    // 老数据没有 plugins / skills 字段（或字段残缺）时补默认
+    if (!state.plugins || typeof state.plugins !== 'object') state.plugins = { installed: ['tavily-search'], configs: {} };
+    if (!Array.isArray(state.plugins.installed)) state.plugins.installed = ['tavily-search'];
+    if (!state.plugins.configs || typeof state.plugins.configs !== 'object') state.plugins.configs = {};
+    if (!state.skills || typeof state.skills !== 'object') state.skills = { enabled: ['polish', 'summary', 'codeExplain'], custom: [] };
+    if (!Array.isArray(state.skills.enabled)) state.skills.enabled = ['polish', 'summary', 'codeExplain'];
+    if (!Array.isArray(state.skills.custom)) state.skills.custom = [];
     return state;
   }
 

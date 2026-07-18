@@ -158,6 +158,27 @@ const Chat = (() => {
     UI.renderAttachments();
   }
 
+  /* 粘贴长文本自动转文件附件（Kimi 式）：与上传文件走同一条 files 链路 */
+  function addPastedText(text) {
+    const MAX = 24000; // 与 Files 文本注入上限一致
+    text = String(text || '');
+    let truncated = false;
+    if (text.length > MAX) { text = text.slice(0, MAX); truncated = true; }
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const stamp = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+    const name = '粘贴文本-' + stamp + (looksLikeMarkdown(text) ? '.md' : '.txt');
+    attachments.files.push({ kind: 'text', name, text, truncated, size: text.length });
+    UI.renderAttachments();
+    Toast.success('已将粘贴内容转为附件：' + name + (truncated ? '（已截断）' : ''));
+  }
+
+  /* 简单判断粘贴内容是否像 Markdown（标题/列表/引用/代码块/链接/表格） */
+  function looksLikeMarkdown(text) {
+    return /(^|\n)#{1,6}\s+\S/.test(text) || /```/.test(text) || /\[[^\]\n]+\]\([^)\n]+\)/.test(text) ||
+      /(^|\n)\s*([-*+] |\d+\. )/.test(text) || /(^|\n)\s*> /.test(text) || /(^|\n)\s*\|[^\n]+\|/.test(text);
+  }
+
   /* ==================== 发送 ==================== */
   function isSending() { return sending; }
 
@@ -196,6 +217,7 @@ const Chat = (() => {
     const at = { image: img, filesText };
 
     const userMsg = { id: genId(), role: 'user', content, ts: Date.now(), image: img ? img.dataUrl : null, files: attachments.files.map(f => f.name) };
+    if (filesText) userMsg.filesText = filesText; // 文件文本上下文持久化，编辑重发时附件不丢失（老数据无此字段则退化为纯文本）
     chat.messages.push(userMsg);
     if (!chat.title || chat.title === '新对话') chat.title = makeTitle(content || (img ? '图片对话' : '文件分析'));
     chat.updatedAt = Date.now();
@@ -208,12 +230,16 @@ const Chat = (() => {
     $('#charCount').textContent = '0 字';
     clearAttachments();
 
+    await runPipeline(chat, content, at, mode, { excludeId: userMsg.id });
+  }
+
+  /* 发送管线（send / 编辑重发共用）：按模式分发到各 runner */
+  async function runPipeline(chat, content, at, mode, runnerOpts) {
     sending = true;
     stopFlag = false;
     UI.setSending(true);
 
     try {
-      const runnerOpts = { excludeId: userMsg.id };
       if (mode === 'multi') await runMulti(chat, content, at, runnerOpts);
       else if (mode === 'debate') await runDebate(chat, content);
       else if (mode === 'collab') await runCollab(chat, content, at, runnerOpts);
@@ -235,6 +261,12 @@ const Chat = (() => {
   /* 流式工具调用回调：快照写入 msg 并实时渲染卡片 */
   function toolCallHandler(msg) {
     return tcs => { if (!stopFlag) { msg.toolCalls = tcs; UI.setMsgToolCalls(msg.id, tcs, true); } };
+  }
+
+  /* 自动播报：开启后 AI 回复完成自动朗读全文（辩论/协同不调用，即不自动播） */
+  function autoSpeak(content, msgId) {
+    if (!Store.state.autoSpeak || !content) return;
+    Voice.speak(content, msgId);
   }
 
   /* 结束（含中止）时将所有工具卡片定态为已完成，避免持久化后仍显示执行中 */
@@ -285,6 +317,7 @@ const Chat = (() => {
       if (result.toolCalls && result.toolCalls.length) msg.toolCalls = result.toolCalls;
       settleToolCalls(msg);
       UI.finishMsg(msg.id, msg.content);
+      autoSpeak(msg.content, msg.id);
     } catch (e) {
       if (stopFlag || e.name === 'AbortError') {
         msg.content = msg.content || '';
@@ -305,6 +338,7 @@ const Chat = (() => {
     opts = opts || {};
     const ids = Store.state.multiModels.slice(0, 8);
     const batchId = genId();
+    let spoken = false; // 自动播报：多模型只读第一个完成的
     const tasks = ids.map(modelId => {
       const msg = { id: genId(), role: 'assistant', modelId, batchId, content: '', thinking: '', toolCalls: [], ts: Date.now() };
       chat.messages.push(msg);
@@ -321,6 +355,7 @@ const Chat = (() => {
         if (r.toolCalls && r.toolCalls.length) msg.toolCalls = r.toolCalls;
         settleToolCalls(msg);
         UI.finishMsg(msg.id, msg.content);
+        if (!spoken && Store.state.autoSpeak && msg.content) { spoken = true; autoSpeak(msg.content, msg.id); }
       }).catch(e => {
         settleToolCalls(msg);
         if (stopFlag || e.name === 'AbortError') { UI.finishMsg(msg.id, msg.content); }
@@ -530,21 +565,33 @@ const Chat = (() => {
     await send(userMsg.content);
   }
 
-  function editUserMsg(id) {
+  /* 用户消息编辑重发（Kimi 式）：更新内容 → 截断其后所有消息 → 复用发送管线重跑。
+   * 附件保留：图片与文件文本上下文从消息自身恢复（filesText 为 v5.6+ 新增字段，老数据无则退化为纯文本）。 */
+  async function editAndResend(id, newContent) {
+    if (sending) return Toast.warning('正在生成中，请先停止');
     const chat = getCurrentChat();
     if (!chat) return;
     const idx = chat.messages.findIndex(m => m.id === id);
     if (idx < 0) return;
     const msg = chat.messages[idx];
-    $('#chatInput').value = msg.content;
-    autoResize($('#chatInput'));
-    $('#charCount').textContent = msg.content.length + ' 字';
-    // 删除该消息及其后内容
-    chat.messages = chat.messages.slice(0, idx);
+    if (msg.role !== 'user') return;
+    const content = String(newContent == null ? '' : newContent).trim();
+    if (!content && !msg.image && !(msg.files && msg.files.length)) return Toast.warning('内容不能为空');
+
+    msg.content = content;
+    chat.messages = chat.messages.slice(0, idx + 1); // 删除此消息之后的所有消息
+    chat.updatedAt = Date.now();
     Store.save();
     UI.renderChat();
-    $('#chatInput').focus();
-    Toast.info('已载入编辑，发送将从此处重新对话');
+    UI.scrollToBottom(true);
+
+    const at = { image: msg.image ? { name: '图片', dataUrl: msg.image } : null, filesText: msg.filesText || '' };
+    const mode = chat.mode || 'single';
+    // 模式前置校验（与 send 一致）
+    if (mode === 'multi' && !Store.state.multiModels.length) return Toast.warning('请先在上方配置多模型（至少 1 个）');
+    if (mode === 'debate' && (!Store.state.debatePro.length || !Store.state.debateCon.length)) return Toast.warning('请先配置正方和反方模型');
+    if (mode === 'collab' && Store.state.collabModels.length < 2) return Toast.warning('协同模式至少需要 2 个模型');
+    await runPipeline(chat, content, at, mode, { excludeId: msg.id });
   }
 
   function delMsg(id) {
@@ -559,7 +606,7 @@ const Chat = (() => {
     attachments, isSending, getCurrentChat,
     new: create, load, del, selectModel, selectMode,
     addToRole, removeFromRole,
-    addAttachment, removeAttachment, clearAttachments,
-    send, stop, regenerate, editUserMsg, delMsg
+    addAttachment, removeAttachment, clearAttachments, addPastedText,
+    send, stop, regenerate, editAndResend, delMsg
   };
 })();
