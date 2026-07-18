@@ -6,7 +6,8 @@ const API = (() => {
 
   const CONFIG = {
     BACKEND_URL: null,   // 例: 'https://your-server.com'  后期接入后端时填写
-    TIMEOUT: 60000
+    TIMEOUT: 60000,
+    SSE_WATCHDOG: 30000  // 流式读取熔断：连续该毫秒数未收到任何字节则判定超时
   };
 
   let controllers = [];
@@ -82,12 +83,14 @@ const API = (() => {
 
   /* ---------- SSE 流式解析 ---------- */
   /* onToolCall：可选第 5 参，OpenAI 格式 tool_calls 更新时回调（参数为快照数组） */
+  /* 返回 {content, thinking, toolCalls, usage}；usage 为 {prompt, completion} 或 null（接口未回传） */
   async function streamSSE(resp, format, onChunk, onThinking, onToolCall) {
     const reader = resp.body.getReader();
     const decoder = new TextDecoder('utf-8');
     let buffer = '';
     let full = '';
     let fullThink = '';
+    let usage = null;
     // tool_calls 累加器：OpenAI 流式按 index 分片，arguments 为增量字符串
     const toolCallsAcc = [];
     const notifyToolCalls = () => {
@@ -100,11 +103,21 @@ const API = (() => {
       try { json = JSON.parse(data); } catch (e) { return; }
 
       if (format === 'anthropic') {
+        // usage：message_start 带输入 token 数，message_delta 累计输出 token 数（取最新值）
+        if (json.type === 'message_start' && json.message && json.message.usage) {
+          usage = { prompt: json.message.usage.input_tokens || 0, completion: json.message.usage.output_tokens || 0 };
+        } else if (json.type === 'message_delta' && json.usage) {
+          if (!usage) usage = { prompt: 0, completion: 0 };
+          if (json.usage.output_tokens != null) usage.completion = json.usage.output_tokens;
+        }
         if (json.type === 'content_block_delta' && json.delta) {
           if (json.delta.type === 'thinking_delta' && onThinking) { fullThink += json.delta.thinking || ''; onThinking(json.delta.thinking || '', fullThink); }
           else if (json.delta.text) { full += json.delta.text; onChunk(json.delta.text, full); }
         }
       } else if (format === 'google') {
+        // usage：usageMetadata 一般在末尾 chunk，取最后一次为准
+        const um = json.usageMetadata;
+        if (um) usage = { prompt: um.promptTokenCount || 0, completion: um.candidatesTokenCount || 0 };
         const parts = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts;
         if (parts) {
           parts.forEach(p => {
@@ -114,6 +127,13 @@ const API = (() => {
         }
       } else {
         // OpenAI 兼容格式
+        // usage：部分厂商最后单独发一个只有 usage、choices 为空的 chunk（需 stream_options.include_usage）
+        if (json.usage) {
+          usage = {
+            prompt: json.usage.prompt_tokens != null ? json.usage.prompt_tokens : (usage ? usage.prompt : 0),
+            completion: json.usage.completion_tokens != null ? json.usage.completion_tokens : (usage ? usage.completion : 0)
+          };
+        }
         const delta = json.choices && json.choices[0] && json.choices[0].delta;
         if (delta) {
           const think = delta.reasoning_content || delta.reasoning;
@@ -146,26 +166,45 @@ const API = (() => {
       }
     };
 
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
+    // 30s 无数据熔断：每读到字节就重置计时；超时主动取消流并抛错，避免连接挂死后无限等待
+    let timedOut = false;
+    let watchdog = null;
+    const armWatchdog = () => {
+      if (watchdog) clearTimeout(watchdog);
+      watchdog = setTimeout(() => {
+        timedOut = true;
+        try { reader.cancel(); } catch (e) {}
+      }, CONFIG.SSE_WATCHDOG || 30000);
+    };
+    armWatchdog();
+    try {
+      for (;;) {
+        let chunk;
+        try { chunk = await reader.read(); }
+        catch (e) { if (timedOut) throw new Error('网络超时：30 秒未收到数据，请重试'); throw e; }
+        if (chunk.done) break;
+        armWatchdog();
+        buffer += decoder.decode(chunk.value, { stream: true });
 
-      // Anthropic / Google(alt=sse) / OpenAI 都是 `data: ` 行
-      let idx;
-      while ((idx = buffer.indexOf('\n')) >= 0) {
-        const line = buffer.slice(0, idx).trim();
-        buffer = buffer.slice(idx + 1);
-        if (line.startsWith('data:')) handleData(line.slice(5).trim());
+        // Anthropic / Google(alt=sse) / OpenAI 都是 `data: ` 行
+        let idx;
+        while ((idx = buffer.indexOf('\n')) >= 0) {
+          const line = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 1);
+          if (line.startsWith('data:')) handleData(line.slice(5).trim());
+        }
       }
+      if (timedOut) throw new Error('网络超时：30 秒未收到数据，请重试');
+      if (buffer.trim().startsWith('data:')) handleData(buffer.trim().slice(5).trim());
+      // 流结束：未收到结果回传的工具调用一律置为已完成
+      if (toolCallsAcc.length) {
+        toolCallsAcc.forEach(t => { t.status = 'done'; });
+        notifyToolCalls();
+      }
+      return { content: full, thinking: fullThink, toolCalls: toolCallsAcc, usage };
+    } finally {
+      if (watchdog) { clearTimeout(watchdog); watchdog = null; }
     }
-    if (buffer.trim().startsWith('data:')) handleData(buffer.trim().slice(5).trim());
-    // 流结束：未收到结果回传的工具调用一律置为已完成
-    if (toolCallsAcc.length) {
-      toolCallsAcc.forEach(t => { t.status = 'done'; });
-      notifyToolCalls();
-    }
-    return { content: full, thinking: fullThink, toolCalls: toolCallsAcc };
   }
 
   /* ---------- 厂商原生参数：联网搜索 / 深度思考开关 ----------
@@ -192,6 +231,36 @@ const API = (() => {
         if (model.thinking) body.enable_thinking = thinkOn;
         break;
     }
+  }
+
+  /* ---------- Token 记账 ----------
+   * 成功拿到回复后调用：优先用接口真实 usage；缺失时按请求/返回文本本地估算（estimated=true）。
+   * TokenStats 未加载或记账异常时静默跳过，绝不影响对话。 */
+  function accountUsage(modelId, messages, result) {
+    try {
+      if (typeof TokenStats === 'undefined' || !result) return result;
+      const u = result.usage;
+      if (u && (u.prompt > 0 || u.completion > 0)) {
+        TokenStats.record(modelId, { prompt: u.prompt || 0, completion: u.completion || 0, estimated: false });
+      } else {
+        // 请求侧累加文本（图片按 1200 token 固定折算，与 buildMessages 的口径一致）
+        let reqText = '', imgCount = 0;
+        (messages || []).forEach(m => {
+          if (!m) return;
+          if (typeof m.content === 'string') { reqText += m.content + '\n'; return; }
+          if (Array.isArray(m.content)) m.content.forEach(c => {
+            if (c && c.type === 'text' && c.text) reqText += c.text + '\n';
+            else if (c && c.type === 'image_url') imgCount++;
+          });
+        });
+        TokenStats.record(modelId, {
+          prompt: TokenStats.estimate(reqText) + imgCount * 1200,
+          completion: TokenStats.estimate(result.content || ''),
+          estimated: true
+        });
+      }
+    } catch (e) { /* 记账失败不影响对话 */ }
+    return result;
   }
 
   /* ---------- 聊天调用 ---------- */
@@ -227,9 +296,12 @@ const API = (() => {
           if (streaming) return streamSSE(resp, 'google', onChunk, onThinking);
           return resp.json().then(d => {
             const parts = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts || [];
-            return { content: parts.map(p => p.text || '').join(''), thinking: '' };
+            const um = d.usageMetadata;
+            const usage = um ? { prompt: um.promptTokenCount || 0, completion: um.candidatesTokenCount || 0 } : null;
+            return { content: parts.map(p => p.text || '').join(''), thinking: '', usage };
           });
         })
+        .then(result => accountUsage(modelId, messages, result))
         .finally(() => { controllers = controllers.filter(c => c !== ac); });
     }
 
@@ -245,8 +317,13 @@ const API = (() => {
       return fetchJSON(cfg.base() + '/v1/messages', { method: 'POST', headers: cfg.headers(key), body: JSON.stringify(body) }, ac)
         .then(resp => {
           if (streaming) return streamSSE(resp, 'anthropic', onChunk, onThinking);
-          return resp.json().then(d => ({ content: (d.content || []).filter(b => b.type === 'text').map(b => b.text).join(''), thinking: '' }));
+          return resp.json().then(d => ({
+            content: (d.content || []).filter(b => b.type === 'text').map(b => b.text).join(''),
+            thinking: '',
+            usage: d.usage ? { prompt: d.usage.input_tokens || 0, completion: d.usage.output_tokens || 0 } : null
+          }));
         })
+        .then(result => accountUsage(modelId, messages, result))
         .finally(() => { controllers = controllers.filter(c => c !== ac); });
     }
 
@@ -254,6 +331,8 @@ const API = (() => {
     let body = { model: modelId, messages, stream: streaming };
     if (cfg.transform) body = cfg.transform(body, model) || body;
     applyProviderExtras(body, model);
+    // 仅流式：要求厂商在流末尾回传 usage（不支持的厂商会忽略该字段）
+    if (streaming) body.stream_options = { include_usage: true };
     return fetchJSON(cfg.base() + '/v1/chat/completions', { method: 'POST', headers: cfg.headers(key), body: JSON.stringify(body) }, ac)
       .then(resp => {
         if (streaming) return streamSSE(resp, 'openai', onChunk, onThinking, opts.onToolCall);
@@ -268,9 +347,11 @@ const API = (() => {
             result: null,
             status: 'done'
           }));
-          return { content: m.content || '', thinking: m.reasoning_content || '', toolCalls };
+          const usage = d.usage ? { prompt: d.usage.prompt_tokens || 0, completion: d.usage.completion_tokens || 0 } : null;
+          return { content: m.content || '', thinking: m.reasoning_content || '', toolCalls, usage };
         });
       })
+      .then(result => accountUsage(modelId, messages, result))
       .finally(() => { controllers = controllers.filter(c => c !== ac); });
   }
 

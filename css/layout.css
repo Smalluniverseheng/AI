@@ -19,6 +19,8 @@
   z-index: 60;
 }
 .sidebar.collapsed { margin-left: calc(-1 * var(--sidebar-w)); }
+/* 侧滑手势拖拽中：关掉过渡，让侧栏跟随手指 */
+.sidebar.swiping { transition: none; }
 
 /* 侧边栏用户卡（Kimi 式顶部） */
 .sidebar-user {

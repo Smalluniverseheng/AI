@@ -84,7 +84,21 @@ const I18n = (() => {
       'toast.modelOff': '该模型已下架，仅供展示，不可选择',
       'toast.modelSpecial': '该模型为专用模型（语音类），请前往「其他 → 语音工坊」使用',
       'toast.switched': '已切换：',
-      'help.title': '帮助中心'
+      'help.title': '帮助中心',
+      'pf.usage': '用量', 'pf.tokens': 'Token 用量统计', 'pf.tokensD': '按厂商与模型分别统计消耗',
+      'tk.title': 'Token 用量统计', 'tk.total': '总消耗', 'tk.input': '输入 tokens', 'tk.output': '输出 tokens',
+      'tk.calls': '调用次数', 'tk.sortTotal': '按消耗量', 'tk.sortRecent': '按最近使用', 'tk.sortCount': '按调用次数',
+      'tk.times': '次', 'tk.in': '输入', 'tk.out': '输出', 'tk.sum': '合计',
+      'tk.clear': '清空统计数据', 'tk.clearQ': '将删除全部 Token 用量统计且无法恢复，确定继续吗？', 'tk.cleared': '统计数据已清空',
+      'tk.empty': '暂无用量数据，对话后自动统计',
+      'tr.title': '万能翻译', 'tr.name': '万能翻译', 'tr.nameD': '多语互译 · 一对多同时译 · 独立翻译空间',
+      'tr.swap': '交换源语言与目标语言', 'tr.ph': '输入要翻译的文字…', 'tr.run': '开始翻译', 'tr.running': '翻译中…',
+      'tr.clear': '清空', 'tr.copy': '复制', 'tr.speak': '朗读', 'tr.retry': '重试', 'tr.noResult': '（无返回内容）',
+      'tr.voice': '朗读音色', 'tr.voiceBrowser': '浏览器本地', 'tr.voiceMimo': 'MiMo 音色', 'tr.voiceClone': '克隆我的声音',
+      'tr.uploadSample': '上传样本', 'tr.keepOne': '至少保留一个目标语言', 'tr.noAutoSwap': '自动检测模式下无法交换语言',
+      'tr.emptyInput': '请先输入要翻译的内容', 'tr.noModel': '请先在对话页选择一个模型', 'tr.copied': '已复制',
+      'tr.sampleSaved': '声音样本已保存，朗读将使用克隆声音', 'tr.sampleTooBig': '音频样本不能超过 10MB', 'tr.needSample': '请先上传声音样本',
+      'tool.note': '该工具在独立窗口运行，可发到对话继续讨论'
     },
 
     'zh-TW': {
@@ -154,7 +168,21 @@ const I18n = (() => {
       'toast.modelOff': '該模型已下架，僅供展示，不可選擇',
       'toast.modelSpecial': '該模型為專用模型（語音類），請前往「其他 → 語音工坊」使用',
       'toast.switched': '已切換：',
-      'help.title': '幫助中心'
+      'help.title': '幫助中心',
+      'pf.usage': '用量', 'pf.tokens': 'Token 用量統計', 'pf.tokensD': '按廠商與模型分別統計消耗',
+      'tk.title': 'Token 用量統計', 'tk.total': '總消耗', 'tk.input': '輸入 tokens', 'tk.output': '輸出 tokens',
+      'tk.calls': '調用次數', 'tk.sortTotal': '按消耗量', 'tk.sortRecent': '按最近使用', 'tk.sortCount': '按調用次數',
+      'tk.times': '次', 'tk.in': '輸入', 'tk.out': '輸出', 'tk.sum': '合計',
+      'tk.clear': '清空統計資料', 'tk.clearQ': '將刪除全部 Token 用量統計且無法恢復，確定繼續嗎？', 'tk.cleared': '統計資料已清空',
+      'tk.empty': '暫無用量資料，對話後自動統計',
+      'tr.title': '萬能翻譯', 'tr.name': '萬能翻譯', 'tr.nameD': '多語互譯 · 一對多同時譯 · 獨立翻譯空間',
+      'tr.swap': '交換來源語言與目標語言', 'tr.ph': '輸入要翻譯的文字…', 'tr.run': '開始翻譯', 'tr.running': '翻譯中…',
+      'tr.clear': '清空', 'tr.copy': '複製', 'tr.speak': '朗讀', 'tr.retry': '重試', 'tr.noResult': '（無返回內容）',
+      'tr.voice': '朗讀音色', 'tr.voiceBrowser': '瀏覽器本地', 'tr.voiceMimo': 'MiMo 音色', 'tr.voiceClone': '克隆我的聲音',
+      'tr.uploadSample': '上傳樣本', 'tr.keepOne': '至少保留一個目標語言', 'tr.noAutoSwap': '自動檢測模式下無法交換語言',
+      'tr.emptyInput': '請先輸入要翻譯的內容', 'tr.noModel': '請先在對話頁選擇一個模型', 'tr.copied': '已複製',
+      'tr.sampleSaved': '聲音樣本已保存，朗讀將使用克隆聲音', 'tr.sampleTooBig': '音頻樣本不能超過 10MB', 'tr.needSample': '請先上傳聲音樣本',
+      'tool.note': '該工具在獨立視窗運行，可發到對話繼續討論'
     },
 
     'en': {
@@ -224,7 +252,21 @@ const I18n = (() => {
       'toast.modelOff': 'This model is discontinued and shown for reference only',
       'toast.modelSpecial': 'This is a dedicated voice model — use it in More → Voice Studio',
       'toast.switched': 'Switched: ',
-      'help.title': 'Help Center'
+      'help.title': 'Help Center',
+      'pf.usage': 'Usage', 'pf.tokens': 'Token Usage', 'pf.tokensD': 'Usage stats by provider and model',
+      'tk.title': 'Token Usage', 'tk.total': 'Total', 'tk.input': 'Input tokens', 'tk.output': 'Output tokens',
+      'tk.calls': 'Calls', 'tk.sortTotal': 'By usage', 'tk.sortRecent': 'By recency', 'tk.sortCount': 'By calls',
+      'tk.times': 'calls', 'tk.in': 'In', 'tk.out': 'Out', 'tk.sum': 'Total',
+      'tk.clear': 'Clear stats', 'tk.clearQ': 'All token usage stats will be deleted and cannot be recovered. Continue?', 'tk.cleared': 'Stats cleared',
+      'tk.empty': 'No usage yet — stats are collected automatically as you chat',
+      'tr.title': 'Translate', 'tr.name': 'Translate', 'tr.nameD': 'Multi-language · one-to-many · dedicated space',
+      'tr.swap': 'Swap source and target languages', 'tr.ph': 'Enter text to translate…', 'tr.run': 'Translate', 'tr.running': 'Translating…',
+      'tr.clear': 'Clear', 'tr.copy': 'Copy', 'tr.speak': 'Speak', 'tr.retry': 'Retry', 'tr.noResult': '(empty result)',
+      'tr.voice': 'Speak voice', 'tr.voiceBrowser': 'Browser', 'tr.voiceMimo': 'MiMo voice', 'tr.voiceClone': 'Clone my voice',
+      'tr.uploadSample': 'Upload sample', 'tr.keepOne': 'Keep at least one target language', 'tr.noAutoSwap': 'Swap is unavailable in auto-detect mode',
+      'tr.emptyInput': 'Enter text to translate first', 'tr.noModel': 'Pick a model on the chat page first', 'tr.copied': 'Copied',
+      'tr.sampleSaved': 'Voice sample saved — cloning will be used for playback', 'tr.sampleTooBig': 'Audio sample must be ≤ 10MB', 'tr.needSample': 'Upload a voice sample first',
+      'tool.note': 'This tool runs in a separate window; send the result to a chat to keep discussing'
     },
 
     'fr': {
@@ -294,7 +336,21 @@ const I18n = (() => {
       'toast.modelOff': 'Ce modèle est retiré, affiché à titre indicatif',
       'toast.modelSpecial': 'Modèle vocal dédié — utilisez Autres → Studio vocal',
       'toast.switched': 'Changé : ',
-      'help.title': 'Centre d’aide'
+      'help.title': 'Centre d’aide',
+      'pf.usage': 'Usage', 'pf.tokens': 'Token Usage', 'pf.tokensD': 'Usage stats by provider and model',
+      'tk.title': 'Token Usage', 'tk.total': 'Total', 'tk.input': 'Input tokens', 'tk.output': 'Output tokens',
+      'tk.calls': 'Calls', 'tk.sortTotal': 'By usage', 'tk.sortRecent': 'By recency', 'tk.sortCount': 'By calls',
+      'tk.times': 'calls', 'tk.in': 'In', 'tk.out': 'Out', 'tk.sum': 'Total',
+      'tk.clear': 'Clear stats', 'tk.clearQ': 'All token usage stats will be deleted and cannot be recovered. Continue?', 'tk.cleared': 'Stats cleared',
+      'tk.empty': 'No usage yet — stats are collected automatically as you chat',
+      'tr.title': 'Translate', 'tr.name': 'Translate', 'tr.nameD': 'Multi-language · one-to-many · dedicated space',
+      'tr.swap': 'Swap source and target languages', 'tr.ph': 'Enter text to translate…', 'tr.run': 'Translate', 'tr.running': 'Translating…',
+      'tr.clear': 'Clear', 'tr.copy': 'Copy', 'tr.speak': 'Speak', 'tr.retry': 'Retry', 'tr.noResult': '(empty result)',
+      'tr.voice': 'Speak voice', 'tr.voiceBrowser': 'Browser', 'tr.voiceMimo': 'MiMo voice', 'tr.voiceClone': 'Clone my voice',
+      'tr.uploadSample': 'Upload sample', 'tr.keepOne': 'Keep at least one target language', 'tr.noAutoSwap': 'Swap is unavailable in auto-detect mode',
+      'tr.emptyInput': 'Enter text to translate first', 'tr.noModel': 'Pick a model on the chat page first', 'tr.copied': 'Copied',
+      'tr.sampleSaved': 'Voice sample saved — cloning will be used for playback', 'tr.sampleTooBig': 'Audio sample must be ≤ 10MB', 'tr.needSample': 'Upload a voice sample first',
+      'tool.note': 'This tool runs in a separate window; send the result to a chat to keep discussing'
     },
 
     'es': {
@@ -364,7 +420,21 @@ const I18n = (() => {
       'toast.modelOff': 'Este modelo está retirado, solo para mostrar',
       'toast.modelSpecial': 'Modelo de voz dedicado — úsalo en Más → Estudio de voz',
       'toast.switched': 'Cambiado: ',
-      'help.title': 'Centro de ayuda'
+      'help.title': 'Centro de ayuda',
+      'pf.usage': 'Usage', 'pf.tokens': 'Token Usage', 'pf.tokensD': 'Usage stats by provider and model',
+      'tk.title': 'Token Usage', 'tk.total': 'Total', 'tk.input': 'Input tokens', 'tk.output': 'Output tokens',
+      'tk.calls': 'Calls', 'tk.sortTotal': 'By usage', 'tk.sortRecent': 'By recency', 'tk.sortCount': 'By calls',
+      'tk.times': 'calls', 'tk.in': 'In', 'tk.out': 'Out', 'tk.sum': 'Total',
+      'tk.clear': 'Clear stats', 'tk.clearQ': 'All token usage stats will be deleted and cannot be recovered. Continue?', 'tk.cleared': 'Stats cleared',
+      'tk.empty': 'No usage yet — stats are collected automatically as you chat',
+      'tr.title': 'Translate', 'tr.name': 'Translate', 'tr.nameD': 'Multi-language · one-to-many · dedicated space',
+      'tr.swap': 'Swap source and target languages', 'tr.ph': 'Enter text to translate…', 'tr.run': 'Translate', 'tr.running': 'Translating…',
+      'tr.clear': 'Clear', 'tr.copy': 'Copy', 'tr.speak': 'Speak', 'tr.retry': 'Retry', 'tr.noResult': '(empty result)',
+      'tr.voice': 'Speak voice', 'tr.voiceBrowser': 'Browser', 'tr.voiceMimo': 'MiMo voice', 'tr.voiceClone': 'Clone my voice',
+      'tr.uploadSample': 'Upload sample', 'tr.keepOne': 'Keep at least one target language', 'tr.noAutoSwap': 'Swap is unavailable in auto-detect mode',
+      'tr.emptyInput': 'Enter text to translate first', 'tr.noModel': 'Pick a model on the chat page first', 'tr.copied': 'Copied',
+      'tr.sampleSaved': 'Voice sample saved — cloning will be used for playback', 'tr.sampleTooBig': 'Audio sample must be ≤ 10MB', 'tr.needSample': 'Upload a voice sample first',
+      'tool.note': 'This tool runs in a separate window; send the result to a chat to keep discussing'
     },
 
     'ru': {
@@ -434,7 +504,21 @@ const I18n = (() => {
       'toast.modelOff': 'Модель снята с продажи, только для просмотра',
       'toast.modelSpecial': 'Это голосовая модель — используйте Ещё → Студия',
       'toast.switched': 'Переключено: ',
-      'help.title': 'Справка'
+      'help.title': 'Справка',
+      'pf.usage': 'Usage', 'pf.tokens': 'Token Usage', 'pf.tokensD': 'Usage stats by provider and model',
+      'tk.title': 'Token Usage', 'tk.total': 'Total', 'tk.input': 'Input tokens', 'tk.output': 'Output tokens',
+      'tk.calls': 'Calls', 'tk.sortTotal': 'By usage', 'tk.sortRecent': 'By recency', 'tk.sortCount': 'By calls',
+      'tk.times': 'calls', 'tk.in': 'In', 'tk.out': 'Out', 'tk.sum': 'Total',
+      'tk.clear': 'Clear stats', 'tk.clearQ': 'All token usage stats will be deleted and cannot be recovered. Continue?', 'tk.cleared': 'Stats cleared',
+      'tk.empty': 'No usage yet — stats are collected automatically as you chat',
+      'tr.title': 'Translate', 'tr.name': 'Translate', 'tr.nameD': 'Multi-language · one-to-many · dedicated space',
+      'tr.swap': 'Swap source and target languages', 'tr.ph': 'Enter text to translate…', 'tr.run': 'Translate', 'tr.running': 'Translating…',
+      'tr.clear': 'Clear', 'tr.copy': 'Copy', 'tr.speak': 'Speak', 'tr.retry': 'Retry', 'tr.noResult': '(empty result)',
+      'tr.voice': 'Speak voice', 'tr.voiceBrowser': 'Browser', 'tr.voiceMimo': 'MiMo voice', 'tr.voiceClone': 'Clone my voice',
+      'tr.uploadSample': 'Upload sample', 'tr.keepOne': 'Keep at least one target language', 'tr.noAutoSwap': 'Swap is unavailable in auto-detect mode',
+      'tr.emptyInput': 'Enter text to translate first', 'tr.noModel': 'Pick a model on the chat page first', 'tr.copied': 'Copied',
+      'tr.sampleSaved': 'Voice sample saved — cloning will be used for playback', 'tr.sampleTooBig': 'Audio sample must be ≤ 10MB', 'tr.needSample': 'Upload a voice sample first',
+      'tool.note': 'This tool runs in a separate window; send the result to a chat to keep discussing'
     },
 
     'ar': {
@@ -504,7 +588,21 @@ const I18n = (() => {
       'toast.modelOff': 'هذا النموذج متوقف، للعرض فقط',
       'toast.modelSpecial': 'هذا نموذج صوتي مخصص — استخدم المزيد ← الاستوديو',
       'toast.switched': 'تم التبديل: ',
-      'help.title': 'مركز المساعدة'
+      'help.title': 'مركز المساعدة',
+      'pf.usage': 'Usage', 'pf.tokens': 'Token Usage', 'pf.tokensD': 'Usage stats by provider and model',
+      'tk.title': 'Token Usage', 'tk.total': 'Total', 'tk.input': 'Input tokens', 'tk.output': 'Output tokens',
+      'tk.calls': 'Calls', 'tk.sortTotal': 'By usage', 'tk.sortRecent': 'By recency', 'tk.sortCount': 'By calls',
+      'tk.times': 'calls', 'tk.in': 'In', 'tk.out': 'Out', 'tk.sum': 'Total',
+      'tk.clear': 'Clear stats', 'tk.clearQ': 'All token usage stats will be deleted and cannot be recovered. Continue?', 'tk.cleared': 'Stats cleared',
+      'tk.empty': 'No usage yet — stats are collected automatically as you chat',
+      'tr.title': 'Translate', 'tr.name': 'Translate', 'tr.nameD': 'Multi-language · one-to-many · dedicated space',
+      'tr.swap': 'Swap source and target languages', 'tr.ph': 'Enter text to translate…', 'tr.run': 'Translate', 'tr.running': 'Translating…',
+      'tr.clear': 'Clear', 'tr.copy': 'Copy', 'tr.speak': 'Speak', 'tr.retry': 'Retry', 'tr.noResult': '(empty result)',
+      'tr.voice': 'Speak voice', 'tr.voiceBrowser': 'Browser', 'tr.voiceMimo': 'MiMo voice', 'tr.voiceClone': 'Clone my voice',
+      'tr.uploadSample': 'Upload sample', 'tr.keepOne': 'Keep at least one target language', 'tr.noAutoSwap': 'Swap is unavailable in auto-detect mode',
+      'tr.emptyInput': 'Enter text to translate first', 'tr.noModel': 'Pick a model on the chat page first', 'tr.copied': 'Copied',
+      'tr.sampleSaved': 'Voice sample saved — cloning will be used for playback', 'tr.sampleTooBig': 'Audio sample must be ≤ 10MB', 'tr.needSample': 'Upload a voice sample first',
+      'tool.note': 'This tool runs in a separate window; send the result to a chat to keep discussing'
     }
   };
 

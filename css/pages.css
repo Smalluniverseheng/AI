@@ -535,3 +535,134 @@ button.badge.key-link:hover { background: var(--accent-soft); color: var(--accen
 
 /* 修复：hidden 属性被 .model-grid 的 display:grid 覆盖，导致「已下架/无法使用」折叠失效 */
 .model-grid[hidden] { display: none !important; }
+
+/* ==================== v5.6 Token 用量统计 ==================== */
+.tk-total { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+.tk-cell {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 13px 10px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.tk-cell b { display: block; font-size: 19px; font-weight: 800; color: var(--accent); }
+.tk-cell span { font-size: 11px; color: var(--text-3); }
+.tk-sort { margin-bottom: 14px; flex-wrap: wrap; }
+.tk-group {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.tk-provider {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+.tk-provider .brand-icon { width: 26px; height: 26px; border-radius: 8px; }
+.tk-pname { font-size: 14px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tk-ptotal { font-size: 15px; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+.tk-pcount { font-size: 11px; color: var(--text-3); flex-shrink: 0; }
+.tk-model { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.tk-model:last-child { border-bottom: none; }
+.tk-mname { font-size: 13px; font-weight: 600; flex: 1; min-width: 120px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tk-mnums { font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.tk-mmeta { font-size: 11px; color: var(--text-3); flex-shrink: 0; margin-left: auto; }
+.tk-clear { margin-top: 4px; display: flex; } /* .btn 是 inline-flex，转块级后 margin:auto 才能居中 */
+@media (max-width: 640px) {
+  .tk-total { grid-template-columns: repeat(2, 1fr); }
+  .tk-mnums { width: 100%; order: 3; }
+}
+
+/* ==================== v5.6 万能翻译（独立翻译空间） ==================== */
+.tr-langbar { display: flex; gap: 8px; margin-bottom: 10px; }
+.tr-src { flex: 1; min-width: 0; }
+.tr-swap {
+  width: 42px; flex-shrink: 0;
+  border-radius: 11px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2);
+  transition: all var(--dur);
+}
+.tr-swap:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-softer); }
+.tr-swap:disabled { opacity: .4; pointer-events: none; }
+.tr-swap .icon { width: 16px; height: 16px; }
+.tr-targets { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px; }
+.tr-chip {
+  padding: 6px 14px;
+  border-radius: 99px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-2);
+  transition: all var(--dur);
+}
+.tr-chip:hover { border-color: var(--accent); color: var(--accent); }
+.tr-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tr-input-box {
+  background: var(--bg-elev);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: border-color var(--dur);
+}
+.tr-input-box:focus-within { border-color: var(--accent); }
+.tr-input-box textarea {
+  width: 100%;
+  border: none;
+  background: none;
+  outline: none;
+  resize: vertical;
+  min-height: 120px;
+  padding: 14px 15px 6px;
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+.tr-input-foot { display: flex; align-items: center; justify-content: space-between; padding: 6px 14px 10px; font-size: 11.5px; color: var(--text-3); }
+.tr-input-foot #trClear { cursor: pointer; }
+.tr-input-foot #trClear:hover { color: var(--danger); }
+.tr-body > #trRun { display: flex; } /* 同 .tk-clear，保证水平居中 */
+.tr-voice-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+.tr-voice-label { font-size: 12.5px; font-weight: 600; color: var(--text-2); flex-shrink: 0; }
+.tr-voice-sel { flex: 1; min-width: 130px; max-width: 230px; }
+.tr-card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 12px;
+  overflow: hidden;
+  animation: fadeUp .25s var(--ease);
+}
+.tr-card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+.tr-card-lang { font-size: 13px; font-weight: 700; }
+.tr-card-act { display: flex; gap: 4px; }
+.tr-act {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-3);
+  transition: all var(--dur);
+}
+.tr-act:hover { background: var(--bg-hover); color: var(--text); }
+.tr-act.speaking { color: var(--accent); background: var(--accent-soft); }
+.tr-act .icon { width: 14px; height: 14px; }
+.tr-card-body { padding: 13px 15px; font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
+.tr-card-body .tr-retry { margin-top: 9px; }
+
+/* 效率工具弹窗标题下说明小字 */
+.tool-modal-note { font-size: 12px; color: var(--text-3); margin: -2px 0 10px; line-height: 1.6; }

@@ -349,10 +349,8 @@ const Pages = (() => {
       : I18n.t('more.websearchD');
   }
 
-  /* ==================== 效率工具（翻译/润色/摘要/代码解释，可开关） ==================== */
+  /* ==================== 效率工具（润色/摘要/代码解释，可开关；翻译已迁入独立空间） ==================== */
   const TOOLS = {
-    translate: { name: '万能翻译', icon: 'translate', btn: '开始翻译', ph: '输入要翻译的文字（自动识别中英方向）…',
-      sys: '你是一位专业翻译。规则：1）自动识别语言方向（中↔英为主，其他语言亦可）；2）译文准确地道；3）对关键用词给出 2-3 个备选并简述差异；4）直接给译文与备选，无需寒暄。' },
     polish: { name: '文本润色', icon: 'wand', btn: '开始润色', ph: '粘贴需要润色的文字…',
       sys: '你是一位文字润色专家。1）在保留原意与个人风格的前提下修改病句、优化表达；2）先给出润色后的全文；3）再用列表说明每处重要修改的理由。不要过度改写。' },
     summary: { name: '文章摘要', icon: 'fileText', btn: '生成摘要', ph: '粘贴长文（文章/报告/论文…）…',
@@ -409,8 +407,10 @@ const Pages = (() => {
   }
 
   function bindToolEvents() {
-    const map = { toolTranslate: 'translate', toolPolish: 'polish', toolSummary: 'summary', toolCodeExplain: 'codeExplain' };
-    const tgMap = { translate: 'tgTranslate', polish: 'tgPolish', summary: 'tgSummary', codeExplain: 'tgCodeExplain' };
+    // 万能翻译：点击进入独立翻译空间（无开关）
+    $('#toolTranslate').addEventListener('click', () => openSub('subTranslate'));
+    const map = { toolPolish: 'polish', toolSummary: 'summary', toolCodeExplain: 'codeExplain' };
+    const tgMap = { polish: 'tgPolish', summary: 'tgSummary', codeExplain: 'tgCodeExplain' };
     Object.keys(map).forEach(rowId => {
       const row = $('#' + rowId);
       const tid = map[rowId];
@@ -445,6 +445,308 @@ const Pages = (() => {
       $('#chatInput').value = '【' + t.name + '】\n' + text;
       autoResize($('#chatInput'));
       setTimeout(() => $('#chatInput').focus(), 250);
+    });
+  }
+
+  /* ==================== Token 用量统计（数据来自 js/token.js 的 TokenStats） ==================== */
+  function renderTokens() {
+    const box = $('#tokenBody');
+    if (!box) return;
+    if (typeof TokenStats === 'undefined') {
+      box.innerHTML = '<div class="empty-state">' + icon('zap', 44) + '<div class="empty-title">' + I18n.t('tk.empty') + '</div></div>';
+      return;
+    }
+    const grand = TokenStats.grand();
+    const sort = Store.state.tokenSort || 'total';
+    const cell = (v, k) => '<div class="tk-cell"><b>' + esc(v) + '</b><span>' + I18n.t(k) + '</span></div>';
+    let html =
+      '<div class="tk-total">' +
+      cell(TokenStats.fmt(grand.total), 'tk.total') +
+      cell(TokenStats.fmt(grand.prompt), 'tk.input') +
+      cell(TokenStats.fmt(grand.completion), 'tk.output') +
+      cell(TokenStats.fmt(grand.count), 'tk.calls') +
+      '</div>' +
+      '<div class="seg-btns tk-sort">' +
+      '<button class="seg-btn' + (sort === 'total' ? ' active' : '') + '" data-tksort="total">' + I18n.t('tk.sortTotal') + '</button>' +
+      '<button class="seg-btn' + (sort === 'recent' ? ' active' : '') + '" data-tksort="recent">' + I18n.t('tk.sortRecent') + '</button>' +
+      '<button class="seg-btn' + (sort === 'count' ? ' active' : '') + '" data-tksort="count">' + I18n.t('tk.sortCount') + '</button>' +
+      '</div>';
+    const groups = TokenStats.byProvider();
+    if (!groups.length || !grand.count) {
+      html += '<div class="empty-state">' + icon('zap', 44) + '<div class="empty-title">' + I18n.t('tk.empty') + '</div></div>';
+    } else {
+      // 排序作用于厂商组与组内模型（字段同名，共用比较器）
+      const sorters = {
+        total: (a, b) => b.total - a.total,
+        recent: (a, b) => (b.lastTs || 0) - (a.lastTs || 0),
+        count: (a, b) => b.count - a.count
+      };
+      const by = sorters[sort] || sorters.total;
+      html += groups.slice().sort(by).map(g =>
+        '<div class="tk-group">' +
+        '<div class="tk-provider">' + providerIconHtml(g.provider, 26) +
+        '<span class="tk-pname">' + esc(g.provider) + '</span>' +
+        '<span class="tk-ptotal">' + esc(TokenStats.fmt(g.total)) + '</span>' +
+        '<span class="tk-pcount">' + g.count + ' ' + I18n.t('tk.times') + '</span></div>' +
+        (g.models || []).slice().sort(by).map(m =>
+          '<div class="tk-model">' +
+          '<span class="tk-mname" title="' + esc(m.id) + '">' + esc(m.name || m.id) + '</span>' +
+          '<span class="tk-mnums">' + I18n.t('tk.in') + ' ' + esc(TokenStats.fmt(m.prompt)) + ' · ' + I18n.t('tk.out') + ' ' + esc(TokenStats.fmt(m.completion)) + ' · ' + I18n.t('tk.sum') + ' ' + esc(TokenStats.fmt(m.total)) + '</span>' +
+          '<span class="tk-mmeta">' + m.count + ' ' + I18n.t('tk.times') + ' · ' + (m.lastTs ? fmtTime(m.lastTs) : '-') + '</span>' +
+          '</div>').join('') +
+        '</div>').join('');
+      html += '<button class="btn btn-danger btn-block tk-clear" id="tkClear">' + icon('trash', 15) + ' ' + I18n.t('tk.clear') + '</button>';
+    }
+    box.innerHTML = html;
+  }
+
+  function bindTokenEvents() {
+    $('#tokenBody').addEventListener('click', e => {
+      const sortBtn = e.target.closest('[data-tksort]');
+      if (sortBtn) {
+        Store.state.tokenSort = sortBtn.dataset.tksort;
+        Store.save();
+        renderTokens();
+        return;
+      }
+      if (e.target.closest('#tkClear')) {
+        confirmDialog(I18n.t('tk.clear'), I18n.t('tk.clearQ'), true).then(ok => {
+          if (!ok) return;
+          if (typeof TokenStats !== 'undefined') TokenStats.reset();
+          renderTokens();
+          Toast.success(I18n.t('tk.cleared'));
+        });
+      }
+    });
+  }
+
+  /* ==================== 万能翻译（独立翻译空间，支持一对多） ==================== */
+  const TR_LANGS = [
+    { id: 'auto', name: '自动检测', en: 'Auto detect' },
+    { id: 'zh', name: '中文', en: 'Chinese', prompt: '简体中文' },
+    { id: 'en', name: '英语', en: 'English', prompt: '英语' },
+    { id: 'ja', name: '日语', en: 'Japanese', prompt: '日语' },
+    { id: 'ko', name: '韩语', en: 'Korean', prompt: '韩语' },
+    { id: 'fr', name: '法语', en: 'French', prompt: '法语' },
+    { id: 'de', name: '德语', en: 'German', prompt: '德语' },
+    { id: 'es', name: '西语', en: 'Spanish', prompt: '西班牙语' },
+    { id: 'ru', name: '俄语', en: 'Russian', prompt: '俄语' },
+    { id: 'yue', name: '粤语', en: 'Cantonese', prompt: '粤语' }
+  ];
+  const TR_TARGET_IDS = ['en', 'zh', 'ja', 'ko', 'fr', 'de', 'es', 'ru'];
+  let trRunning = false;
+
+  function trLang(id) { return TR_LANGS.find(l => l.id === id); }
+  function trLangName(l) { return I18n.lang().startsWith('zh') ? l.name : l.en; }
+  function trTargets() {
+    const t = Store.state.trTargets;
+    const list = (Array.isArray(t) && t.length ? t : ['en']).filter(id => TR_TARGET_IDS.indexOf(id) >= 0);
+    return list.length ? list : ['en'];
+  }
+
+  function renderTranslate() {
+    const src = Store.state.trSrc || 'auto';
+    $('#trSrc').innerHTML = TR_LANGS.map(l =>
+      '<option value="' + l.id + '"' + (l.id === src ? ' selected' : '') + '>' + esc(trLangName(l)) + '</option>').join('');
+    $('#trSwap').disabled = src === 'auto';
+    $('#trSwap').title = I18n.t('tr.swap');
+    renderTrTargets();
+    const eng = Store.state.trVoiceEngine || 'browser';
+    $('#trVoiceEngine').innerHTML =
+      '<option value="browser"' + (eng === 'browser' ? ' selected' : '') + '>' + I18n.t('tr.voiceBrowser') + '</option>' +
+      '<option value="mimo"' + (eng === 'mimo' ? ' selected' : '') + '>' + I18n.t('tr.voiceMimo') + '</option>' +
+      '<option value="clone"' + (eng === 'clone' ? ' selected' : '') + '>' + I18n.t('tr.voiceClone') + '</option>';
+    $('#trMimoVoice').innerHTML = Voice.MIMO_VOICES.map(v =>
+      '<option value="' + esc(v.id) + '"' + ((Store.state.trMimoVoice || 'mimo_default') === v.id ? ' selected' : '') + '>' + esc(v.name) + '</option>').join('');
+    syncTrVoiceRow();
+    $('#trRun').innerHTML = icon('translate', 15) + ' ' + I18n.t('tr.run');
+    updateTrCount();
+  }
+
+  function renderTrTargets() {
+    const targets = trTargets();
+    $('#trTargets').innerHTML = TR_TARGET_IDS.map(id =>
+      '<button class="tr-chip' + (targets.indexOf(id) >= 0 ? ' active' : '') + '" data-trt="' + id + '">' + esc(trLangName(trLang(id))) + '</button>').join('');
+  }
+
+  function updateTrCount() {
+    $('#trCount').textContent = $('#trInput').value.length + ' ' + I18n.t('input.chars');
+  }
+
+  function syncTrVoiceRow() {
+    const eng = Store.state.trVoiceEngine || 'browser';
+    $('#trMimoVoice').hidden = eng !== 'mimo';
+    const btn = $('#trSampleBtn');
+    btn.hidden = eng !== 'clone';
+    if (eng === 'clone') {
+      const s = Store.state.voiceSettings && Store.state.voiceSettings.cloneSample;
+      btn.innerHTML = icon('mic', 13) + ' ' + esc(s && s.name ? s.name : I18n.t('tr.uploadSample'));
+    }
+  }
+
+  /* 单语言独立调用，错误隔离：失败只影响该卡片并可重试 */
+  async function translateOne(tid, text, src, modelId) {
+    const target = trLang(tid);
+    let card = $('#trResults .tr-card[data-tlang="' + tid + '"]');
+    if (!card) {
+      $('#trResults').insertAdjacentHTML('beforeend',
+        '<div class="tr-card" data-tlang="' + tid + '">' +
+        '<div class="tr-card-head"><span class="tr-card-lang">' + esc(trLangName(target)) + '</span>' +
+        '<span class="tr-card-act">' +
+        '<button class="tr-act" data-act="copy" title="' + I18n.t('tr.copy') + '">' + icon('copy', 13) + '</button>' +
+        '<button class="tr-act" data-act="speak" title="' + I18n.t('tr.speak') + '">' + icon('volume', 13) + '</button>' +
+        '</span></div>' +
+        '<div class="tr-card-body"></div></div>');
+      card = $('#trResults .tr-card[data-tlang="' + tid + '"]');
+    }
+    card.classList.add('loading');
+    card.dataset.text = '';
+    const body = card.querySelector('.tr-card-body');
+    body.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+    const sys = '你是一位专业翻译。' +
+      (src && src.id !== 'auto'
+        ? '请将用户输入的' + src.prompt + '文本翻译成' + target.prompt + '。'
+        : '请先自动判断用户输入文本的语言，再将其翻译成' + target.prompt + '。') +
+      '规则：1）译文准确地道，符合目标语言母语表达习惯；2）只输出译文本身，不要解释、不要注音、不要寒暄；3）保留原文的段落与换行格式。';
+    let full = '';
+    try {
+      const r = await API.chat({
+        modelId,
+        messages: [{ role: 'system', content: sys }, { role: 'user', content: text }],
+        onChunk: (c, f) => { full = f; body.textContent = f; }
+      });
+      full = String(r.content || full || '').trim();
+      card.dataset.text = full;
+      body.textContent = full || I18n.t('tr.noResult');
+    } catch (err) {
+      body.innerHTML = '<div class="msg-error">' + icon('zap', 16) + '<span>' + esc(err.message) + '</span></div>' +
+        '<button class="btn btn-secondary btn-sm tr-retry" data-act="retry">' + icon('refresh', 13) + ' ' + I18n.t('tr.retry') + '</button>';
+    }
+    card.classList.remove('loading');
+  }
+
+  /* 无 Key / 未选模型引导（与效率工具同款 Toast） */
+  function checkTrReady() {
+    const model = getModel(Store.state.currentModelId);
+    if (!model) { Toast.warning(I18n.t('tr.noModel')); return null; }
+    if (!getKeyForModel(model)) { Toast.warning('请先配置 ' + model.provider + ' 的 API Key（我的 → API Key）'); return null; }
+    return model;
+  }
+
+  async function runTranslate() {
+    if (trRunning) return;
+    const text = $('#trInput').value.trim();
+    if (!text) return Toast.warning(I18n.t('tr.emptyInput'));
+    const model = checkTrReady();
+    if (!model) return;
+    const targets = trTargets();
+    const src = trLang(Store.state.trSrc || 'auto');
+    trRunning = true;
+    const btn = $('#trRun');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> ' + I18n.t('tr.running');
+    $('#trResults').innerHTML = '';
+    // 多目标语言并行流式渲染，单语言失败互不影响
+    await Promise.allSettled(targets.map(tid => translateOne(tid, text, src, model.id)));
+    trRunning = false;
+    btn.disabled = false;
+    btn.innerHTML = icon('translate', 15) + ' ' + I18n.t('tr.run');
+  }
+
+  /* 朗读：浏览器本地（跟随全局引擎）/ MiMo 音色 / 克隆我的声音 */
+  function trSpeak(text, key) {
+    if (Voice.isSpeaking(key)) { Voice.stopSpeak(); return; }
+    const eng = Store.state.trVoiceEngine || 'browser';
+    if (eng === 'mimo') { Voice.speakMimo(text, Store.state.trMimoVoice || 'mimo_default', key); return; }
+    if (eng === 'clone') {
+      const s = Store.state.voiceSettings && Store.state.voiceSettings.cloneSample;
+      if (!s || !s.dataUrl) { Toast.warning(I18n.t('tr.needSample')); $('#trSampleFile').click(); return; }
+      Voice.speakClone(text, s.dataUrl, key);
+      return;
+    }
+    Voice.speak(text, key);
+  }
+
+  function bindTranslateEvents() {
+    $('#trSrc').addEventListener('change', e => {
+      Store.state.trSrc = e.target.value;
+      Store.save();
+      $('#trSwap').disabled = e.target.value === 'auto';
+    });
+    $('#trTargets').addEventListener('click', e => {
+      const chip = e.target.closest('[data-trt]');
+      if (!chip) return;
+      let targets = trTargets();
+      const id = chip.dataset.trt;
+      if (targets.indexOf(id) >= 0) {
+        if (targets.length === 1) return Toast.info(I18n.t('tr.keepOne'));
+        targets = targets.filter(t => t !== id);
+      } else targets.push(id);
+      Store.state.trTargets = targets;
+      Store.save();
+      renderTrTargets();
+    });
+    // 交换：源语言与第一个目标语言互换（自动检测时禁用）
+    $('#trSwap').addEventListener('click', () => {
+      const src = Store.state.trSrc || 'auto';
+      if (src === 'auto') return Toast.info(I18n.t('tr.noAutoSwap'));
+      const targets = trTargets();
+      const first = targets[0];
+      if (!first || first === src) return;
+      const rest = targets.slice(1).filter(t => t !== src);
+      rest.unshift(src);
+      Store.state.trSrc = first;
+      Store.state.trTargets = rest;
+      Store.save();
+      renderTranslate();
+    });
+    $('#trInput').addEventListener('input', updateTrCount);
+    $('#trClear').addEventListener('click', () => {
+      $('#trInput').value = '';
+      updateTrCount();
+      $('#trResults').innerHTML = '';
+      $('#trInput').focus();
+    });
+    $('#trRun').addEventListener('click', runTranslate);
+    $('#trVoiceEngine').addEventListener('change', e => {
+      Store.state.trVoiceEngine = e.target.value;
+      Store.save();
+      syncTrVoiceRow();
+      if (e.target.value === 'clone' && !(Store.state.voiceSettings && Store.state.voiceSettings.cloneSample)) $('#trSampleFile').click();
+      if (e.target.value === 'mimo' && !Voice.engineKey('mimo', Voice.TTS_ENGINES)) Toast.warning('小米 MiMo ' + I18n.t('voice.needKey'));
+    });
+    $('#trMimoVoice').addEventListener('change', e => { Store.state.trMimoVoice = e.target.value; Store.save(); });
+    $('#trSampleBtn').addEventListener('click', () => $('#trSampleFile').click());
+    $('#trSampleFile').addEventListener('change', async e => {
+      const file = e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) return Toast.warning(I18n.t('tr.sampleTooBig'));
+      const dataUrl = await readFileAsDataURL(file);
+      Store.state.voiceSettings.cloneSample = { name: file.name, dataUrl };
+      Store.save();
+      syncTrVoiceRow();
+      Toast.success(I18n.t('tr.sampleSaved'));
+    });
+    // 结果卡片：复制 / 朗读 / 重试（事件委托）
+    $('#trResults').addEventListener('click', e => {
+      const btn = e.target.closest('[data-act]');
+      if (!btn) return;
+      const card = btn.closest('[data-tlang]');
+      if (!card) return;
+      const tid = card.dataset.tlang;
+      const text = card.dataset.text || card.querySelector('.tr-card-body').textContent;
+      if (btn.dataset.act === 'copy') {
+        copyText(text).then(() => Toast.success(I18n.t('tr.copied')));
+      } else if (btn.dataset.act === 'speak') {
+        trSpeak(text, 'tr:' + tid);
+      } else if (btn.dataset.act === 'retry') {
+        const input = $('#trInput').value.trim();
+        if (!input) return Toast.warning(I18n.t('tr.emptyInput'));
+        const model = checkTrReady();
+        if (!model) return;
+        translateOne(tid, input, trLang(Store.state.trSrc || 'auto'), model.id);
+      }
     });
   }
 
@@ -572,6 +874,8 @@ const Pages = (() => {
     else if (id === 'subHelp') renderHelp();
     else if (id === 'subAbout') $('#aboutVersionSub').textContent = 'v' + APP_VERSION;
     else if (id === 'subTheme') syncThemeCards();
+    else if (id === 'subTokens') renderTokens();
+    else if (id === 'subTranslate') renderTranslate();
   }
 
   function bindSubpageEvents() {
@@ -1188,11 +1492,15 @@ const Pages = (() => {
     bindPaintEvents();
     bindProfileEvents();
     bindToolEvents();
+    bindTokenEvents();
+    bindTranslateEvents();
     // 语言切换时重渲染动态内容
     document.addEventListener('langchange', () => {
       renderRowDescs();
       if (Store.state.currentPage === 'models') renderModels();
       renderDiscover();
+      if ($('#subTranslate').classList.contains('show')) renderTranslate();
+      if ($('#subTokens').classList.contains('show')) renderTokens();
     });
   }
 

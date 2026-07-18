@@ -834,7 +834,7 @@ const UI = (() => {
       if (act === 'copy') copyText(msg.content || '').then(() => Toast.success('已复制'));
       else if (act === 'del') Chat.delMsg(id);
       else if (act === 'regen') Chat.regenerate(id);
-      else if (act === 'edit') Chat.editUserMsg(id);
+      else if (act === 'edit') { Chat.editUserMsg(id); updateTokenEst(); }
       else if (act === 'speak') {
         if (Voice.isSpeaking(id)) Voice.stopSpeak();
         else Voice.speak(msg.content || '', id);
@@ -850,19 +850,39 @@ const UI = (() => {
       btn.innerHTML = icon(speaking ? 'volumeOff' : 'volume', 14);
       btn.title = speaking ? '停止朗读' : '朗读';
     });
+    // 翻译空间结果卡片朗读按钮同步
+    $$('#trResults [data-act="speak"]').forEach(btn => {
+      const card = btn.closest('[data-tlang]');
+      const speaking = card && Voice.isSpeaking('tr:' + card.dataset.tlang);
+      btn.classList.toggle('speaking', !!speaking);
+      btn.innerHTML = icon(speaking ? 'volumeOff' : 'volume', 13);
+    });
   }
 
   /* ==================== 输入区 ==================== */
+  /* 实时 token 估算（300ms 防抖；TokenStats 未加载时隐藏） */
+  const updateTokenEst = debounce(() => {
+    const el = $('#tokenEst');
+    if (!el) return;
+    if (typeof TokenStats === 'undefined') { el.hidden = true; return; }
+    const v = $('#chatInput').value;
+    if (!v) { el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = '≈ ' + TokenStats.fmt(TokenStats.estimate(v)) + ' tokens';
+  }, 300);
+
   function bindInputEvents() {
     const input = $('#chatInput');
     input.addEventListener('input', () => {
       autoResize(input);
       $('#charCount').textContent = input.value.length + ' 字';
+      updateTokenEst();
     });
     input.addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
         e.preventDefault();
         Chat.send();
+        updateTokenEst();
       }
     });
     input.addEventListener('paste', e => {
@@ -878,7 +898,7 @@ const UI = (() => {
       }
     });
 
-    $('#sendBtn').addEventListener('click', () => Chat.isSending() ? Chat.stop() : Chat.send());
+    $('#sendBtn').addEventListener('click', () => { Chat.isSending() ? Chat.stop() : Chat.send(); updateTokenEst(); });
     $('#attachBtn').addEventListener('click', () => $('#fileInput').click());
     $('#fileInput').addEventListener('change', e => {
       Array.from(e.target.files).forEach(f => Chat.addAttachment(f));
@@ -896,6 +916,7 @@ const UI = (() => {
           if (final) baseText += final;
           autoResize(input);
           $('#charCount').textContent = input.value.length + ' 字';
+          updateTokenEst();
         },
         () => updateMicBtn()
       );
@@ -1042,6 +1063,86 @@ const UI = (() => {
     if (btn) btn.innerHTML = icon(dark ? 'sun' : 'moon', 19);
   }
 
+  /* ==================== 移动端侧滑手势（Kimi 式） ====================
+   * 对话页：左边缘（≤24px）右滑打开历史侧栏；侧栏打开时左滑关闭。
+   * 仅移动端断点（与 layout.css 一致 max-width:860px）且非手表端启用；
+   * 水平位移 >60px 且 >垂直位移*1.5 才触发，纵向滚动不受影响。 */
+  function bindSwipeGesture() {
+    const EDGE = 24, TRIGGER = 60, DECIDE = 8;
+    let tracking = false, decided = false, startX = 0, startY = 0, mode = null; // mode: 'open' | 'close'
+    const sb = () => $('#sidebar');
+    const ov = () => $('#sidebarOverlay');
+    const mobile = () => window.matchMedia('(max-width: 860px)').matches && !(window.DeviceInfo && DeviceInfo.isWatch());
+    const blocked = () => document.querySelector('.subpage.show') || document.querySelector('.modal-overlay.show');
+
+    function cleanup() {
+      tracking = false; decided = false; mode = null;
+      const s = sb(), o = ov();
+      s.classList.remove('swiping');
+      s.style.transform = '';
+      o.style.opacity = '';
+      o.style.animation = '';
+    }
+
+    function endDrag(dx) {
+      const s = sb(), o = ov();
+      if (decided) {
+        if (mode === 'open' && dx > TRIGGER) { s.classList.add('open'); o.classList.add('show'); }
+        else if (mode === 'close' && dx < -TRIGGER) { s.classList.remove('open'); o.classList.remove('show'); }
+        else if (mode === 'open') { o.classList.remove('show'); }
+      } else if (mode === 'open') { o.classList.remove('show'); }
+      cleanup();
+    }
+
+    document.addEventListener('touchstart', e => {
+      if (!mobile() || blocked() || e.touches.length !== 1) return;
+      const open = sb().classList.contains('open');
+      const x = e.touches[0].clientX;
+      if (!open) {
+        if (x > EDGE || Store.state.currentPage !== 'chat') return; // 仅对话页左边缘起步可打开
+        mode = 'open';
+      } else {
+        mode = 'close'; // 侧栏打开时，任意位置左滑可关闭
+      }
+      tracking = true; decided = false;
+      startX = x; startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      if (!tracking) return;
+      if (e.touches.length !== 1) { endDrag(0); return; } // 多指介入：放弃手势并回弹
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+      if (!decided) {
+        if (Math.abs(dx) < DECIDE && Math.abs(dy) < DECIDE) return;
+        decided = true;
+        // 水平意图（水平位移 > 垂直位移*1.5）才接管；否则交还列表纵向滚动
+        if (Math.abs(dx) <= Math.abs(dy) * 1.5) { tracking = false; mode = null; return; }
+        sb().classList.add('swiping'); // 拖拽期间关掉过渡，跟随手指
+        ov().classList.add('show');
+        ov().style.animation = 'none'; // 避免 fadeIn 覆盖拖拽中的内联透明度
+      }
+      e.preventDefault();
+      const w = sb().getBoundingClientRect().width || 288;
+      if (mode === 'open') {
+        const p = Math.min(Math.max(dx / w, 0), 1);
+        sb().style.transform = 'translateX(' + (-104 + p * 104) + '%)';
+        ov().style.opacity = String(p);
+      } else {
+        const p = Math.min(Math.max(-dx / w, 0), 1);
+        sb().style.transform = 'translateX(' + (-p * 104) + '%)';
+        ov().style.opacity = String(1 - p);
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchend', e => {
+      if (!tracking) return;
+      endDrag(e.changedTouches[0].clientX - startX);
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => { if (tracking) endDrag(0); }, { passive: true });
+  }
+
   /* ==================== 初始化绑定 ==================== */
   function init() {
     bindSidebarEvents();
@@ -1051,6 +1152,7 @@ const UI = (() => {
     bindChatEvents();
     bindInputEvents();
     bindScroll();
+    bindSwipeGesture();
 
     // 全局点击关闭下拉
     document.addEventListener('click', e => {

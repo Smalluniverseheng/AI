@@ -36,7 +36,8 @@ const Store = (() => {
     rankChart: 'bar',       // 排行榜图型 bar|radar
     toolsEnabled: { translate: true, polish: true, summary: true, codeExplain: true },  // 其他页效率工具开关
     sidebarCollapsed: false,
-    recentModels: []
+    recentModels: [],
+    tokenStats: { byModel: {}, updatedAt: 0 }   // Token 用量统计（js/token.js 读写，重置不影响其他字段）
   };
 
   let state = JSON.parse(JSON.stringify(DEFAULTS));
@@ -58,6 +59,9 @@ const Store = (() => {
     } catch (e) { /* 数据损坏时使用默认 */ }
     if (!Array.isArray(state.chats)) state.chats = [];
     if (!state.apiKeys) state.apiKeys = {};
+    // 老数据没有 tokenStats 时补默认（Object.assign(DEFAULTS, parsed) 已覆盖，这里再兜底字段残缺）
+    if (!state.tokenStats || typeof state.tokenStats !== 'object') state.tokenStats = { byModel: {}, updatedAt: 0 };
+    if (!state.tokenStats.byModel || typeof state.tokenStats.byModel !== 'object') state.tokenStats.byModel = {};
     return state;
   }
 

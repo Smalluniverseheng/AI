@@ -458,6 +458,8 @@
 }
 .input-footer .left-note { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .input-footer .badge { font-size: 10px; padding: 0 7px; }
+.count-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+#tokenEst { color: var(--accent); font-weight: 600; }
 
 /* 图片预览灯箱 */
 .lightbox {

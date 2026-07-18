@@ -292,6 +292,59 @@ const Voice = (() => {
     return 'data:audio/wav;base64,' + audio.data;
   }
 
+  /* 指定 MiMo 音色朗读（不走全局设置，翻译空间音色行用） */
+  async function speakMimo(text, voiceId, msgId) {
+    stopSpeak();
+    const clean = cleanText(text);
+    if (!clean.trim()) return false;
+    const key = engineKey('mimo', TTS_ENGINES);
+    if (!key) {
+      Toast.warning('请先在「我的 → API Key 管理」配置 小米 MiMo 的 Key');
+      return false;
+    }
+    speakingMsgId = msgId || null;
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
+    try {
+      const url = await mimoTtsUrl(clean, key, { audio: { format: 'wav', voice: voiceId || 'mimo_default' } });
+      playUrl(url, msgId);
+      return true;
+    } catch (e) {
+      speakingMsgId = null;
+      if (typeof UI !== "undefined") UI.updateSpeakButtons();
+      Toast.error('语音合成失败：' + e.message);
+      return false;
+    }
+  }
+
+  /* 克隆声音朗读：assistant 消息放目标文本，audio.voice 传样本 dataURL（同语音工坊克隆模式） */
+  async function speakClone(text, sampleDataUrl, msgId) {
+    stopSpeak();
+    const clean = cleanText(text);
+    if (!clean.trim()) return false;
+    if (!sampleDataUrl) { Toast.warning('请先上传声音样本'); return false; }
+    const key = engineKey('mimo', TTS_ENGINES);
+    if (!key) {
+      Toast.warning('克隆声音使用小米 MiMo 语音模型，请先在「我的 → API Key 管理」配置小米 MiMo Key');
+      return false;
+    }
+    speakingMsgId = msgId || null;
+    if (typeof UI !== "undefined") UI.updateSpeakButtons();
+    try {
+      const url = await mimoTtsUrl(clean, key, {
+        model: 'mimo-v2.5-tts-voiceclone',
+        messages: [{ role: 'assistant', content: clean }],
+        audio: { format: 'wav', voice: sampleDataUrl }
+      });
+      playUrl(url, msgId);
+      return true;
+    } catch (e) {
+      speakingMsgId = null;
+      if (typeof UI !== "undefined") UI.updateSpeakButtons();
+      Toast.error('语音合成失败：' + e.message);
+      return false;
+    }
+  }
+
   /* OpenAI TTS：/v1/audio/speech 返回二进制音频 */
   async function openaiTtsUrl(text, key) {
     const res = await fetch(providerBase('OpenAI') + '/v1/audio/speech', {
@@ -340,7 +393,7 @@ const Voice = (() => {
   return {
     TTS_ENGINES, ASR_ENGINES, MIMO_VOICES, OPENAI_VOICES,
     inputSupported, startInput, stopInput, isRecognizing,
-    ttsSupported, speak, stopSpeak, isSpeaking, getVoices,
+    ttsSupported, speak, speakMimo, speakClone, stopSpeak, isSpeaking, getVoices,
     mimoTtsUrl, engineKey
   };
 })();
