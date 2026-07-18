@@ -2,7 +2,7 @@
 (function () {
   // 加载状态
   Store.load();
-  Auth.ensureDefaultUser();
+  SB.init();   // 云 SDK 懒初始化；加载失败时 Toast 一次并整体降级为纯本地
   UI.applyTheme();
 
   /* ---------- PWA 安装 ---------- */
@@ -80,10 +80,9 @@
     }, 1600);
   }
 
-  /* ---------- 登录/注册 ---------- */
+  /* ---------- 登录/注册（三条路径：管理员别名 / 邮箱注册登录 / 游客本地） ---------- */
   function bindAuthEvents() {
     const switchTab = tab => {
-      if (tab === 'register') { Toast.info('网站后端服务器已关闭，无法在线登录或注册；待后续接入后端后开放'); return; }
       $$('.login-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
       $('#loginFormSection').style.display = tab === 'login' ? 'block' : 'none';
       $('#registerFormSection').style.display = tab === 'register' ? 'block' : 'none';
@@ -91,7 +90,7 @@
     };
     $$('.login-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 
-    // 游客登录：本地浏览使用，无需账号
+    // 游客登录：本地浏览使用，无需账号（不关联云端）
     $('#guestBtn').addEventListener('click', () => {
       Auth.guest();
       UI.showApp();
@@ -112,12 +111,15 @@
       const btn = $('#loginBtn');
       btn.disabled = true;
       btn.textContent = '登录中…';
-      const result = await Auth.login(account, password);
+      // 账号框兼容：管理员别名（1234/admin）与邮箱 → 云端；其余 → 老本地账号
+      const email = SB.mapAccount(account);
+      const result = email ? await Auth.cloudLogin(email, password) : await Auth.login(account, password);
       btn.disabled = false;
       btn.textContent = '登 录';
       if (result.ok) {
         UI.showApp();
-        Toast.success('欢迎回来，' + ((Store.state.userInfo || {}).name || account));
+        const name = (Store.state.userInfo || {}).name || account;
+        Toast.success('欢迎回来，' + name + (email ? (result.isAdmin ? '（管理员 · 云端同步已开启）' : '（云端同步已开启）') : ''));
       } else showError(result.error);
     };
 
@@ -126,25 +128,59 @@
         name: $('#regName').value.trim(),
         account: $('#regAccount').value.trim(),
         password: $('#regPass').value,
-        password2: $('#regPass2').value,
-        remark: $('#regRemark').value.trim()
+        password2: $('#regPass2').value
       };
       const btn = $('#registerBtn');
       btn.disabled = true;
       btn.textContent = '注册中…';
-      const result = await Auth.register(info);
+      const result = await Auth.cloudRegister(info);
       btn.disabled = false;
-      btn.textContent = '注册并登录';
+      btn.textContent = '注 册';
       if (result.ok) {
-        UI.showApp();
-        Toast.success('注册成功，欢迎使用！');
+        // 邮箱验证开启：不自动登录，引导用户去邮箱点链接
+        Toast.success('验证邮件已发送，请到邮箱点击链接后登录');
+        switchTab('login');
+        $('#loginUser').value = info.account;
+        $('#loginPass').value = '';
+        [$('#regName'), $('#regAccount'), $('#regPass'), $('#regPass2')].forEach(el => { el.value = ''; });
       } else showError(result.error);
     };
+
+    // 忘记密码：向账号框中的邮箱发送重置邮件
+    $('#forgotPassLink').addEventListener('click', async () => {
+      const account = $('#loginUser').value.trim();
+      const email = SB.mapAccount(account);
+      if (!email) return showError('请先在账号框输入邮箱');
+      if (!SB.ready()) return showError('云服务不可用，请检查网络');
+      const r = await SB.Auth.resetPassword(email);
+      if (r.error) showError(SB.errMsg(r.error));
+      else Toast.success('重置密码邮件已发送，请查收');
+    });
 
     $('#loginBtn').addEventListener('click', doLogin);
     $('#registerBtn').addEventListener('click', doRegister);
     [$('#loginUser'), $('#loginPass')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); }));
-    [$('#regName'), $('#regAccount'), $('#regPass'), $('#regPass2'), $('#regRemark')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); }));
+    [$('#regName'), $('#regAccount'), $('#regPass'), $('#regPass2')].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); }));
+  }
+
+  /* ---------- 云会话恢复：Supabase session 持久化，启动时后台恢复 + 增量同步 ---------- */
+  async function restoreCloud() {
+    if (!Store.state.cloudUser) return;
+    if (!SB.ready()) return;   // SDK 未加载：保持本地会话，云功能静默降级
+    const u = await SB.Auth.getUser();
+    if (!u) {
+      // 云会话已失效：在线时清掉 cloudUser（离线时保留，等 online 后再验）
+      if (navigator.onLine !== false) Store.patch({ cloudUser: null });
+      return;
+    }
+    // 刷新 profile（角色可能变化），随后后台增量同步（拉取合并 + 幂等推送）
+    const prof = await SB.profile();
+    const cu = Store.state.cloudUser;
+    if (prof) {
+      cu.isAdmin = !!prof.isAdmin;
+      if (prof.displayName) cu.name = prof.displayName;
+    }
+    SB.Sync.syncNow();
   }
 
   /* ---------- 启动 ---------- */
@@ -171,7 +207,10 @@
       $('#sidebarToggle').classList.add('collapsed');
     }
 
-    if (Auth.checkSession()) UI.showApp();
+    if (Auth.checkSession()) { UI.showApp(); restoreCloud(); }
     else UI.showLogin();
+
+    // 断网恢复：补一次同步（SB 内部自行判断登录态/离线，静默跳过）
+    window.addEventListener('online', () => { if (Store.state.cloudUser) SB.Sync.schedulePush(0); });
   });
 })();

@@ -50,6 +50,18 @@ js/
 ## 数据流
 用户输入 → chat.js 组装 messages（注入系统提示/语言提示/角色/联网）→ api.js 按厂商格式 fetch SSE → 回调流式更新 ui.js → 完成时记账 TokenStats、存 Store。全部状态在 `Store.state`（key: `ai_chat_state_v5`），`Store.save()` 400ms 防抖落盘。
 
+## 云端后端（v5.8 起，Supabase）
+- 项目：`mxvxlgjzeboktufumxbp`（ap-south-1，Free Tier：DB 500MB / Storage 1GB / 60 并发）
+- 前端只用 **publishable key**；secret key 永不入库/入前端（用户通过对话临时提供给 AI 做后台配置，用完提醒吊销）
+- 表与权限（RLS 强制，非仅前端约定）：
+  - 管理员专属（`is_admin()` 才可读写的表）：conversations、messages、token_usage、cloud_backups
+  - 全用户本人表：profiles(display_name,is_admin)、user_settings(jsonb)、encrypted_api_keys(AES-GCM，密码派生 PBKDF2 密钥)、custom_roles
+  - 触发器 handle_new_user：注册自动建 profile；is_admin 用户不可自助修改（RLS WITH CHECK 防提权）
+- 管理员账号：email `admin@thirdparty.ai`（默认密码 1234，用户可自行改）；登录页账号 `1234`/`admin` 映射到该邮箱
+- 邮箱验证：对新注册用户保持开启（Supabase 默认）；管理员由 SQL 直接建成已验证
+- js/supabase.js 是唯一云访问层（SB 模块：Auth/Profile/Sync）；未来迁移自托管（黑鲨4 Pro）只改这一个文件
+- 分级同步策略：游客=零云同步；普通用户=轻量（设置/加密Key/昵称/角色）；管理员=轻量+全量（会话/消息/用量/云备份）
+
 ## 设计约定
 - 增量开发：新功能优先加新文件/新 subpage/新 CSS 追加，不重构旧代码。
 - 样式一律用现有 CSS 变量，明暗主题自动适配；新 CSS 追加到对应文件末尾。

@@ -6,7 +6,7 @@
 <!-- Apple Watch：使用真实视口（272-368px），关闭自动缩放适配 -->
 <meta name="disabled-adaptations" content="watch">
 <title>第三方科技 · AI 智能聚合平台</title>
-<script src="js/device.js?v=5.7.0"></script>
+<script src="js/device.js?v=5.8.0"></script>
 <meta name="description" content="第三方科技 AI 智能聚合平台：270+ 模型一站通达，支持单模型/多模型对比/辩论/协同四种模式，语音、文件解析、AI 绘画、联网搜索，可安装为应用。">
 <meta name="theme-color" content="#F5F6F8">
 <!-- PWA -->
@@ -19,13 +19,13 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <!-- KaTeX（数学公式渲染，可选增强） -->
 <link rel="stylesheet" href="https://registry.npmmirror.com/katex/latest/files/dist/katex.min.css">
-<link rel="stylesheet" href="css/base.css?v=5.7.0">
-<link rel="stylesheet" href="css/layout.css?v=5.7.0">
-<link rel="stylesheet" href="css/components.css?v=5.7.0">
-<link rel="stylesheet" href="css/chat.css?v=5.7.0">
-<link rel="stylesheet" href="css/login.css?v=5.7.0">
-<link rel="stylesheet" href="css/pages.css?v=5.7.0">
-<link rel="stylesheet" href="css/watch.css?v=5.7.0">
+<link rel="stylesheet" href="css/base.css?v=5.8.0">
+<link rel="stylesheet" href="css/layout.css?v=5.8.0">
+<link rel="stylesheet" href="css/components.css?v=5.8.0">
+<link rel="stylesheet" href="css/chat.css?v=5.8.0">
+<link rel="stylesheet" href="css/login.css?v=5.8.0">
+<link rel="stylesheet" href="css/pages.css?v=5.8.0">
+<link rel="stylesheet" href="css/watch.css?v=5.8.0">
 </head>
 <body>
 
@@ -45,25 +45,25 @@
     <div class="login-subtitle">AI 智能聚合平台 v<span id="loginVersion">5</span> · 270+ 模型一站通达</div>
     <div class="login-tabs">
       <button class="login-tab active" data-tab="login">登录</button>
-      <button class="login-tab disabled" data-tab="register" title="网站后端服务器已关闭">注册</button>
+      <button class="login-tab" data-tab="register">注册</button>
     </div>
 
     <div id="loginFormSection">
-      <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="请输入账号" autocomplete="username"></div>
+      <div class="login-field"><label>账号</label><input type="text" id="loginUser" placeholder="邮箱 / 管理员账号" autocomplete="username"></div>
       <div class="login-field"><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码" autocomplete="current-password"></div>
       <button class="login-btn" id="loginBtn">登 录</button>
       <button class="login-btn guest" id="guestBtn">游客登录 · 本地浏览使用</button>
-      <div class="login-hint">演示模式：首次登录自动创建账号 <code>1234 / 1234</code></div>
+      <div class="login-hint" data-i18n-text="login.hint">云端登录自动同步数据 · 管理员账号 1234</div>
+      <div class="login-hint login-forgot"><a href="javascript:void 0" id="forgotPassLink" data-i18n-text="login.forgot">忘记密码？</a></div>
     </div>
 
     <div id="registerFormSection" style="display:none">
       <div class="login-field"><label>昵称</label><input type="text" id="regName" placeholder="你的昵称" autocomplete="off"></div>
-      <div class="login-field"><label>账号</label><input type="text" id="regAccount" placeholder="登录账号（手机号/用户名）" autocomplete="username"></div>
-      <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="至少 4 位" autocomplete="new-password"></div>
+      <div class="login-field"><label>邮箱</label><input type="email" id="regAccount" placeholder="name@example.com" autocomplete="username"></div>
+      <div class="login-field"><label>密码</label><input type="password" id="regPass" placeholder="至少 6 位" autocomplete="new-password"></div>
       <div class="login-field"><label>确认密码</label><input type="password" id="regPass2" placeholder="再次输入密码" autocomplete="new-password"></div>
-      <div class="login-field"><label>备注（可选）</label><input type="text" id="regRemark" placeholder="备注信息" autocomplete="off"></div>
-      <button class="login-btn" id="registerBtn" disabled style="opacity:.5;cursor:not-allowed">注册并登录</button>
-      <div class="login-hint" id="regClosedHint" style="color:var(--warning)">网站后端服务器已关闭，无法在线登录或注册；待后续接入后端后开放。</div>
+      <button class="login-btn" id="registerBtn">注 册</button>
+      <div class="login-hint" data-i18n-text="login.regHint">注册后需到邮箱点击验证链接，再回来登录</div>
     </div>
 
     <div class="login-error" id="loginError"></div>
@@ -305,6 +305,7 @@
             <div class="profile-info">
               <h2 id="profileName">用户</h2>
               <p id="profileTag"></p>
+              <div class="profile-cloud" id="profileCloud"></div>
               <div class="profile-stats" id="profileStats"></div>
             </div>
           </div>
@@ -346,6 +347,11 @@
             <div class="settings-row clickable" data-sub="subTokens">
               <span class="row-icon" data-icon="zap"></span>
               <span class="row-label"><span class="row-title" data-i18n-text="pf.tokens">Token 用量统计</span><span class="row-desc" data-i18n-text="pf.tokensD">按厂商与模型分别统计消耗</span></span>
+              <span class="chev" data-icon="chevronRight"></span>
+            </div>
+            <div class="settings-row clickable" data-sub="subSync" id="syncRow">
+              <span class="row-icon" data-icon="refresh"></span>
+              <span class="row-label"><span class="row-title" data-i18n-text="cld.sync">云端同步</span><span class="row-desc" id="syncRowDesc">未登录云端账号</span></span>
               <span class="chev" data-icon="chevronRight"></span>
             </div>
           </div>
@@ -537,6 +543,7 @@
             <span class="row-label"><span class="row-title">恢复备份</span><span class="row-desc" style="display:block">从备份文件恢复全部数据</span></span>
             <span class="chev" data-icon="chevronRight"></span>
           </div>
+          <div id="cloudBackupRows"></div>
           <div class="settings-row clickable" id="clearAllBtn">
             <span class="row-icon danger" data-icon="trash"></span>
             <span class="row-label"><span class="row-title" style="color:var(--danger)">清除所有数据</span><span class="row-desc" style="display:block">删除对话、Key 与账号，恢复初始状态</span></span>
@@ -551,6 +558,12 @@
     <div class="subpage" id="subTokens">
       <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="tk.title">Token 用量统计</h2></div>
       <div class="subpage-body" id="tokenBody"></div>
+    </div>
+
+    <!-- 云端同步 -->
+    <div class="subpage" id="subSync">
+      <div class="subpage-head"><button class="subpage-back" data-back><span data-icon="chevronRight"></span></button><h2 data-i18n-text="cld.sync">云端同步</h2></div>
+      <div class="subpage-body" id="syncBody"></div>
     </div>
 
     <!-- 万能翻译（独立翻译空间） -->
@@ -740,27 +753,30 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- 脚本（顺序有依赖） -->
-<script src="js/icons.js?v=5.7.0"></script>
-<script src="js/models.js?v=5.7.0"></script>
-<script src="js/providers.js?v=5.7.0"></script>
-<script src="js/changelog.js?v=5.7.0"></script>
-<script src="js/modelsync.js?v=5.7.0"></script>
-<script src="js/store.js?v=5.7.0"></script>
-<script src="js/plugins.js?v=5.7.0"></script>
-<script src="js/skills.js?v=5.7.0"></script>
-<script src="js/token.js?v=5.7.0"></script>
-<script src="js/i18n.js?v=5.7.0"></script>
-<script src="js/util.js?v=5.7.0"></script>
-<script src="js/markdown.js?v=5.7.0"></script>
-<script src="js/api.js?v=5.7.0"></script>
-<script src="js/voice.js?v=5.7.0"></script>
-<script src="js/files.js?v=5.7.0"></script>
-<script src="js/presets.js?v=5.7.0"></script>
-<script src="js/auth.js?v=5.7.0"></script>
-<script src="js/chat.js?v=5.7.0"></script>
-<script src="js/ui.js?v=5.7.0"></script>
-<script src="js/pages.js?v=5.7.0"></script>
-<script src="js/app.js?v=5.7.0"></script>
+<script src="js/icons.js?v=5.8.0"></script>
+<script src="js/models.js?v=5.8.0"></script>
+<script src="js/providers.js?v=5.8.0"></script>
+<script src="js/changelog.js?v=5.8.0"></script>
+<script src="js/modelsync.js?v=5.8.0"></script>
+<!-- Supabase SDK（UMD 全局 window.supabase）：主链 jsdelivr，失败回退 unpkg；两者都挂则云功能优雅降级 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" onerror="var _s=document.createElement('script');_s.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js';document.head.appendChild(_s)"></script>
+<script src="js/supabase.js?v=5.8.0"></script>
+<script src="js/store.js?v=5.8.0"></script>
+<script src="js/plugins.js?v=5.8.0"></script>
+<script src="js/skills.js?v=5.8.0"></script>
+<script src="js/token.js?v=5.8.0"></script>
+<script src="js/i18n.js?v=5.8.0"></script>
+<script src="js/util.js?v=5.8.0"></script>
+<script src="js/markdown.js?v=5.8.0"></script>
+<script src="js/api.js?v=5.8.0"></script>
+<script src="js/voice.js?v=5.8.0"></script>
+<script src="js/files.js?v=5.8.0"></script>
+<script src="js/presets.js?v=5.8.0"></script>
+<script src="js/auth.js?v=5.8.0"></script>
+<script src="js/chat.js?v=5.8.0"></script>
+<script src="js/ui.js?v=5.8.0"></script>
+<script src="js/pages.js?v=5.8.0"></script>
+<script src="js/app.js?v=5.8.0"></script>
 <script>
 /* 静态占位图标注入（减少 HTML 重复） */
 document.addEventListener('DOMContentLoaded', () => {

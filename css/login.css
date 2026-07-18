@@ -176,6 +176,59 @@
 .login-btn.guest { background: transparent; border: 1px solid var(--border); color: var(--text-2); margin-top: 10px; box-shadow: none; }
 .login-btn.guest:hover { background: var(--bg-hover); color: var(--text); }
 
+/* ==================== v5.8 云端同步（徽标/同步页/备份列表，含手表端隐藏降级） ==================== */
+/* 忘记密码链接 */
+.login-forgot { margin-top: 8px; }
+.login-forgot a { color: var(--accent-2); text-decoration: none; }
+.login-forgot a:active { opacity: .7; }
+
+/* 我的页头像区：云端身份徽标 / 游客提示 */
+.profile-cloud { margin-top: 5px; }
+.cloud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--accent-softer);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+.cloud-badge .icon { width: 12px; height: 12px; }
+.cloud-badge.admin {
+  background: linear-gradient(135deg, rgba(245, 158, 11, .16), rgba(249, 115, 22, .12));
+  color: var(--warning, #F59E0B);
+  border-color: color-mix(in srgb, #F59E0B 32%, transparent);
+}
+.cloud-badge.guest {
+  background: var(--bg-soft);
+  color: var(--text-3);
+  border-color: var(--border);
+}
+
+/* 同步中 spinner（同步子页「立即同步」行右侧） */
+.sync-spin {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--dur);
+}
+.sync-spin.on { opacity: 1; animation: sbSpin .8s linear infinite; }
+@keyframes sbSpin { to { transform: rotate(360deg); } }
+
+/* 云端备份列表提示文字 */
+.cloud-backup-tip { padding: 10px 16px; font-size: 12.5px; color: var(--text-3); }
+
+/* 手表端：云功能入口隐藏降级（后台同步不受影响，UI 不展示） */
+[data-device="watch"] #syncRow,
+[data-device="watch"] #cloudBackupRows,
+[data-device="watch"] #profileCloud { display: none !important; }
+
 /* ==================== v5.7 开屏页 SPLASH ==================== */
 #splash {
   position: fixed;

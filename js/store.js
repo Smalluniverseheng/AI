@@ -39,7 +39,10 @@ const Store = (() => {
     skills: { enabled: ['polish', 'summary', 'codeExplain'], custom: [] },  // 技能库（js/skills.js；enabled 与 toolsEnabled 双向同步）
     sidebarCollapsed: false,
     recentModels: [],
-    tokenStats: { byModel: {}, updatedAt: 0 }   // Token 用量统计（js/token.js 读写，重置不影响其他字段）
+    tokenStats: { byModel: {}, updatedAt: 0 },  // Token 用量统计（js/token.js 读写，重置不影响其他字段）
+    cloudUser: null,        // 云端账号 {id, email, name, isAdmin}（js/supabase.js；游客/本地账号为 null）
+    cloudMap: {},           // 会话映射 {本地会话id: 云端uuid}（管理员全量同步用）
+    cloudMeta: { lastSync: 0, lastSettingsSync: 0, lastUsagePush: 0, usageTotal: 0 }  // 同步游标
   };
 
   let state = JSON.parse(JSON.stringify(DEFAULTS));
@@ -71,6 +74,10 @@ const Store = (() => {
     if (!state.skills || typeof state.skills !== 'object') state.skills = { enabled: ['polish', 'summary', 'codeExplain'], custom: [] };
     if (!Array.isArray(state.skills.enabled)) state.skills.enabled = ['polish', 'summary', 'codeExplain'];
     if (!Array.isArray(state.skills.custom)) state.skills.custom = [];
+    // 老数据没有云端同步字段时补默认
+    if (!state.cloudMap || typeof state.cloudMap !== 'object') state.cloudMap = {};
+    if (!state.cloudMeta || typeof state.cloudMeta !== 'object') state.cloudMeta = { lastSync: 0, lastSettingsSync: 0, lastUsagePush: 0, usageTotal: 0 };
+    if (state.cloudUser !== null && (typeof state.cloudUser !== 'object' || !state.cloudUser.id)) state.cloudUser = null;
     return state;
   }
 
@@ -92,6 +99,8 @@ const Store = (() => {
       }
     };
     if (immediate) { write(); } else { saveTimer = setTimeout(write, 400); }
+    // 云端账号在线时联动推送（SB 内部防抖 2s；游客/本地账号/离线时静默跳过）
+    if (state.cloudUser && typeof SB !== 'undefined' && SB.Sync) SB.Sync.schedulePush();
   }
 
   function patch(obj) { Object.assign(state, obj); save(); }

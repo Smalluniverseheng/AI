@@ -902,6 +902,7 @@ const Pages = (() => {
     else if (id === 'subAbout') $('#aboutVersionSub').textContent = 'v' + APP_VERSION;
     else if (id === 'subTheme') syncThemeCards();
     else if (id === 'subTokens') renderTokens();
+    else if (id === 'subSync') renderSyncSection();
     else if (id === 'subTranslate') renderTranslate();
   }
 
@@ -976,6 +977,14 @@ const Pages = (() => {
     $('#profileAvatar').style.background = (av && av.type === 'image') ? 'transparent' : UI.AVATAR_GRADS[(av && av.idx) || 0];
     $('#profileName').textContent = u.name || '未登录';
     $('#profileTag').textContent = u.account ? '@' + u.account + (u.remark ? ' · ' + u.remark : '') : '';
+    // 云端身份徽标 / 游客提示
+    const cu = Store.state.cloudUser;
+    const cloudBox = $('#profileCloud');
+    if (cloudBox) {
+      if (cu) cloudBox.innerHTML = '<span class="cloud-badge' + (cu.isAdmin ? ' admin' : '') + '">' + icon(cu.isAdmin ? 'shield' : 'check', 12) + esc(cu.isAdmin ? I18n.t('cld.adminBadge') : I18n.t('cld.userBadge')) + '</span>';
+      else if (u.guest) cloudBox.innerHTML = '<span class="cloud-badge guest">' + icon('info', 12) + esc(I18n.t('cld.guestHint')) + '</span>';
+      else cloudBox.innerHTML = '';
+    }
     $('#profileStats').innerHTML =
       '<span class="profile-stat"><b>' + stats.chats + '</b> 对话</span>' +
       '<span class="profile-stat"><b>' + stats.messages + '</b> 消息</span>' +
@@ -995,6 +1004,14 @@ const Pages = (() => {
     $('#asrRowDesc').textContent = asrE ? (asrE.provider || '浏览器内置') : '浏览器内置';
     $('#themeRowDesc').textContent = I18n.t('theme.' + (Store.state.theme || 'system'));
     $('#langRowDesc').textContent = I18n.current().name;
+    const syncDesc = $('#syncRowDesc');
+    if (syncDesc) {
+      const cu = Store.state.cloudUser;
+      const st = (typeof SB !== 'undefined') ? SB.Sync.status() : null;
+      if (!cu) syncDesc.textContent = I18n.t('cld.notCloud');
+      else syncDesc.textContent = (cu.isAdmin ? I18n.t('cld.roleAdmin') : I18n.t('cld.roleUser')) + ' · ' +
+        (st && st.lastSync ? I18n.t('cld.lastSync') + ' ' + fmtTime(st.lastSync) : I18n.t('cld.never'));
+    }
   }
 
   /* ---- API Key 管理 ---- */
@@ -1462,6 +1479,79 @@ const Pages = (() => {
     });
   }
 
+  /* ---- 云端同步（我的 → 用量 分组；SB 不可用时整体降级） ---- */
+  /* 动态渲染区域的 [data-icon] 占位填充（静态 DOM 由 index.html 统一注入，动态 HTML 需就地填充） */
+  function fillIcons(root) {
+    $$('[data-icon]', root).forEach(el => {
+      if (!el.innerHTML) el.innerHTML = icon(el.dataset.icon, el.classList.contains('chev') ? 15 : 16);
+    });
+  }
+
+  function renderSyncSection() {
+    const box = $('#syncBody');
+    if (!box) return;
+    const cu = Store.state.cloudUser;
+    const sbReady = typeof SB !== 'undefined' && SB.ready();
+    if (!cu) {
+      box.innerHTML = '<div class="settings-card"><div class="settings-row">' +
+        '<span class="row-icon" data-icon="info"></span>' +
+        '<span class="row-label"><span class="row-title">' + esc(I18n.t('cld.notCloud')) + '</span>' +
+        '<span class="row-desc" style="display:block">' + esc(I18n.t('cld.notCloudD')) + '</span></span></div></div>';
+      fillIcons(box);
+      return;
+    }
+    const st = SB.Sync.status();
+    const row = (ic, title, desc) =>
+      '<div class="settings-row"><span class="row-icon" data-icon="' + ic + '"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(title) + '</span>' +
+      (desc ? '<span class="row-desc" style="display:block">' + esc(desc) + '</span>' : '') + '</span></div>';
+    let html = '<div class="settings-card">' +
+      row('shield', cu.email, cu.isAdmin ? I18n.t('cld.roleAdmin') : I18n.t('cld.roleUser')) +
+      row('history', I18n.t('cld.lastSync'), st.lastSync ? fmtTime(st.lastSync) : I18n.t('cld.never')) +
+      (st.keyReady ? '' : row('key', I18n.t('cld.keyPaused'), I18n.t('cld.keyPausedD'))) +
+      (cu.isAdmin ? row('database', I18n.t('cld.heavyNote'), I18n.t('cld.heavyNoteD')) : '') +
+      (st.lastError ? row('zap', I18n.t('cld.syncFail'), st.lastError) : '') +
+      '</div>' +
+      '<div class="settings-card">' +
+      '<div class="settings-row clickable" id="syncNowBtn">' +
+      '<span class="row-icon" data-icon="refresh"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(I18n.t('cld.syncNow')) + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(sbReady ? I18n.t('cld.syncNowD') : I18n.t('cld.cloudOff')) + '</span></span>' +
+      '<span class="sync-spin' + (st.syncing ? ' on' : '') + '" id="syncSpin"></span>' +
+      '</div>' +
+      '<div class="settings-row clickable" id="cloudSignOutBtn">' +
+      '<span class="row-icon danger" data-icon="logout"></span>' +
+      '<span class="row-label"><span class="row-title" style="color:var(--danger)">' + esc(I18n.t('cld.signOut')) + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(I18n.t('cld.signOutD')) + '</span></span>' +
+      '</div></div>';
+    box.innerHTML = html;
+    fillIcons(box);
+  }
+
+  function bindSyncEvents() {
+    $('#syncBody').addEventListener('click', async e => {
+      if (e.target.closest('#syncNowBtn')) {
+        if (typeof SB === 'undefined' || !SB.ready()) return Toast.warning(I18n.t('cld.cloudOff'));
+        const spin = $('#syncSpin');
+        if (spin) spin.classList.add('on');
+        const r = await SB.Sync.syncNow();
+        if (r.ok) Toast.success(I18n.t('cld.syncOk'));
+        else Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+        renderSyncSection();
+        renderRowDescs();
+        return;
+      }
+      if (e.target.closest('#cloudSignOutBtn')) {
+        const ok = await confirmDialog(I18n.t('cld.signOut'), I18n.t('cld.signOutD'));
+        if (!ok) return;
+        await Auth.cloudSignOut();
+        renderProfile();
+        renderSyncSection();
+        Toast.info(I18n.t('cld.signedOut'));
+      }
+    });
+  }
+
   /* ---- 数据管理 ---- */
   function renderDataSection() {
     const s = Store.stats();
@@ -1470,6 +1560,46 @@ const Pages = (() => {
       '<div class="data-stat"><b>' + s.messages + '</b><span>消息数</span></div>' +
       '<div class="data-stat"><b>' + s.keys + '</b><span>API Key</span></div>' +
       '<div class="data-stat"><b>' + fmtBytes(s.bytes) + '</b><span>存储占用</span></div>';
+    renderCloudBackupRows();
+  }
+
+  /* 云端备份入口（仅管理员；RLS 限制 cloud_backups 为管理员可写） */
+  function renderCloudBackupRows() {
+    const box = $('#cloudBackupRows');
+    if (!box) return;
+    const cu = Store.state.cloudUser;
+    if (!cu || !cu.isAdmin) { box.innerHTML = ''; return; }
+    box.innerHTML =
+      '<div class="settings-row clickable" id="cloudBackupBtn">' +
+      '<span class="row-icon" data-icon="upload"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(I18n.t('cld.backupNow')) + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(I18n.t('cld.backupNowD')) + '</span></span>' +
+      '<span class="chev" data-icon="chevronRight"></span></div>' +
+      '<div class="settings-row clickable" id="cloudRestoreBtn">' +
+      '<span class="row-icon" data-icon="download"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(I18n.t('cld.restore')) + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(I18n.t('cld.restoreD')) + '</span></span>' +
+      '<span class="chev" data-icon="chevronRight"></span></div>' +
+      '<div id="cloudBackupList"></div>';
+    fillIcons(box);
+  }
+
+  async function loadCloudBackupList() {
+    const list = $('#cloudBackupList');
+    if (!list) return;
+    list.innerHTML = '<div class="cloud-backup-tip">' + esc(I18n.t('cld.loading')) + '</div>';
+    const r = await SB.Sync.listBackups();
+    if (!r.ok) { list.innerHTML = '<div class="cloud-backup-tip">' + esc(r.error || I18n.t('cld.syncFail')) + '</div>'; return; }
+    if (!r.list.length) { list.innerHTML = '<div class="cloud-backup-tip">' + esc(I18n.t('cld.noBackups')) + '</div>'; return; }
+    list.innerHTML = r.list.map(b => {
+      const d = new Date(b.created_at || '');
+      return '<div class="settings-row clickable cloud-backup-item" data-bid="' + esc(b.id) + '">' +
+      '<span class="row-icon" data-icon="database"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(b.backup_name || '') + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(fmtBytes(b.size_bytes || 0)) + (isNaN(d) ? '' : ' · ' + esc(d.toLocaleString())) + '</span></span>' +
+      '<span class="chev" data-icon="chevronRight"></span></div>';
+    }).join('');
+    fillIcons(list);
   }
 
   function bindDataEvents() {
@@ -1492,6 +1622,30 @@ const Pages = (() => {
       confirmDialog('清除所有数据', '将删除全部对话、Key 配置与账号信息并恢复初始状态，确定继续吗？', true).then(ok => {
         if (ok) { Store.reset(); location.reload(); }
       });
+    });
+    // 云端备份/恢复（行是动态渲染的，用容器委托）
+    $('#cloudBackupRows').addEventListener('click', async e => {
+      if (typeof SB === 'undefined' || !SB.ready()) return Toast.warning(I18n.t('cld.cloudOff'));
+      if (e.target.closest('#cloudBackupBtn')) {
+        Toast.info(I18n.t('cld.backing'));
+        const r = await SB.Sync.backupNow();
+        if (r.ok) { Toast.success(I18n.t('cld.backupOk')); if ($('#cloudBackupList').innerHTML) loadCloudBackupList(); }
+        else Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+        return;
+      }
+      if (e.target.closest('#cloudRestoreBtn')) { loadCloudBackupList(); return; }
+      const item = e.target.closest('.cloud-backup-item');
+      if (item) {
+        const ok = await confirmDialog(I18n.t('cld.restore'), I18n.t('cld.restoreQ'), true);
+        if (!ok) return;
+        const r = await SB.Sync.restoreBackup(item.dataset.bid);
+        if (!r.ok) return Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+        try {
+          Store.importAll(JSON.stringify(r.data));
+          UI.renderSidebar(); UI.renderChat(); renderProfile(); renderDataSection();
+          Toast.success(I18n.t('cld.restoreOk'));
+        } catch (err) { Toast.error('恢复失败：' + err.message); }
+      }
     });
   }
 
@@ -1735,6 +1889,7 @@ const Pages = (() => {
     bindDiscoverEvents();
     bindPaintEvents();
     bindProfileEvents();
+    bindSyncEvents();
     bindToolEvents();
     bindTokenEvents();
     bindTranslateEvents();
@@ -1748,8 +1903,14 @@ const Pages = (() => {
       renderDiscover();
       if ($('#subTranslate').classList.contains('show')) renderTranslate();
       if ($('#subTokens').classList.contains('show')) renderTokens();
+      if ($('#subSync').classList.contains('show')) renderSyncSection();
       if ($('#subPlugins').classList.contains('show')) renderPlugins();
       if ($('#subSkills').classList.contains('show')) renderSkills();
+    });
+    // 云端同步状态变化：刷新同步子页与「我的」页条目描述
+    document.addEventListener('sbsync', () => {
+      renderRowDescs();
+      if ($('#subSync').classList.contains('show')) renderSyncSection();
     });
   }
 
