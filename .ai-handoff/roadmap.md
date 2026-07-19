@@ -33,3 +33,5 @@
 - 后端：长期方向是手机（黑鲨4 Pro + Termux）当服务器（Node.js + PostgreSQL + Redis + Nginx + 内网穿透），届时 localStorage 切 REST API
 - WebGPU 本地模型（WebLLM/Transformers.js）预留接口，低优先级
 - Mermaid 代码块渲染，中优先级
+
+| 5.9 | 07-19 | 编辑资料页（头像/名字/简介/账号安全：改邮箱/绑手机/改密码）；自动同步加固（cost_usd 列补齐、分步容错、失败 30s 重试）；顶栏播报按钮与模式胶囊分离（移动端移至输入区） |

@@ -136,7 +136,22 @@ const I18n = (() => {
       'cld.backupOk': '云端备份完成', 'cld.backing': '备份中…', 'cld.noBackups': '暂无云端备份',
       'cld.adminOnly': '仅管理员可用', 'cld.loading': '加载中…',
       'cld.badCred': '邮箱或密码错误', 'cld.dupEmail': '该邮箱已注册，请直接登录',
-      'cld.notConfirmed': '邮箱未验证，请先到邮箱点击验证链接', 'cld.pwdShort': '密码至少 6 位', 'cld.badEmail': '邮箱格式不正确', 'cld.srvErr': '服务器异常，稍后重试'
+      'cld.notConfirmed': '邮箱未验证，请先到邮箱点击验证链接', 'cld.pwdShort': '密码至少 6 位', 'cld.badEmail': '邮箱格式不正确', 'cld.srvErr': '服务器异常，稍后重试',
+      /* ---- v5.9 编辑资料 / 账号安全 ---- */
+      'pe.title': '编辑资料', 'pe.secA': '编辑资料', 'pe.secB': '账号安全',
+      'pe.avatarTip': '点击头像更换', 'pe.avatarOk': '头像已更新',
+      'pe.name': '名字', 'pe.namePh': '输入你的名字', 'pe.nameEmpty': '名字不能为空',
+      'pe.bio': '简介', 'pe.bioPh': '简单介绍一下自己…', 'pe.saved': '资料已保存',
+      'pe.email': '邮箱', 'pe.emailChange': '更改邮箱', 'pe.emailNew': '新邮箱地址',
+      'pe.emailSent': '验证邮件已发送到新邮箱，确认后生效',
+      'pe.phone': '手机号', 'pe.phoneUnset': '未绑定', 'pe.phoneNew': '新手机号', 'pe.phoneBad': '手机号格式不正确',
+      'pe.phoneNote': '手机号短信验证将在后续版本开放，目前仅作展示。',
+      'pe.password': '修改密码', 'pe.passwordD': '定期更换密码更安全',
+      'pe.oldPass': '当前密码', 'pe.oldPassPh': '请输入当前密码',
+      'pe.newPass': '新密码（至少 6 位）', 'pe.newPassPh': '请输入新密码', 'pe.newPass2': '再次输入新密码',
+      'pe.passOk': '密码已更新，下次登录请用新密码', 'pe.passMismatch': '两次输入的密码不一致',
+      'pe.localOnly': '本地账号无需邮箱 / 手机号', 'pe.localOnlyD': '注册云端账号以启用账号安全',
+      'pe.cancel': '取消', 'pe.confirm': '确认'
     },
 
     'zh-TW': {
@@ -258,7 +273,22 @@ const I18n = (() => {
       'cld.backupOk': '雲端備份完成', 'cld.backing': '備份中…', 'cld.noBackups': '暫無雲端備份',
       'cld.adminOnly': '僅管理員可用', 'cld.loading': '載入中…',
       'cld.badCred': '郵箱或密碼錯誤', 'cld.dupEmail': '該郵箱已註冊，請直接登入',
-      'cld.notConfirmed': '郵箱未驗證，請先到郵箱點擊驗證連結', 'cld.pwdShort': '密碼至少 6 位', 'cld.badEmail': '郵箱格式不正確', 'cld.srvErr': '伺服器異常，稍後重試'
+      'cld.notConfirmed': '郵箱未驗證，請先到郵箱點擊驗證連結', 'cld.pwdShort': '密碼至少 6 位', 'cld.badEmail': '郵箱格式不正確', 'cld.srvErr': '伺服器異常，稍後重試',
+      /* ---- v5.9 編輯資料 / 帳號安全 ---- */
+      'pe.title': '編輯資料', 'pe.secA': '編輯資料', 'pe.secB': '帳號安全',
+      'pe.avatarTip': '點擊頭像更換', 'pe.avatarOk': '頭像已更新',
+      'pe.name': '名字', 'pe.namePh': '輸入你的名字', 'pe.nameEmpty': '名字不能為空',
+      'pe.bio': '簡介', 'pe.bioPh': '簡單介紹一下自己…', 'pe.saved': '資料已儲存',
+      'pe.email': '郵箱', 'pe.emailChange': '更改郵箱', 'pe.emailNew': '新郵箱地址',
+      'pe.emailSent': '驗證郵件已發送到新郵箱，確認後生效',
+      'pe.phone': '手機號', 'pe.phoneUnset': '未綁定', 'pe.phoneNew': '新手機號', 'pe.phoneBad': '手機號格式不正確',
+      'pe.phoneNote': '手機號簡訊驗證將在後續版本開放，目前僅作展示。',
+      'pe.password': '修改密碼', 'pe.passwordD': '定期更換密碼更安全',
+      'pe.oldPass': '目前密碼', 'pe.oldPassPh': '請輸入目前密碼',
+      'pe.newPass': '新密碼（至少 6 位）', 'pe.newPassPh': '請輸入新密碼', 'pe.newPass2': '再次輸入新密碼',
+      'pe.passOk': '密碼已更新，下次登入請用新密碼', 'pe.passMismatch': '兩次輸入的密碼不一致',
+      'pe.localOnly': '本地帳號無需郵箱 / 手機號', 'pe.localOnlyD': '註冊雲端帳號以啟用帳號安全',
+      'pe.cancel': '取消', 'pe.confirm': '確認'
     },
 
     'en': {
@@ -380,7 +410,22 @@ const I18n = (() => {
       'cld.backupOk': 'Cloud backup complete', 'cld.backing': 'Backing up…', 'cld.noBackups': 'No cloud backups yet',
       'cld.adminOnly': 'Admin only', 'cld.loading': 'Loading…',
       'cld.badCred': 'Wrong email or password', 'cld.dupEmail': 'Email already registered — please sign in',
-      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later'
+      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later',
+      /* ---- v5.9 profile edit / account security (fr/es/ru/ar reuse English per convention) ---- */
+      'pe.title': 'Edit Profile', 'pe.secA': 'Profile', 'pe.secB': 'Account & Security',
+      'pe.avatarTip': 'Tap avatar to change', 'pe.avatarOk': 'Avatar updated',
+      'pe.name': 'Name', 'pe.namePh': 'Enter your name', 'pe.nameEmpty': 'Name cannot be empty',
+      'pe.bio': 'Bio', 'pe.bioPh': 'Introduce yourself…', 'pe.saved': 'Profile saved',
+      'pe.email': 'Email', 'pe.emailChange': 'Change email', 'pe.emailNew': 'New email address',
+      'pe.emailSent': 'Verification email sent to the new address — takes effect after confirmation',
+      'pe.phone': 'Phone', 'pe.phoneUnset': 'Not linked', 'pe.phoneNew': 'New phone number', 'pe.phoneBad': 'Invalid phone number',
+      'pe.phoneNote': 'SMS verification for phone numbers is coming in a future version; display only for now.',
+      'pe.password': 'Change password', 'pe.passwordD': 'Changing your password regularly is safer',
+      'pe.oldPass': 'Current password', 'pe.oldPassPh': 'Enter current password',
+      'pe.newPass': 'New password (min 6 chars)', 'pe.newPassPh': 'Enter new password', 'pe.newPass2': 'Re-enter new password',
+      'pe.passOk': 'Password updated — use it the next time you sign in', 'pe.passMismatch': 'Passwords do not match',
+      'pe.localOnly': 'Local accounts need no email / phone', 'pe.localOnlyD': 'Register a cloud account to enable account security',
+      'pe.cancel': 'Cancel', 'pe.confirm': 'OK'
     },
 
     'fr': {
@@ -502,7 +547,22 @@ const I18n = (() => {
       'cld.backupOk': 'Cloud backup complete', 'cld.backing': 'Backing up…', 'cld.noBackups': 'No cloud backups yet',
       'cld.adminOnly': 'Admin only', 'cld.loading': 'Loading…',
       'cld.badCred': 'Wrong email or password', 'cld.dupEmail': 'Email already registered — please sign in',
-      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later'
+      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later',
+      /* ---- v5.9 profile edit / account security (fr/es/ru/ar reuse English per convention) ---- */
+      'pe.title': 'Edit Profile', 'pe.secA': 'Profile', 'pe.secB': 'Account & Security',
+      'pe.avatarTip': 'Tap avatar to change', 'pe.avatarOk': 'Avatar updated',
+      'pe.name': 'Name', 'pe.namePh': 'Enter your name', 'pe.nameEmpty': 'Name cannot be empty',
+      'pe.bio': 'Bio', 'pe.bioPh': 'Introduce yourself…', 'pe.saved': 'Profile saved',
+      'pe.email': 'Email', 'pe.emailChange': 'Change email', 'pe.emailNew': 'New email address',
+      'pe.emailSent': 'Verification email sent to the new address — takes effect after confirmation',
+      'pe.phone': 'Phone', 'pe.phoneUnset': 'Not linked', 'pe.phoneNew': 'New phone number', 'pe.phoneBad': 'Invalid phone number',
+      'pe.phoneNote': 'SMS verification for phone numbers is coming in a future version; display only for now.',
+      'pe.password': 'Change password', 'pe.passwordD': 'Changing your password regularly is safer',
+      'pe.oldPass': 'Current password', 'pe.oldPassPh': 'Enter current password',
+      'pe.newPass': 'New password (min 6 chars)', 'pe.newPassPh': 'Enter new password', 'pe.newPass2': 'Re-enter new password',
+      'pe.passOk': 'Password updated — use it the next time you sign in', 'pe.passMismatch': 'Passwords do not match',
+      'pe.localOnly': 'Local accounts need no email / phone', 'pe.localOnlyD': 'Register a cloud account to enable account security',
+      'pe.cancel': 'Cancel', 'pe.confirm': 'OK'
     },
 
     'es': {
@@ -624,7 +684,22 @@ const I18n = (() => {
       'cld.backupOk': 'Cloud backup complete', 'cld.backing': 'Backing up…', 'cld.noBackups': 'No cloud backups yet',
       'cld.adminOnly': 'Admin only', 'cld.loading': 'Loading…',
       'cld.badCred': 'Wrong email or password', 'cld.dupEmail': 'Email already registered — please sign in',
-      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later'
+      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later',
+      /* ---- v5.9 profile edit / account security (fr/es/ru/ar reuse English per convention) ---- */
+      'pe.title': 'Edit Profile', 'pe.secA': 'Profile', 'pe.secB': 'Account & Security',
+      'pe.avatarTip': 'Tap avatar to change', 'pe.avatarOk': 'Avatar updated',
+      'pe.name': 'Name', 'pe.namePh': 'Enter your name', 'pe.nameEmpty': 'Name cannot be empty',
+      'pe.bio': 'Bio', 'pe.bioPh': 'Introduce yourself…', 'pe.saved': 'Profile saved',
+      'pe.email': 'Email', 'pe.emailChange': 'Change email', 'pe.emailNew': 'New email address',
+      'pe.emailSent': 'Verification email sent to the new address — takes effect after confirmation',
+      'pe.phone': 'Phone', 'pe.phoneUnset': 'Not linked', 'pe.phoneNew': 'New phone number', 'pe.phoneBad': 'Invalid phone number',
+      'pe.phoneNote': 'SMS verification for phone numbers is coming in a future version; display only for now.',
+      'pe.password': 'Change password', 'pe.passwordD': 'Changing your password regularly is safer',
+      'pe.oldPass': 'Current password', 'pe.oldPassPh': 'Enter current password',
+      'pe.newPass': 'New password (min 6 chars)', 'pe.newPassPh': 'Enter new password', 'pe.newPass2': 'Re-enter new password',
+      'pe.passOk': 'Password updated — use it the next time you sign in', 'pe.passMismatch': 'Passwords do not match',
+      'pe.localOnly': 'Local accounts need no email / phone', 'pe.localOnlyD': 'Register a cloud account to enable account security',
+      'pe.cancel': 'Cancel', 'pe.confirm': 'OK'
     },
 
     'ru': {
@@ -746,7 +821,22 @@ const I18n = (() => {
       'cld.backupOk': 'Cloud backup complete', 'cld.backing': 'Backing up…', 'cld.noBackups': 'No cloud backups yet',
       'cld.adminOnly': 'Admin only', 'cld.loading': 'Loading…',
       'cld.badCred': 'Wrong email or password', 'cld.dupEmail': 'Email already registered — please sign in',
-      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later'
+      'cld.notConfirmed': 'Email not verified — tap the link in the verification email first', 'cld.pwdShort': 'Password must be at least 6 characters', 'cld.badEmail': 'Invalid email address', 'cld.srvErr': 'Server error, try again later',
+      /* ---- v5.9 profile edit / account security (fr/es/ru/ar reuse English per convention) ---- */
+      'pe.title': 'Edit Profile', 'pe.secA': 'Profile', 'pe.secB': 'Account & Security',
+      'pe.avatarTip': 'Tap avatar to change', 'pe.avatarOk': 'Avatar updated',
+      'pe.name': 'Name', 'pe.namePh': 'Enter your name', 'pe.nameEmpty': 'Name cannot be empty',
+      'pe.bio': 'Bio', 'pe.bioPh': 'Introduce yourself…', 'pe.saved': 'Profile saved',
+      'pe.email': 'Email', 'pe.emailChange': 'Change email', 'pe.emailNew': 'New email address',
+      'pe.emailSent': 'Verification email sent to the new address — takes effect after confirmation',
+      'pe.phone': 'Phone', 'pe.phoneUnset': 'Not linked', 'pe.phoneNew': 'New phone number', 'pe.phoneBad': 'Invalid phone number',
+      'pe.phoneNote': 'SMS verification for phone numbers is coming in a future version; display only for now.',
+      'pe.password': 'Change password', 'pe.passwordD': 'Changing your password regularly is safer',
+      'pe.oldPass': 'Current password', 'pe.oldPassPh': 'Enter current password',
+      'pe.newPass': 'New password (min 6 chars)', 'pe.newPassPh': 'Enter new password', 'pe.newPass2': 'Re-enter new password',
+      'pe.passOk': 'Password updated — use it the next time you sign in', 'pe.passMismatch': 'Passwords do not match',
+      'pe.localOnly': 'Local accounts need no email / phone', 'pe.localOnlyD': 'Register a cloud account to enable account security',
+      'pe.cancel': 'Cancel', 'pe.confirm': 'OK'
     },
 
     'ar': {
@@ -849,7 +939,22 @@ const I18n = (() => {
       'skl.desc': 'Description', 'skl.descPh': 'What does this skill do',
       'skl.prompt': 'Prompt template', 'skl.promptPh': 'Describe the role, rules and output format…',
       'skl.save': 'Save skill', 'skl.needName': 'Enter a skill name first', 'skl.needPrompt': 'Prompt template too short (at least 10 chars)',
-      'skl.createdToast': 'created and added to the More page'
+      'skl.createdToast': 'created and added to the More page',
+      /* ---- v5.9 profile edit / account security (fr/es/ru/ar reuse English per convention) ---- */
+      'pe.title': 'Edit Profile', 'pe.secA': 'Profile', 'pe.secB': 'Account & Security',
+      'pe.avatarTip': 'Tap avatar to change', 'pe.avatarOk': 'Avatar updated',
+      'pe.name': 'Name', 'pe.namePh': 'Enter your name', 'pe.nameEmpty': 'Name cannot be empty',
+      'pe.bio': 'Bio', 'pe.bioPh': 'Introduce yourself…', 'pe.saved': 'Profile saved',
+      'pe.email': 'Email', 'pe.emailChange': 'Change email', 'pe.emailNew': 'New email address',
+      'pe.emailSent': 'Verification email sent to the new address — takes effect after confirmation',
+      'pe.phone': 'Phone', 'pe.phoneUnset': 'Not linked', 'pe.phoneNew': 'New phone number', 'pe.phoneBad': 'Invalid phone number',
+      'pe.phoneNote': 'SMS verification for phone numbers is coming in a future version; display only for now.',
+      'pe.password': 'Change password', 'pe.passwordD': 'Changing your password regularly is safer',
+      'pe.oldPass': 'Current password', 'pe.oldPassPh': 'Enter current password',
+      'pe.newPass': 'New password (min 6 chars)', 'pe.newPassPh': 'Enter new password', 'pe.newPass2': 'Re-enter new password',
+      'pe.passOk': 'Password updated — use it the next time you sign in', 'pe.passMismatch': 'Passwords do not match',
+      'pe.localOnly': 'Local accounts need no email / phone', 'pe.localOnlyD': 'Register a cloud account to enable account security',
+      'pe.cancel': 'Cancel', 'pe.confirm': 'OK'
     }
   };
 

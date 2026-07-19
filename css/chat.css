@@ -863,6 +863,13 @@
 /* ==================== v5.6 粘贴附件 chip 大小 / 顶栏按钮 ==================== */
 .attach-item-size { color: var(--text-3); font-size: 11px; font-weight: 400; flex-shrink: 0; }
 
-/* 手表端不显示顶栏「自动播报 / 新对话」按钮 */
+/* 手表端不显示「自动播报 / 新对话」按钮（顶栏与输入区两个实例都隐藏） */
 html[data-device="watch"] #autoSpeakBtn,
+html[data-device="watch"] #autoSpeakInputBtn,
 html[data-device="watch"] #newChatTopBtn { display: none !important; }
+
+/* 自动播报输入区实例：仅移动端（≤860px）显示，桌面端由顶栏独立圆形按钮承担 */
+#autoSpeakInputBtn { display: none; }
+@media (max-width: 860px) {
+  #autoSpeakInputBtn { display: flex; }
+}

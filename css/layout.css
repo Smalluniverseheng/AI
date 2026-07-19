@@ -346,6 +346,8 @@
   .page-container { padding-bottom: 0; }
   .topbar { padding: 0 10px; }
   .topbar-btn.desktop-only { display: none; }
+  /* 移动端：自动播报移入输入栏工具区，顶栏只留 模型选择 + 模式选择 + 新对话 */
+  #autoSpeakBtn { display: none; }
 }
 
 /* ==================== 电脑端宽屏增强（横向界面） ==================== */

@@ -903,6 +903,7 @@ const Pages = (() => {
     else if (id === 'subTheme') syncThemeCards();
     else if (id === 'subTokens') renderTokens();
     else if (id === 'subSync') renderSyncSection();
+    else if (id === 'subProfileEdit') renderProfileEdit();
     else if (id === 'subTranslate') renderTranslate();
   }
 
@@ -968,17 +969,24 @@ const Pages = (() => {
     const u = Store.state.userInfo || {};
     const stats = Store.stats();
 
-    // 顶部卡片
-    const av = Store.state.avatar;
+    // 顶部卡片（头像来源统一走 UI.avatarView：云端 → userInfo → state.avatar）
+    const av = UI.avatarView();
     let avatarInner;
-    if (av && av.type === 'image' && av.data) avatarInner = '<img src="' + av.data + '">';
+    if (av.img) avatarInner = '<img src="' + av.img + '">';
     else avatarInner = esc((u.name || 'U').charAt(0).toUpperCase());
     $('#profileAvatar').innerHTML = avatarInner;
-    $('#profileAvatar').style.background = (av && av.type === 'image') ? 'transparent' : UI.AVATAR_GRADS[(av && av.idx) || 0];
+    $('#profileAvatar').style.background = av.img ? 'transparent' : av.grad;
     $('#profileName').textContent = u.name || '未登录';
     $('#profileTag').textContent = u.account ? '@' + u.account + (u.remark ? ' · ' + u.remark : '') : '';
-    // 云端身份徽标 / 游客提示
+    // 简介一行（云端取 cloudUser.bio，本地取 userInfo.bio）
     const cu = Store.state.cloudUser;
+    const bio = (cu ? cu.bio : u.bio) || '';
+    const bioEl = $('#profileBio');
+    if (bioEl) {
+      bioEl.textContent = bio;
+      bioEl.style.display = bio ? '' : 'none';
+    }
+    // 云端身份徽标 / 游客提示
     const cloudBox = $('#profileCloud');
     if (cloudBox) {
       if (cu) cloudBox.innerHTML = '<span class="cloud-badge' + (cu.isAdmin ? ' admin' : '') + '">' + icon(cu.isAdmin ? 'shield' : 'check', 12) + esc(cu.isAdmin ? I18n.t('cld.adminBadge') : I18n.t('cld.userBadge')) + '</span>';
@@ -1738,41 +1746,274 @@ const Pages = (() => {
     });
   }
 
-  /* ---- 头像 ---- */
-  function bindAvatarEvents() {
-    $('#profileAvatar').addEventListener('click', () => {
-      $('#avatarModal').classList.add('show');
-      renderAvatarOptions();
-    });
-    $('#avatarClose').addEventListener('click', () => $('#avatarModal').classList.remove('show'));
-    $('#avatarModal').addEventListener('click', e => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('show'); });
-    $('#avatarOptions').addEventListener('click', e => {
-      const opt = e.target.closest('.avatar-option');
-      if (!opt) return;
-      Store.state.avatar = { type: 'preset', idx: +opt.dataset.idx };
-      Store.save();
-      renderAvatarOptions();
-      renderProfile();
-    });
-    $('#avatarUploadBtn').addEventListener('click', () => $('#avatarFileInput').click());
-    $('#avatarFileInput').addEventListener('change', async e => {
-      const file = e.target.files[0];
-      e.target.value = '';
-      if (!file) return;
-      const dataUrl = await compressImage(await readFileAsDataURL(file), 256, 0.85);
-      Store.state.avatar = { type: 'image', data: dataUrl };
-      Store.save();
-      renderAvatarOptions();
-      renderProfile();
-      Toast.success('头像已更新');
+  /* ==================== 编辑资料（Kimi 式：头像 / 名字 / 简介 + 账号安全） ==================== */
+  /* 失焦自动保存；返回时若有改动 Toast 一次 */
+  let peDirty = false;
+
+  /* 通用输入弹窗：body 内带 data-field 的输入控件，确认后回传 {field: value}，取消回 null；
+     opts.validate(vals) 返回提示文案则 Toast 并保持弹窗打开，返回 null 通过 */
+  function inputDialog(opts) {
+    return new Promise(resolve => {
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay show';
+      overlay.innerHTML =
+        '<div class="modal modal-sm" style="animation:popIn .22s var(--ease)">' +
+        '<div class="modal-header"><h3>' + icon(opts.icon || 'edit', 19) + esc(opts.title) + '</h3></div>' +
+        '<div class="modal-body">' + opts.body + '</div>' +
+        '<div class="modal-footer">' +
+        '<button class="btn btn-ghost" data-act="no">' + esc(I18n.t('pe.cancel')) + '</button>' +
+        '<button class="btn btn-primary" data-act="yes">' + esc(opts.okText || I18n.t('pe.confirm')) + '</button>' +
+        '</div></div>';
+      document.body.appendChild(overlay);
+      const collect = () => {
+        const vals = {};
+        overlay.querySelectorAll('[data-field]').forEach(el => { vals[el.dataset.field] = el.value; });
+        return vals;
+      };
+      const close = val => { overlay.remove(); resolve(val); };
+      const submit = () => {
+        const vals = collect();
+        if (opts.validate) {
+          const msg = opts.validate(vals);
+          if (msg) return Toast.warning(msg);   // 校验不过：保持弹窗
+        }
+        close(vals);
+      };
+      overlay.addEventListener('click', e => {
+        const act = e.target.closest('[data-act]');
+        if (act) return act.dataset.act === 'yes' ? submit() : close(null);
+        if (e.target === overlay) close(null);
+      });
+      overlay.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      const first = overlay.querySelector('[data-field]');
+      if (first) setTimeout(() => first.focus(), 60);
     });
   }
 
-  function renderAvatarOptions() {
-    const cur = Store.state.avatar;
-    $('#avatarOptions').innerHTML = UI.AVATAR_GRADS.map((g, i) =>
-      '<button class="avatar-option' + (cur && cur.type === 'preset' && cur.idx === i ? ' active' : '') + '" data-idx="' + i + '" style="--av-grad:' + g + ';background:' + g + '">' +
-      esc(((Store.state.userInfo || {}).name || 'U').charAt(0).toUpperCase()) + '</button>').join('');
+  /* 本地用户表同步写（userInfo 与 users 表记录是同一账号的两处落地，都要写） */
+  function patchLocalUser(fields) {
+    const u = Store.state.userInfo || {};
+    Object.assign(u, fields);
+    Store.state.userInfo = u;
+    const account = Store.state.user;
+    if (account && account !== 'guest') {
+      const users = Store.getUsers();
+      if (users[account]) { Object.assign(users[account], fields); Store.saveUsers(users); }
+    }
+    Store.save();
+  }
+
+  /* 资料变更后：刷新资料卡 / 侧栏用户区，并标记「返回时 Toast」 */
+  function afterPeChange() {
+    peDirty = true;
+    renderProfile();
+    UI.renderSidebar();
+    // 编辑页大头像为字母占位时同步首字（图片头像不动）
+    const peAv = $('#peAvatarBtn');
+    if (peAv && peAv.firstElementChild && peAv.firstElementChild.tagName === 'SPAN' && !peAv.firstElementChild.classList.contains('pe-avatar-edit')) {
+      const cu = Store.state.cloudUser;
+      const nm = (cu && cu.name) || (Store.state.userInfo || {}).name || 'U';
+      peAv.firstElementChild.textContent = nm.charAt(0).toUpperCase();
+    }
+  }
+
+  function renderProfileEdit() {
+    const box = $('#peBody');
+    if (!box) return;
+    peDirty = false;
+    const cu = Store.state.cloudUser;
+    const u = Store.state.userInfo || {};
+    const name = (cu && cu.name) || u.name || '';
+    const bio = cu ? (cu.bio || '') : (u.bio || '');
+    const av = UI.avatarView();
+    const avInner = av.img
+      ? '<img src="' + av.img + '" alt="">'
+      : '<span>' + esc((name || 'U').charAt(0).toUpperCase()) + '</span>';
+    const secRow = (id, ic, title, val) =>
+      '<div class="settings-row clickable" id="' + id + '">' +
+      '<span class="row-icon" data-icon="' + ic + '"></span>' +
+      '<span class="row-label"><span class="row-title">' + esc(title) + '</span>' +
+      '<span class="row-desc" style="display:block">' + esc(val) + '</span></span>' +
+      '<span class="chev" data-icon="chevronRight"></span></div>';
+
+    let html =
+      '<div class="settings-group-title">' + icon('user', 15) + ' ' + esc(I18n.t('pe.secA')) + '</div>' +
+      '<div class="settings-card pe-card">' +
+        '<div class="pe-avatar-wrap">' +
+          '<button class="pe-avatar" id="peAvatarBtn" title="' + esc(I18n.t('pe.avatarTip')) + '"' +
+            (av.img ? '' : ' style="background:' + av.grad + '"') + '>' + avInner +
+            '<span class="pe-avatar-edit">' + icon('edit', 13) + '</span></button>' +
+          '<div class="pe-avatar-tip">' + esc(I18n.t('pe.avatarTip')) + '</div>' +
+        '</div>' +
+        '<div class="pe-field"><label for="peName">' + esc(I18n.t('pe.name')) + '</label>' +
+          '<input class="input" id="peName" maxlength="30" value="' + esc(name) + '" placeholder="' + esc(I18n.t('pe.namePh')) + '" autocomplete="off"></div>' +
+        '<div class="pe-field"><label for="peBio">' + esc(I18n.t('pe.bio')) + '</label>' +
+          '<textarea class="textarea" id="peBio" maxlength="100" rows="3" placeholder="' + esc(I18n.t('pe.bioPh')) + '">' + esc(bio) + '</textarea>' +
+          '<div class="pe-count" id="peBioCount">' + bio.length + '/100</div></div>' +
+      '</div>';
+
+    html += '<div class="settings-group-title">' + icon('shield', 15) + ' ' + esc(I18n.t('pe.secB')) + '</div>';
+    if (cu) {
+      html += '<div class="settings-card">' +
+        secRow('peEmailRow', 'link', I18n.t('pe.email'), cu.email || '') +
+        secRow('pePhoneRow', 'smartphone', I18n.t('pe.phone'), cu.phone || I18n.t('pe.phoneUnset')) +
+        secRow('pePassRow', 'key', I18n.t('pe.password'), I18n.t('pe.passwordD')) +
+        '</div>' +
+        '<div class="subpage-tip">' + esc(I18n.t('pe.phoneNote')) + '</div>';
+    } else {
+      // 本地账号 / 游客：无云端凭据，隐藏账号安全操作
+      html += '<div class="settings-card"><div class="settings-row">' +
+        '<span class="row-icon" data-icon="info"></span>' +
+        '<span class="row-label"><span class="row-title">' + esc(I18n.t('pe.localOnly')) + '</span>' +
+        '<span class="row-desc" style="display:block">' + esc(I18n.t('pe.localOnlyD')) + '</span></span></div></div>';
+    }
+    box.innerHTML = html;
+    fillIcons(box);
+
+    /* ---- A 区：头像 / 名字 / 简介（失焦自动保存） ---- */
+    $('#peAvatarBtn').addEventListener('click', () => $('#peAvatarFile').click());
+    $('#peName').addEventListener('blur', savePeName);
+    $('#peBio').addEventListener('input', e => { $('#peBioCount').textContent = e.target.value.length + '/100'; });
+    $('#peBio').addEventListener('blur', savePeBio);
+
+    /* ---- B 区：账号安全（仅云端用户渲染） ---- */
+    if (cu) {
+      $('#peEmailRow').addEventListener('click', () => changePeEmail(cu));
+      $('#pePhoneRow').addEventListener('click', () => changePePhone(cu));
+      $('#pePassRow').addEventListener('click', () => changePePassword(cu));
+    }
+  }
+
+  /* 头像：选图 → 压缩 256px JPEG（≤60KB，超了逐级降质量）→ 云端写 profiles.avatar_url / 本地写 userInfo.avatar */
+  async function onPeAvatarFile(e) {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    let dataUrl = await compressImage(await readFileAsDataURL(file), 256, 0.85);
+    let q = 0.7;
+    while (dataUrl.length > 60 * 1024 && q >= 0.3) {
+      dataUrl = await compressImage(dataUrl, 256, q);
+      q -= 0.15;
+    }
+    const cu = Store.state.cloudUser;
+    if (cu) {
+      const r = await SB.updateProfile({ avatar: dataUrl });
+      if (!r.ok) return Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+    } else {
+      patchLocalUser({ avatar: dataUrl });
+    }
+    afterPeChange();
+    renderProfileEdit();
+    Toast.success(I18n.t('pe.avatarOk'));
+  }
+
+  async function savePeName() {
+    const el = $('#peName');
+    if (!el) return;
+    const name = (el.value || '').trim();
+    const cu = Store.state.cloudUser;
+    const cur = (cu && cu.name) || (Store.state.userInfo || {}).name || '';
+    if (name === cur) return;
+    if (!name) { el.value = cur; return Toast.warning(I18n.t('pe.nameEmpty')); }
+    peDirty = true;   // 提前标记：云端请求未返回时直接返回也有 Toast
+    patchLocalUser({ name });
+    if (cu) {
+      cu.name = name;
+      const r = await SB.updateProfile({ displayName: name });
+      if (!r.ok) Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+    }
+    afterPeChange();
+  }
+
+  async function savePeBio() {
+    const el = $('#peBio');
+    if (!el) return;
+    const bio = (el.value || '').trim().slice(0, 100);
+    const cu = Store.state.cloudUser;
+    const cur = cu ? (cu.bio || '') : ((Store.state.userInfo || {}).bio || '');
+    if (bio === cur) return;
+    peDirty = true;
+    if (cu) {
+      const r = await SB.updateProfile({ bio });
+      if (!r.ok) Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+    } else {
+      patchLocalUser({ bio });
+    }
+    afterPeChange();
+  }
+
+  /* 更改邮箱：updateUser({email}) → 验证邮件发送到新邮箱，确认后生效 */
+  async function changePeEmail(cu) {
+    const vals = await inputDialog({
+      title: I18n.t('pe.emailChange'), icon: 'link',
+      body: '<label class="pe-dialog-label">' + esc(I18n.t('pe.emailNew')) + '</label>' +
+            '<input class="input" type="email" data-field="email" placeholder="name@example.com" autocomplete="off">',
+      okText: I18n.t('pe.confirm'),
+      validate: v => (v.email || '').trim().indexOf('@') < 1 ? I18n.t('cld.badEmail') : null
+    });
+    if (!vals) return;
+    const email = (vals.email || '').trim().toLowerCase();
+    if (email === (cu.email || '').toLowerCase()) return;
+    const r = await SB.Auth.updateUser({ email });
+    if (r.error) return Toast.error(SB.errMsg(r.error));
+    Toast.success(I18n.t('pe.emailSent'));
+  }
+
+  /* 绑定手机号：仅存 profiles.phone（短信验证后续版本开放，目前仅展示） */
+  async function changePePhone(cu) {
+    const vals = await inputDialog({
+      title: I18n.t('pe.phone'), icon: 'smartphone',
+      body: '<label class="pe-dialog-label">' + esc(I18n.t('pe.phoneNew')) + '</label>' +
+            '<input class="input" type="tel" data-field="phone" value="' + esc(cu.phone || '') + '" placeholder="+86 138 0000 0000" autocomplete="off">',
+      okText: I18n.t('pe.confirm'),
+      validate: v => {
+        const phone = (v.phone || '').trim();
+        return (phone && !/^\+?[0-9][0-9 -]{4,18}$/.test(phone)) ? I18n.t('pe.phoneBad') : null;
+      }
+    });
+    if (!vals) return;
+    const phone = (vals.phone || '').trim();
+    if (phone === (cu.phone || '')) return;
+    const r = await SB.updateProfile({ phone });
+    if (!r.ok) return Toast.error(I18n.t('cld.syncFail') + '：' + (r.error || ''));
+    renderProfileEdit();
+    Toast.success(I18n.t('pe.saved'));
+  }
+
+  /* 修改密码：旧密码仅本地非空提示；updateUser({password}) 成功后会话内 Key 加密密钥同步换新并重推 */
+  async function changePePassword(cu) {
+    const vals = await inputDialog({
+      title: I18n.t('pe.password'), icon: 'key',
+      body: '<label class="pe-dialog-label">' + esc(I18n.t('pe.oldPass')) + '</label>' +
+            '<input class="input" type="password" data-field="old" placeholder="' + esc(I18n.t('pe.oldPassPh')) + '" autocomplete="current-password">' +
+            '<label class="pe-dialog-label" style="margin-top:12px">' + esc(I18n.t('pe.newPass')) + '</label>' +
+            '<input class="input" type="password" data-field="p1" placeholder="' + esc(I18n.t('pe.newPassPh')) + '" autocomplete="new-password">' +
+            '<input class="input" type="password" data-field="p2" style="margin-top:8px" placeholder="' + esc(I18n.t('pe.newPass2')) + '" autocomplete="new-password">',
+      okText: I18n.t('pe.confirm'),
+      validate: v => {
+        if (!v.old) return I18n.t('pe.oldPassPh');
+        if (!v.p1 || v.p1.length < 6) return I18n.t('cld.pwdShort');
+        if (v.p1 !== v.p2) return I18n.t('pe.passMismatch');
+        return null;
+      }
+    });
+    if (!vals) return;
+    const r = await SB.Auth.updateUser({ password: vals.p1 });
+    if (r.error) return Toast.error(SB.errMsg(r.error));
+    /* 会话内派生密钥随新密码更新并立即重推（否则旧密文在新密码下无法解开） */
+    SB.setPassword(vals.p1);
+    SB.Sync.schedulePush(0);
+    Toast.success(I18n.t('pe.passOk'));
+  }
+
+  /* ---- 编辑资料页事件（一次性绑定；页内元素在 renderProfileEdit 后各自绑定） ---- */
+  function bindProfileEditEvents() {
+    $('#profileCard').addEventListener('click', () => openSub('subProfileEdit'));
+    $('#peAvatarFile').addEventListener('change', onPeAvatarFile);
+    // 返回时有未提示的改动 → Toast 一次（subpage-back 的关闭逻辑在 bindSubpageEvents 统一绑定）
+    $('#subProfileEdit .subpage-back').addEventListener('click', () => {
+      if (peDirty) { peDirty = false; Toast.success(I18n.t('pe.saved')); }
+    });
   }
 
   /* ==================== 语音工坊（小米 MiMo：合成/设计/克隆） ==================== */
@@ -1875,7 +2116,7 @@ const Pages = (() => {
   }
 
   function bindProfileEvents() {
-    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindAvatarEvents(); bindChangelogEvents();
+    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindProfileEditEvents(); bindChangelogEvents();
     bindSubpageEvents(); bindVoiceEvents(); bindAsrEvents(); bindLangEvents(); bindHelpEvents(); bindVoiceStudioEvents();
     $('#installRow').addEventListener('click', () => { if (window.AppInstall) AppInstall.prompt(); });
     $('#logoutBtn').addEventListener('click', () => {
@@ -1904,6 +2145,7 @@ const Pages = (() => {
       if ($('#subTranslate').classList.contains('show')) renderTranslate();
       if ($('#subTokens').classList.contains('show')) renderTokens();
       if ($('#subSync').classList.contains('show')) renderSyncSection();
+      if ($('#subProfileEdit').classList.contains('show')) renderProfileEdit();
       if ($('#subPlugins').classList.contains('show')) renderPlugins();
       if ($('#subSkills').classList.contains('show')) renderSkills();
     });

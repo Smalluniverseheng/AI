@@ -40,15 +40,26 @@ const UI = (() => {
   }
 
   /* ==================== 侧边栏 ==================== */
+  /* 头像来源统一解析：云端 avatar → 本地 userInfo.avatar → state.avatar 图片 → 预设渐变首字 */
+  function avatarView() {
+    const cu = Store.state.cloudUser;
+    const ui = Store.state.userInfo || {};
+    const av = Store.state.avatar;
+    if (cu && cu.avatar) return { img: cu.avatar };
+    if (ui.avatar) return { img: ui.avatar };
+    if (av && av.type === 'image' && av.data) return { img: av.data };
+    return { grad: AVATAR_GRADS[(av && av.idx) || 0] || AVATAR_GRADS[0] };
+  }
+
   /* 侧边栏用户卡 */
   function renderSidebarUser() {
     const u = Store.state.userInfo || {};
-    const av = Store.state.avatar;
+    const av = avatarView();
     const box = $('#sidebarUserAvatar');
     if (box) {
-      if (av && av.type === 'image' && av.data) box.innerHTML = '<img src="' + av.data + '">';
+      if (av.img) box.innerHTML = '<img src="' + av.img + '">';
       else box.innerHTML = esc((u.name || 'U').charAt(0).toUpperCase());
-      box.style.background = (av && av.type === 'image') ? 'transparent' : AVATAR_GRADS[(av && av.idx) || 0];
+      box.style.background = av.img ? 'transparent' : av.grad;
     }
     const nm = $('#sidebarUserName');
     if (nm) nm.textContent = u.name || '用户';
@@ -1229,11 +1240,10 @@ const UI = (() => {
 
   /* ==================== 头像 ==================== */
   function userAvatarHtml() {
-    const av = Store.state.avatar;
-    if (av && av.type === 'image' && av.data) return '<img src="' + av.data + '" alt="">';
-    const grad = AVATAR_GRADS[(av && av.idx) || 0] || AVATAR_GRADS[0];
+    const av = avatarView();
+    if (av.img) return '<img src="' + av.img + '" alt="">';
     const name = (Store.state.userInfo && Store.state.userInfo.name) || '我';
-    return '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:' + grad + ';color:#fff;font-weight:800;font-size:14px;border-radius:11px">' + esc(name.charAt(0).toUpperCase()) + '</span>';
+    return '<span style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:' + av.grad + ';color:#fff;font-weight:800;font-size:14px;border-radius:11px">' + esc(name.charAt(0).toUpperCase()) + '</span>';
   }
 
   const AVATAR_GRADS = [
@@ -1335,7 +1345,9 @@ const UI = (() => {
   }
 
   /* ==================== 顶栏右侧：自动播报 + 新对话（Kimi 式） ==================== */
-  /* index.html 由其他模块维护，这里用 JS 注入两个圆形图标按钮，保持与现有按钮一致 */
+  /* 自动播报双实例（同一 Store.state.autoSpeak，各自只绑一次事件）：
+     - #autoSpeakBtn：顶栏右侧独立圆形按钮，仅桌面端显示（≤860px 由 CSS 隐藏）
+     - #autoSpeakInputBtn：输入栏工具区（attach/mic/web/think 同排），仅 ≤860px 显示 */
   function injectTopbarActions() {
     const right = $('.topbar-right');
     const themeBtn = $('#themeBtn');
@@ -1344,13 +1356,7 @@ const UI = (() => {
     const speakBtn = document.createElement('button');
     speakBtn.className = 'topbar-btn';
     speakBtn.id = 'autoSpeakBtn';
-    speakBtn.addEventListener('click', () => {
-      Store.state.autoSpeak = !Store.state.autoSpeak;
-      Store.save();
-      syncAutoSpeakBtn();
-      if (!Store.state.autoSpeak) Voice.stopSpeak();
-      Toast.info(Store.state.autoSpeak ? '自动播报已开启：AI 回复完成后自动朗读' : '自动播报已关闭');
-    });
+    speakBtn.addEventListener('click', toggleAutoSpeak);
 
     const newBtn = document.createElement('button');
     newBtn.className = 'topbar-btn';
@@ -1361,16 +1367,38 @@ const UI = (() => {
 
     right.insertBefore(speakBtn, themeBtn);
     right.insertBefore(newBtn, themeBtn);
+
+    // 移动端实例：注入输入栏工具区（thinkBtn 之后、输入框之前）
+    const inputBox = $('.input-box');
+    if (inputBox && !$('#autoSpeakInputBtn')) {
+      const speakInBtn = document.createElement('button');
+      speakInBtn.className = 'input-btn';
+      speakInBtn.id = 'autoSpeakInputBtn';
+      speakInBtn.addEventListener('click', toggleAutoSpeak);
+      const thinkBtn = $('#thinkBtn');
+      inputBox.insertBefore(speakInBtn, thinkBtn ? thinkBtn.nextSibling : $('#chatInput'));
+    }
     syncAutoSpeakBtn();
   }
 
+  function toggleAutoSpeak() {
+    Store.state.autoSpeak = !Store.state.autoSpeak;
+    Store.save();
+    syncAutoSpeakBtn();
+    if (!Store.state.autoSpeak) Voice.stopSpeak();
+    Toast.info(Store.state.autoSpeak ? '自动播报已开启：AI 回复完成后自动朗读' : '自动播报已关闭');
+  }
+
   function syncAutoSpeakBtn() {
-    const btn = $('#autoSpeakBtn');
-    if (!btn) return;
     const on = !!Store.state.autoSpeak;
-    btn.classList.toggle('active', on);
-    btn.innerHTML = icon(on ? 'volume' : 'volumeOff', 19);
-    btn.title = on ? '自动播报：开（点击关闭）' : '自动播报：关（点击开启）';
+    const title = on ? '自动播报：开（点击关闭）' : '自动播报：关（点击开启）';
+    [['#autoSpeakBtn', 'active'], ['#autoSpeakInputBtn', 'toggled']].forEach(pair => {
+      const btn = $(pair[0]);
+      if (!btn) return;
+      btn.classList.toggle(pair[1], on);
+      btn.innerHTML = icon(on ? 'volume' : 'volumeOff', 19);
+      btn.title = title;
+    });
   }
 
   /* ==================== 初始化绑定 ==================== */
@@ -1422,6 +1450,6 @@ const UI = (() => {
     setMsgContent, setMsgThinking, setMsgToolCalls, finishMsg, setMsgError,
     updateModelSel, updateModeSel, renderModeConfig, renderChips, syncAttachBtn,
     setSending, renderAttachments, updateMicBtn, updateWebSearchBtn, updateSpeakButtons,
-    scrollToBottom, applyTheme, userAvatarHtml, AVATAR_GRADS, openLightbox
+    scrollToBottom, applyTheme, userAvatarHtml, avatarView, AVATAR_GRADS, openLightbox
   };
 })();

@@ -16,6 +16,7 @@ const SB = (() => {
   const ATTACH_MAX = 200 * 1024;   // 附件内容 >200KB 不入库，只存元数据
   const BACKUP_KEEP = 10;          // 云端备份保留份数
   const PUSH_DEBOUNCE = 2000;      // Store.save 触发推送的防抖
+  const RETRY_DELAY = 30000;       // 推送失败后的自动重试间隔（仅一次）
 
   let client = null;        // supabase client（懒创建）
   let sdkFailed = false;    // SDK 加载/初始化失败标记
@@ -24,6 +25,7 @@ const SB = (() => {
   let encSalt = null;       // 本会话加密随机盐（每行 IV 独立随机）
   const dkCache = {};       // 解密用派生密钥缓存（按 salt 缓存）
   let pushTimer = null;
+  let retryTimer = null;    // 推送失败后的自动重试定时器
   let suppress = false;     // 同步自身写本地时抑制再次调度（防循环）
 
   const enc = new TextEncoder();
@@ -149,19 +151,65 @@ const SB = (() => {
         const r = await client.auth.resetPasswordForEmail(email);
         return { error: r.error };
       } catch (e) { return { error: e }; }
+    },
+    /* 账号安全：改邮箱（{email}，需新邮箱验证后生效）/ 改密码（{password}）/ 改元数据（{data}） */
+    async updateUser(attrs) {
+      if (!ready()) return { user: null, error: new Error('sdk not ready') };
+      try {
+        const r = await client.auth.updateUser(attrs);
+        return { user: r.data && r.data.user, error: r.error };
+      } catch (e) { return { user: null, error: e }; }
     }
   };
 
-  /* ---------- profiles → {id, displayName, isAdmin} ---------- */
+  /* ---------- profiles → {id, displayName, isAdmin, bio, avatar, phone, email} ---------- */
   async function profile() {
     if (!ready()) return null;
     const u = await Auth.getUser();
     if (!u) return null;
     try {
-      const r = await client.from('profiles').select('id,display_name,is_admin').eq('id', u.id).single();
+      const r = await client.from('profiles').select('id,display_name,is_admin,bio,avatar_url,phone').eq('id', u.id).single();
       if (r.error || !r.data) return null;
-      return { id: r.data.id, displayName: r.data.display_name || '', isAdmin: !!r.data.is_admin };
+      const prof = {
+        id: r.data.id, displayName: r.data.display_name || '', isAdmin: !!r.data.is_admin,
+        bio: r.data.bio || '', avatar: r.data.avatar_url || '', phone: r.data.phone || '',
+        email: u.email || ''
+      };
+      /* 扩展字段直接合入 cloudUser（登录/恢复链路的调用方只读 displayName/isAdmin，
+         cloudUser 可能尚未建立——登录场景由 firstSync 再次调用本方法完成合入） */
+      const cu = cloudUser();
+      if (cu && cu.id === prof.id) {
+        cu.isAdmin = prof.isAdmin;
+        if (prof.displayName) cu.name = prof.displayName;
+        if (prof.email) cu.email = prof.email;
+        cu.bio = prof.bio;
+        cu.avatar = prof.avatar;
+        cu.phone = prof.phone;
+      }
+      return prof;
     } catch (e) { return null; }
+  }
+
+  /* ---------- 资料扩展字段写回（displayName/bio/avatar/phone → profiles 列） ---------- */
+  async function updateProfile(fields) {
+    if (!canSync()) return { ok: false, error: t('cld.cloudOff', '云服务不可用') };
+    const cu = cloudUser();
+    const cols = { displayName: 'display_name', bio: 'bio', avatar: 'avatar_url', phone: 'phone' };
+    const row = {};
+    Object.keys(cols).forEach(k => { if (fields[k] !== undefined) row[cols[k]] = fields[k]; });
+    if (!Object.keys(row).length) return { ok: true };
+    try {
+      const r = await client.from('profiles').update(row).eq('id', cu.id);
+      if (r.error) return { ok: false, error: errMsg(r.error) };
+      // 云端写入成功后同步 patch 本地 cloudUser 并落盘（编辑页/资料卡即时生效）
+      if (row.display_name !== undefined) cu.name = row.display_name;
+      if (row.bio !== undefined) cu.bio = row.bio;
+      if (row.avatar_url !== undefined) cu.avatar = row.avatar_url;
+      if (row.phone !== undefined) cu.phone = row.phone;
+      saveLocal(true);
+      emit();
+      return { ok: true };
+    } catch (e) { return { ok: false, error: errMsg(e) }; }
   }
 
   /* ==================== 密码派生加密（PBKDF2 10 万次 + AES-GCM） ==================== */
@@ -376,54 +424,64 @@ const SB = (() => {
     return row;
   }
 
-  /* conversations 推送：维护 cloudMap {本地会话id → 云端uuid} */
+  /* conversations 推送：维护 cloudMap {本地会话id → 云端uuid}；单会话失败不拖垮其余，错误汇总后抛出 */
   async function pushConversations() {
     const uid = cloudUser().id;
     const map = cloudMap();
     const chats = Store.state.chats || [];
     const known = [], fresh = [];
     chats.forEach(c => (map[c.id] ? known : fresh).push(c));
+    let err = null;
     if (known.length) {
-      const rows = known.map(c => ({
-        id: map[c.id], user_id: uid, title: c.title || '新对话', mode: c.mode || 'single',
-        local_id: c.id, updated_at: new Date(c.updatedAt || Date.now()).toISOString()
-      }));
-      const r = await client.from('conversations').upsert(rows);
-      if (r.error) throw r.error;
+      try {
+        const rows = known.map(c => ({
+          id: map[c.id], user_id: uid, title: c.title || '新对话', mode: c.mode || 'single',
+          local_id: c.id, updated_at: new Date(c.updatedAt || Date.now()).toISOString()
+        }));
+        const r = await client.from('conversations').upsert(rows);
+        if (r.error) err = r.error;
+      } catch (e) { err = e; }
     }
     for (const c of fresh) {
-      // 先按 local_id 找回（防止上次插入成功但映射丢失造成重复）
-      let cid = null;
-      const q = await client.from('conversations').select('id').eq('user_id', uid).eq('local_id', c.id).limit(1);
-      if (q.data && q.data.length) cid = q.data[0].id;
-      else {
-        const r = await client.from('conversations').insert({
-          user_id: uid, title: c.title || '新对话', mode: c.mode || 'single',
-          local_id: c.id, updated_at: new Date(c.updatedAt || Date.now()).toISOString()
-        }).select('id').single();
-        if (r.error) throw r.error;
-        cid = r.data && r.data.id;
-      }
-      if (cid) map[c.id] = cid;
+      try {
+        // 先按 local_id 找回（防止上次插入成功但映射丢失造成重复）
+        let cid = null;
+        const q = await client.from('conversations').select('id').eq('user_id', uid).eq('local_id', c.id).limit(1);
+        if (q.data && q.data.length) cid = q.data[0].id;
+        else {
+          const r = await client.from('conversations').insert({
+            user_id: uid, title: c.title || '新对话', mode: c.mode || 'single',
+            local_id: c.id, updated_at: new Date(c.updatedAt || Date.now()).toISOString()
+          }).select('id').single();
+          if (r.error) throw r.error;
+          cid = r.data && r.data.id;
+        }
+        if (cid) map[c.id] = cid;
+      } catch (e) { if (!err) err = e; }   // 跳过该会话，继续其余
     }
+    if (err) throw err;
   }
 
-  /* messages 推送：按会话查已有 local_id → 幂等 upsert */
+  /* messages 推送：按会话查已有 local_id → 幂等 upsert；单会话失败继续其余 */
   async function pushMessages() {
     const map = cloudMap();
+    let err = null;
     for (const c of (Store.state.chats || [])) {
       const cid = map[c.id];
       if (!cid || !(c.messages || []).length) continue;
-      const exist = {};
-      const q = await client.from('messages').select('id,local_id').eq('conversation_id', cid);
-      if (q.error) throw q.error;
-      (q.data || []).forEach(r => { if (r.local_id) exist[r.local_id] = r.id; });
-      const rows = c.messages.map(m => msgToRow(m, cid, exist[m.id]));
-      for (let i = 0; i < rows.length; i += 100) {
-        const r = await client.from('messages').upsert(rows.slice(i, i + 100));
-        if (r.error) throw r.error;
-      }
+      try {
+        const exist = {};
+        const q = await client.from('messages').select('id,local_id').eq('conversation_id', cid);
+        if (q.error) throw q.error;
+        (q.data || []).forEach(r => { if (r.local_id) exist[r.local_id] = r.id; });
+        const rows = c.messages.map(m => msgToRow(m, cid, exist[m.id]));
+        for (let i = 0; i < rows.length; i += 100) {
+          const r = await client.from('messages').upsert(rows.slice(i, i + 100));
+          if (r.error) throw r.error;
+        }
+      } catch (e) { if (!err) err = e; }   // 跳过该会话，继续其余
     }
+    if (err) throw err;
   }
 
   /* token_usage：本地聚合作一行 snapshot（estimated），总量变化才插 */
@@ -447,12 +505,15 @@ const SB = (() => {
     m.lastUsagePush = Date.now();
   }
 
+  /* 全量推送：各环节独立容错（一步失败不中断后续步骤），错误汇总后抛出 */
   async function pushHeavy() {
     if (!canSync() || !isAdmin()) return { ok: false, skipped: true };
-    await pushConversations();
-    await pushMessages();
-    await pushUsage();
-    saveLocal();   // cloudMap / meta 落盘
+    const errs = [];
+    for (const step of [pushConversations, pushMessages, pushUsage]) {
+      try { await step(); } catch (e) { errs.push(e); }
+    }
+    saveLocal();   // cloudMap / meta 落盘（部分成功也保留进度）
+    if (errs.length) throw errs[0];
     return { ok: true };
   }
 
@@ -524,24 +585,47 @@ const SB = (() => {
 
   function genLocalId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
-  /* ---------- 组合推送：轻量 +（管理员）全量 ---------- */
+  /* ---------- 组合推送：轻量 +（管理员）全量；两级独立容错，全部成功才推进 lastSync ---------- */
   async function pushAll() {
     if (!canSync()) return { ok: false, skipped: true };
-    await pushLight();
-    if (isAdmin()) await pushHeavy();
-    meta().lastSync = Date.now();
+    const errs = [];
+    try { await pushLight(); } catch (e) { errs.push(e); }
+    if (isAdmin()) { try { await pushHeavy(); } catch (e) { errs.push(e); } }
+    if (!errs.length) meta().lastSync = Date.now();
     saveLocal();
     emit();
+    if (errs.length) throw errs[0];
     return { ok: true };
+  }
+
+  /* 同步失败后 30s 自动重试一次（仅在线时；仍失败则静默，下次 save 再试） */
+  function scheduleRetry() {
+    clearRetry();
+    retryTimer = setTimeout(async () => {
+      retryTimer = null;
+      if (SyncState.syncing || !canSync()) return;   // 同步中/离线/未登录云 → 放弃本次重试
+      SyncState.syncing = true; emit();
+      try {
+        await pushAll();
+        SyncState.lastError = null;
+      } catch (e) {
+        SyncState.lastError = errMsg(e);   // 静默：不再 Toast，等下次 save 触发推送
+      }
+      SyncState.syncing = false; emit();
+    }, RETRY_DELAY);
+  }
+  function clearRetry() {
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
   }
 
   /* Store.save 挂钩：2s 防抖；抑制期内/离线/未登录云 → 跳过 */
   function schedulePush(delay) {
     if (suppress || !canSync()) return;
+    clearRetry();   // 新的本地变更取代待执行的重试
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(async () => {
       pushTimer = null;
-      if (SyncState.syncing) { schedulePush(); return; }   // 手动同步进行中，顺延
+      if (SyncState.syncing) { schedulePush(); return; }   // 手动同步进行中，顺延（默认防抖，防空转）
       SyncState.syncing = true; emit();
       try {
         await pushAll();
@@ -549,45 +633,52 @@ const SB = (() => {
       } catch (e) {
         SyncState.lastError = errMsg(e);
         if (typeof Toast !== 'undefined') Toast.error(t('cld.syncFail', '同步失败') + '：' + SyncState.lastError);
+        scheduleRetry();   // 30s 后自动补一次
       }
       SyncState.syncing = false; emit();
     }, delay == null ? PUSH_DEBOUNCE : delay);
   }
 
-  /* 手动「立即同步」：管理员先拉后推（双向合并），普通用户轻量拉推 */
+  /* 手动「立即同步」：管理员先拉后推（双向合并），普通用户轻量拉推；各环节独立容错 */
   async function syncNow() {
     if (!canSync()) return { ok: false, error: t('cld.cloudOff', '云服务不可用') };
     if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }   // 与手动同步合并，避免重复推送
+    clearRetry();
     SyncState.syncing = true; emit();
-    try {
-      if (isAdmin()) await pullHeavy();
-      await pullLight();
-      await pushAll();
-      SyncState.lastError = null;
-      return { ok: true };
-    } catch (e) {
-      SyncState.lastError = errMsg(e);
+    const errs = [];
+    if (isAdmin()) { try { await pullHeavy(); } catch (e) { errs.push(e); } }
+    try { await pullLight(); } catch (e) { errs.push(e); }
+    try { await pushAll(); } catch (e) { errs.push(e); }
+    SyncState.syncing = false; emit();
+    if (errs.length) {
+      SyncState.lastError = errMsg(errs[0]);
       return { ok: false, error: SyncState.lastError };
-    } finally {
-      SyncState.syncing = false; emit();
     }
+    SyncState.lastError = null;
+    return { ok: true };
   }
 
-  /* 登录后首次同步：管理员全量双向，普通用户轻量 */
+  /* 登录后首次同步：管理员全量双向，普通用户轻量；各环节独立容错 */
   async function firstSync() {
     if (!canSync()) return;
     if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
+    clearRetry();
     SyncState.syncing = true; emit();
-    try {
-      if (isAdmin()) { await pullHeavy(); await pushHeavy(); }
-      await pullLight();
-      await pushLight();
-      meta().lastSync = Date.now();
-      saveLocal();
-      SyncState.lastError = null;
-    } catch (e) {
-      SyncState.lastError = errMsg(e);
+    const errs = [];
+    try { await profile(); } catch (e) {}   // 登录场景 cloudUser 刚建立：合入 bio/avatar/phone 等扩展字段
+    if (isAdmin()) {
+      try { await pullHeavy(); } catch (e) { errs.push(e); }
+      try { await pushHeavy(); } catch (e) { errs.push(e); }
+    }
+    try { await pullLight(); } catch (e) { errs.push(e); }
+    try { await pushLight(); } catch (e) { errs.push(e); }
+    if (!errs.length) meta().lastSync = Date.now();
+    saveLocal();
+    if (errs.length) {
+      SyncState.lastError = errMsg(errs[0]);
       if (typeof Toast !== 'undefined') Toast.error(t('cld.syncFail', '同步失败') + '：' + SyncState.lastError);
+    } else {
+      SyncState.lastError = null;
     }
     SyncState.syncing = false; emit();
   }
@@ -634,11 +725,11 @@ const SB = (() => {
     } catch (e) { return { ok: false, error: errMsg(e) }; }
   }
 
-  const Sync = { schedulePush, syncNow, firstSync, pushLight, pullLight, pushHeavy, pullHeavy, backupNow, listBackups, restoreBackup, status };
+  const Sync = { schedulePush, syncNow, firstSync, pushAll, pushLight, pullLight, pushHeavy, pullHeavy, backupNow, listBackups, restoreBackup, status };
 
   return {
     init, ready, mapAccount, errMsg,
-    Auth, profile, setPassword, clearPassword, hasPassword, Sync,
+    Auth, profile, updateProfile, setPassword, clearPassword, hasPassword, Sync,
     /* 测试钩子（下划线开头，供 node 冒烟测试直接验证内部逻辑） */
     _pickSettings: pickSettings,
     _deriveKey: deriveKey,
