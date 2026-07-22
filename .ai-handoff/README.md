@@ -8,7 +8,7 @@
 
 - **项目**：第三方科技 · AI 智能聚合平台 —— 纯前端 PWA，零构建、零框架（原生 HTML/CSS/JS），GitHub Pages 托管。
 - **线上**：https://smalluniverseheng.github.io/AI/ ｜ **仓库**：https://github.com/Smalluniverseheng/AI
-- **当前版本**：v6.0（2026-07-22）
+- **当前版本**：v6.1（2026-07-23）
 - **核心约束（用户反复强调）**：
   1. **只做增量添加，禁止改动现有逻辑**（聊天管线、模型库结构、主题 CSS 变量、API 层）。
   2. 不引入构建工具/框架/国外平台依赖；纯原生 JS + CDN。
