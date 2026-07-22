@@ -6,16 +6,15 @@
  * ============================================================ */
 const CHANGELOG = [
   {
-    version: '6.0', date: '2026-07-22', major: true, items: [
-      'Cloudflare Worker 后端网关上线：所有厂商 API 请求统一走 Worker 代理，API Key 不再暴露前端',
-      '多模型并行后端化：Worker 同时向多个模型发起 SSE 流式请求，前端按 model_id 分发 chunk',
-      '联网搜索代理：Tavily 搜索走 Worker，结果带 answer + sources',
-      'AI 绘画代理：OpenAI DALL-E 走 Worker，返回图片 URL',
-      'RAG 向量检索：OpenAI Embedding + Supabase pgvector，支持文档分块语义搜索',
-      '文件上传代理：Cloudflare R2 文件存储（可选）',
-      'API Key 管理升级：前端输入 Key 可选择「仅本地保存」或「加密上传云端」，云端同步基于 Supabase Auth',
-      'Supabase 数据库 Schema：chats / messages / documents / document_chunks / user_settings / profiles 六表 + RLS',
-      'GitHub Actions 自动部署：push 到 v2 分支自动部署 Worker'
+    version: '6.1', date: '2026-07-23', major: false, items: [
+      'PWA 完善：新增 offline.html 离线页面，manifest 添加 screenshots 和 shortcuts',
+      'Service Worker 升级：缓存策略优化，支持离线页面回退',
+      '全局错误边界：捕获未处理异常和 Promise 拒绝，显示友好 Toast 提示',
+      '网络状态检测：自动检测在线/离线状态，切换时提示用户',
+      '图片懒加载：基于 Intersection Observer，对话中图片按需加载',
+      '消息虚拟列表：超过 50 条消息时启用虚拟滚动，提升长对话性能',
+      '性能监控：集成 LCP/FID 和长任务监控，输出到控制台',
+      '版本号统一升级：所有资源缓存穿透标记更新至 v6.1'
     ]
   },
 
