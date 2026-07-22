@@ -8,6 +8,12 @@
 - GitHub Actions 自动部署 Worker
 - **遗留**：Worker 待部署（需注册 workers.dev 子域名），前端待接入后端
 
+## v6.1 — 前端优化（2026-07-23）
+- PWA 完善：offline.html、manifest screenshots、sw 缓存策略
+- 全局错误边界：错误捕获 + 离线检测 + Toast 提示
+- 图片懒加载 + 消息虚拟列表（>50条启用）
+- 性能监控：LCP/FID/长任务
+
 ## 版本史（摘要）
 | 版本 | 日期 | 内容 |
 |---|---|---|
