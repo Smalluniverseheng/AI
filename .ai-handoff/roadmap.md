@@ -1,5 +1,13 @@
 # 路线图 · 版本历史与待办
 
+
+## v6.0 — 后端架构升级（2026-07-22）
+- Cloudflare Worker 网关：AI 对话 / 多模型并行 / 联网搜索 / AI 绘画 / RAG 向量检索 / 文件上传
+- Supabase 数据库：六表 Schema + RLS + pgvector
+- API Key 管理：本地存储或云端同步（可选）
+- GitHub Actions 自动部署 Worker
+- **遗留**：Worker 待部署（需注册 workers.dev 子域名），前端待接入后端
+
 ## 版本史（摘要）
 | 版本 | 日期 | 内容 |
 |---|---|---|
