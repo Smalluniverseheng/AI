@@ -5,7 +5,7 @@
 const API = (() => {
 
   const CONFIG = {
-    BACKEND_URL: null,   // 例: 'https://your-server.com'  后期接入后端时填写
+    BACKEND_URL: 'https://ai-gateway.smalluniverseheng.workers.dev',  // Cloudflare Worker 网关
     TIMEOUT: 60000,
     SSE_WATCHDOG: 30000  // 流式读取熔断：连续该毫秒数未收到任何字节则判定超时
   };
@@ -268,6 +268,34 @@ const API = (() => {
     const { modelId, messages, onChunk, onThinking } = opts;
     const model = getModel(modelId);
     if (!model) return Promise.reject(new Error('模型不存在: ' + modelId));
+
+    /* ===== v6.1: Worker 代理分支 ===== */
+    if (CONFIG.BACKEND_URL) {
+      const userKey = (typeof apiKeys !== 'undefined' && apiKeys.get) ? apiKeys.get(model.provider) : '';
+      return fetch(CONFIG.BACKEND_URL + '/api/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: model.provider,
+          model: modelId,
+          messages,
+          temperature: 0.7,
+          stream: typeof onChunk === 'function',
+          apiKey: userKey || undefined
+        })
+      }).then(res => {
+        if (!res.ok) throw new Error('Worker error: ' + res.status);
+        if (typeof onChunk === 'function') {
+          return streamSSE(res, onChunk, onThinking, ac);
+        }
+        return res.json().then(j => j.content || j.text || '');
+      }).catch(err => {
+        console.warn('[Worker] 失败，回退到直连:', err.message);
+        // fallback 到原有逻辑（继续执行下面的代码）
+      });
+    }
+    /* ===== /Worker 代理 ===== */
+
     const cfg = PROVIDERS[model.provider];
     if (!cfg) return Promise.reject(new Error('暂不支持该厂商: ' + model.provider));
     const key = getKeyForModel(model);
