@@ -125,3 +125,26 @@
 - major: true 标记里程碑版本（如 3.0, 5.0, 6.0）
 - 日志格式：`{ version: 'X.Y', date: 'YYYY-MM-DD', major: bool, items: ['...'] }`
 - 每次发版必做：更新 `js/changelog.js` + `sw.js` VERSION + `index.html` ?v= 缓存穿透 + `.ai-handoff/` 文档
+
+
+---
+
+## v6.1 前端优化（2026-07-23）
+
+### PWA 完善
+- 新增 `offline.html` 离线页面
+- `manifest.json` 添加 screenshots 和 shortcuts
+- `sw.js` 版本升级至 v6.1，缓存策略优化
+
+### 错误处理
+- 新增 `js/error-handler.js`：全局错误捕获、离线检测、Toast 提示
+- 新增 `js/lazy-load.js`：图片懒加载、消息虚拟列表
+
+### 性能优化
+- 图片懒加载：Intersection Observer，200px rootMargin
+- 虚拟列表：超过 50 条消息时启用
+- 性能监控：LCP/FID 和长任务监控
+
+### 版本号
+- 所有资源缓存穿透标记：`?v=5.9.0` → `?v=6.1`
+- `js/changelog.js` 添加 v6.1 记录
