@@ -6,6 +6,20 @@
  * ============================================================ */
 const CHANGELOG = [
   {
+    version: '6.0', date: '2026-07-22', major: true, items: [
+      'Cloudflare Worker 后端网关上线：所有厂商 API 请求统一走 Worker 代理，API Key 不再暴露前端',
+      '多模型并行后端化：Worker 同时向多个模型发起 SSE 流式请求，前端按 model_id 分发 chunk',
+      '联网搜索代理：Tavily 搜索走 Worker，结果带 answer + sources',
+      'AI 绘画代理：OpenAI DALL-E 走 Worker，返回图片 URL',
+      'RAG 向量检索：OpenAI Embedding + Supabase pgvector，支持文档分块语义搜索',
+      '文件上传代理：Cloudflare R2 文件存储（可选）',
+      'API Key 管理升级：前端输入 Key 可选择「仅本地保存」或「加密上传云端」，云端同步基于 Supabase Auth',
+      'Supabase 数据库 Schema：chats / messages / documents / document_chunks / user_settings / profiles 六表 + RLS',
+      'GitHub Actions 自动部署：push 到 v2 分支自动部署 Worker'
+    ]
+  },
+
+  {
     version: '5.9', date: '2026-07-19', major: false, items: [
       '编辑资料页：点击「我的」头像卡进入，Kimi 式——头像上传（自动压缩）、名字、简介，云端用户自动同步到 profiles，全端即时生效',
       '账号安全：更改邮箱（新邮箱验证后生效）、绑定手机号、修改密码（管理员可自助改掉初始密码 1234，改后 API Key 密文自动用新密码重加密）',
