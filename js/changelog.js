@@ -226,11 +226,24 @@ const CHANGELOG = [
   },
 ];
 
+window.changelogOrder = window.changelogOrder || 'desc'; // 'desc'=新→旧, 'asc'=旧→新
+
 function renderChangelog() {
   const container = document.getElementById('changelog-list');
   if (!container) return;
-  const reversed = [...CHANGELOG].reverse();
-  container.innerHTML = reversed.map(entry => {
+
+  // 排序切换按钮
+  const orderBtn = document.getElementById('changelog-order-btn');
+  if (orderBtn) {
+    orderBtn.textContent = changelogOrder === 'desc' ? '↓ 新→旧' : '↑ 旧→新';
+    orderBtn.onclick = () => {
+      window.changelogOrder = window.changelogOrder === 'desc' ? 'asc' : 'desc';
+      renderChangelog();
+    };
+  }
+
+  const entries = window.changelogOrder === 'desc' ? [...CHANGELOG].reverse() : [...CHANGELOG];
+  container.innerHTML = entries.map(entry => {
     const majorBadge = entry.major ? '<span class="version-badge major">里程碑</span>' : '';
     const items = entry.items.map(i => `<li>${i}</li>`).join('');
     return `
