@@ -38,7 +38,7 @@
         });
       });
     });
-    mo.observe(document.body, { childList: true, subtree: true });
+    if (document.body) mo.observe(document.body, { childList: true, subtree: true });
 
     // 初始观察
     if (document.readyState === 'loading') {
