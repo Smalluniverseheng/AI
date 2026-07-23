@@ -20,7 +20,7 @@
   // ===== 离线/在线检测 =====
   function updateOnlineStatus() {
     const isOnline = navigator.onLine;
-    document.body.classList.toggle('is-offline', !isOnline);
+    if (document.body) document.body.classList.toggle('is-offline', !isOnline);
 
     if (!isOnline) {
       showErrorToast('⚠️ 网络已断开，已切换至离线模式', 5000);
@@ -45,7 +45,7 @@
         box-shadow:0 4px 20px rgba(0,0,0,.3); transition:transform .3s ease;
         max-width:90vw; word-break:break-word; pointer-events:none;
       `;
-      document.body.appendChild(toast);
+      if (document.body) document.body.appendChild(toast);
     }
     toast.textContent = msg;
     toast.style.transform = 'translateX(-50%) translateY(0)';
