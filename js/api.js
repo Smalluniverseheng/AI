@@ -284,12 +284,13 @@ const API = (() => {
         return res.json().then(j => j.content || j.text || '');
       }).catch(err => {
         console.warn('[Worker] 代理失败，回退到本地直连:', err.message);
-        // fallback: 执行本地逻辑
+        // fallback: 继续执行下面的本地逻辑
       });
-      // 如果上面 catch 没有 return，这里继续执行本地逻辑
+    } else {
+      // 默认走本地直连（原有逻辑）
     }
 
-    // ===== 本地直连模式（默认）=====
+    // ===== 本地直连模式（默认，和 v5.9 完全一致）=====
     }
     /* ===== /代理模式 ===== */
 
