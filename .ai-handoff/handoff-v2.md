@@ -1,213 +1,167 @@
-# 🤖 AI 交接文档 v2.0
+# 🤖 AI 交接文档 v3.4 — 2026-07-23 14:35
 
-> **你好，接手的 AI。** 本文档包含架构说明和待办事项。
-> 密钥已 base64 编码放在文末，解码即可获取。
-> 用户（站长）会开启新对话继续，你需要先读完本文档再动手。
-> 本文档**只存在于仓库**，不会被网站引用（`.` 开头目录 GitHub Pages 不对外 serve）。
+> **给下一个接管的 AI。**
+> 本文档只存在于仓库（`.ai-handoff/`），不对外 serve。
+> 用户（站长）会开启新对话继续，请先读完本文档再动手。
 
 ---
 
-## 📋 项目现状（2026-07-22）
+## 📋 项目现状
 
 | 项目 | 状态 |
 |------|------|
 | **线上地址** | `https://smalluniverseheng.github.io/AI/` |
 | **仓库** | `https://github.com/Smalluniverseheng/AI` |
-| **main 分支** | ✅ 前端 v5.9.0，纯原生 JS PWA，功能完整 |
-| **v2 分支** | 🔄 后端开发中（Cloudflare Worker + Supabase） |
-| **gh-pages** | ✅ 当前部署的是 main 的精确副本（前端正常） |
-| **当前版本** | **v6.0**（后端架构升级，major 里程碑） |
-
-**核心约束（用户反复强调）：**
-1. **只做增量添加，禁止改动现有逻辑**（聊天管线、模型库结构、主题 CSS 变量、API 层）。
-2. 不引入构建工具/框架/国外平台依赖；纯原生 JS + CDN。
-3. **移动端优先**（用户主要在手机/手表上用）。
-4. UI 改动不用特别大，以添加模块为主。
+| **当前版本** | **v3.4**（前端） |
+| **main 分支** | 前端 v5.9.0 基础 + v3.4 修复 |
+| **v2 分支** | 后端代码（Worker + Supabase SQL） |
+| **gh-pages** | 部署分支，同步 main |
 
 ---
 
-## 🔐 密钥获取方式
+## 🔐 密钥（base64 编码，文档底部解码）
 
-本文档末尾附有 base64 编码的密钥块。解码命令：
-
-```bash
-echo "【见文末编码块】" | base64 -d
+```
+IyBHaXRIdWIKR0lUSFVCX1RPS0VOOiBnaHBfUEgxOWdmZmdmdHZyTm1jWWxjcWFvT0czQ213MXRZMnNlenlpClJFUE86IFNtYWxsdW5pdmVyc2VoZW5nL0FJCgojIENsb3VkZmxhcmUKQ0ZfQVBJX1RPS0VOOiBjZmF0X2NUTnV6eU9IbWZPczk4WnBPM2wyWGdCbngwa2UxcENJUWlOYmNVRjBhMzEyMDgwMApDRl9BQ0NPVU5UX0lEOiA0M2EzNzlkMTg1MGE5NTM5ODFmMjgzNWE5ZDVlZDY4MwpXT1JLRVJfU1VCRE9NQUlOOiAxODI5NDg3ODk3LndvcmtlcnMuZGV2CgojIFN1cGFiYXNlClNVUEFCQVNFX1VSTDogaHR0cHM6Ly9teHZ4bGdqemVib2t0dWZ1bXhicC5zdXBhYmFzZS5jbwpTVVBBQkFTRV9BTk9OX0tFWTogc2JfcHVibGlzaGFibGVfV3pVekFRSzVjT0VzbjdRd0ZCMmNBd191YklrRzdSSgpTVVBBQkFTRV9TRVJWSUNFX0tFWTogc2Jfc2VjcmV0X0Y0V2ZWeTRUelgtMG80WGlvVC1VandfYS1IaHNocUIK
 ```
 
-**注意：Secret Key 只存 Worker 环境变量，绝不暴露前端。**
+解码：`echo "上面编码块" | base64 -d`
 
 ---
 
-## 🏗️ 架构说明
+## ✅ 已完成
 
-### 现有前端（main 分支）
+### 前端（main 分支）
+- [x] 基础对话（单模型/多模型/辩论/协同）
+- [x] 23 家厂商 272 个模型
+- [x] 语音输入/朗读
+- [x] 文件上传/图片识别
+- [x] 主题切换（亮/暗/跟随系统）
+- [x] 移动端适配 + 手表端检测
+- [x] PWA（manifest + Service Worker）
+- [x] 离线页面
+- [x] 全局错误捕获 + Toast 提示
+- [x] 图片懒加载
+- [x] 消息虚拟列表（>50条启用）
+- [x] 代理模式切换（本地直连/服务器代理）
+- [x] 日志正序/倒序切换按钮
+- [x] 版本号修正（1.0→3.4 连续编号）
 
-纯静态多文件 PWA，无构建步骤：
+### 后端（v2 分支 + Cloudflare Worker）
+- [x] Worker 脚本部署到 `ai-gateway.1829487897.workers.dev`
+- [x] 路由：`/api/v1/chat`, `/search`, `/image`, `/vector`, `/health`, `/keys`
+- [x] CORS 全开放
+- [x] 支持前端传 Key（apiKey 字段）
+- [x] Supabase 环境变量已配置（SUPABASE_URL, SUPABASE_SERVICE_KEY）
+- [x] 数据库迁移 SQL 已写好
 
+---
+
+## ❌ 待完成 / 已知问题
+
+### P0 — 阻塞
+1. **厂商 API Keys 未配置**
+   - Worker 已部署，但 OPENAI_API_KEY / DEEPSEEK_API_KEY / MOONSHOT_API_KEY / TAVILY_API_KEY 为空
+   - 解决方案：用户在「我的→API Key」中输入 Key，切换为服务器代理模式
+   - 或：在 Cloudflare Dashboard → Workers → ai-gateway → Settings → Variables 中添加
+
+2. **Supabase 数据库未初始化**
+   - 迁移 SQL 在 `supabase/migrations/001_initial.sql`
+   - 需要用户在 Supabase Dashboard → SQL Editor 中执行
+
+### P1 — 体验优化
+3. **Worker 连接超时**
+   - 从中国大陆访问 `1829487897.workers.dev` 可能超时
+   - 建议：配置自定义域名（如 `api.smalluniverseheng.workers.dev`）或使用 Cloudflare 中国加速
+
+4. **GitHub Actions 自动部署**
+   - `.github/workflows/deploy.yml` 已写好
+   - 需要配置 GitHub Secrets：CF_API_TOKEN, CF_ACCOUNT_ID
+   - 当前 Worker 是手动通过 API 部署的
+
+### P2 — 功能增强
+5. **RAG 知识库**
+   - 文档上传 → 分块 → Embedding → pgvector
+   - 前端 UI 待开发
+
+6. **MCP 插件系统**
+   - 插件市场 UI
+   - Worker 端 MCP Client
+
+7. **Artifacts 代码预览**
+   - React/HTML/Mermaid 实时预览
+
+---
+
+## 🏗️ 架构
+
+### 前端
 ```
 index.html        单页应用，hash 路由
 css/              base.css / layout.css / chat.css / pages.css / watch.css / login.css / components.css
 js/
   store.js        状态管理 + localStorage
-  api.js          API 网关（所有厂商请求经过这里）
+  api.js          API 网关（所有厂商请求经过这里）— 定义全局 API 对象
+  api-v2.js       Worker 客户端（定义全局 api 对象，小写）
   chat.js         对话编排（单模型/多模型/辩论/协同）
   providers.js    23 家厂商配置
   models.js       272 个模型数据
-  auth.js         登录认证（Supabase Auth）
+  auth.js         登录认证（Supabase Auth）— 原始版本，不要覆盖！
   supabase.js     Supabase 客户端
   ui.js           UI 渲染
   pages.js        页面路由
   voice.js        语音
   files.js        文件处理
-  ...
+  error-handler.js 全局错误捕获
+  lazy-load.js    图片懒加载 + 虚拟列表
+  changelog.js    更新日志
 ```
 
-**关键接入点：`js/api.js` 中的 `CONFIG.BACKEND_URL`**
+**关键约束（用户反复强调）：**
+1. 只做增量添加，禁止改动现有逻辑（聊天管线、模型库结构、主题 CSS 变量、API 层）
+2. 不引入构建工具/框架/国外平台依赖；纯原生 JS + CDN
+3. 移动端优先
+4. UI 改动不用特别大，以添加模块为主
 
-```javascript
-const CONFIG = {
-  BACKEND_URL: null,   // ← 后期接入后端时填写 Worker 地址
-  TIMEOUT: 60000,
-  SSE_WATCHDOG: 30000
-};
+### 后端
 ```
-
-当 `BACKEND_URL` 不为 null 时，所有请求会自动改走服务端代理（Key 不再暴露前端）。
-
-### 后端（v2 分支开发中）
-
-**Cloudflare Worker**（`worker/src/`）：
-- `index.ts` — 入口路由
-- `router.ts` — 路由封装
-- `routes/chat.ts` — AI 对话代理（支持 23 家厂商）
-- `routes/multi.ts` — 多模型并行
-- `routes/search.ts` — Tavily 联网搜索
-- `routes/image.ts` — AI 绘画
-- `routes/vector.ts` — RAG 向量检索
-- `routes/storage.ts` — 文件上传
-- `routes/health.ts` — 健康检查
-- `routes/keys.ts` — 用户 API Key 管理
-
-**Supabase 数据库**（`supabase/migrations/001_initial.sql`）：
-- `profiles` — 用户扩展表
-- `chats` — 对话表
-- `messages` — 消息表
-- `documents` — 知识库文档表
-- `document_chunks` — 文档分块（pgvector）
-- `user_settings` — 用户设置表
-
----
-
-## 📦 待办事项（优先级排序）
-
-### P0 — 必须完成（阻塞）
-
-1. **部署 Cloudflare Worker**
-   - 问题：Workers 需要先在 Cloudflare 控制台注册 workers.dev 子域名
-   - 解决：登录 https://dash.cloudflare.com → Workers & Pages → 注册子域名
-   - 然后：本地 `cd worker && npx wrangler login && npx wrangler deploy`
-   - 或：配置 GitHub Secrets 后 push 到 v2 分支自动部署
-
-2. **配置 GitHub Secrets**
-   - 在仓库 Settings → Secrets → Actions 添加：
-     - `CF_API_TOKEN`
-     - `CF_ACCOUNT_ID`
-     - `SUPABASE_URL`
-     - `SUPABASE_SERVICE_KEY`
-     - `OPENAI_API_KEY`（用户的）
-     - `DEEPSEEK_API_KEY`（用户的）
-     - 其他厂商 Key...
-
-3. **初始化 Supabase 数据库**
-   - 登录 Supabase Dashboard → SQL Editor
-   - 执行 `supabase/migrations/001_initial.sql`
-
-### P1 — 前端接入后端
-
-4. **修改 `js/api.js` 的 `CONFIG.BACKEND_URL`**
-   - 设为 `'https://ai-gateway.smalluniverseheng.workers.dev'`
-   - 修改 `chat()` 函数：当 `BACKEND_URL` 存在时，请求改走 Worker
-   - 保留现有厂商适配逻辑作为 fallback
-
-5. **API Key 管理面板**
-   - 在「我的」页面添加 API Key 设置
-   - 支持：本地存储（localStorage）或 上传云端（Supabase）
-   - 已有 `js/api-keys.js` 草稿，需要集成到 UI
-
-### P2 — 功能增强
-
-6. **RAG 知识库**
-   - 文档上传 → 分块 → OpenAI Embedding → Supabase pgvector
-   - 对话时先检索相关片段，拼接进 Prompt
-
-7. **MCP 插件系统**
-   - 前端：插件市场 UI
-   - Worker：MCP Client，连接各种 MCP Server
-
-8. **Artifacts 代码预览**
-   - AI 生成 React/HTML/Mermaid 时实时预览
-
----
-
-## 🚀 前端 + 后端融合方案
-
-**最小改动原则**：只改 `js/api.js`，其他文件不动。
-
-```javascript
-// js/api.js 修改点
-
-const CONFIG = {
-  BACKEND_URL: 'https://ai-gateway.smalluniverseheng.workers.dev', // ← 改这里
-  TIMEOUT: 60000,
-  SSE_WATCHDOG: 30000
-};
-
-// 在 chat() 函数开头添加：
-if (CONFIG.BACKEND_URL) {
-  // 走 Worker 代理
-  return fetchJSON(CONFIG.BACKEND_URL + '/api/v1/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider: model.provider, model: modelId, messages, temperature: 0.7 })
-  }, ac).then(...);
-}
-// 否则走原有逻辑（直接调厂商 API）
+worker/src/
+  index.ts        入口路由
+  router.ts       路由封装
+  routes/
+    chat.ts       AI 对话代理
+    search.ts     Tavily 联网搜索
+    image.ts      AI 绘画
+    vector.ts     RAG 向量检索
+    storage.ts    文件上传
+    health.ts     健康检查
+    keys.ts       API Key 管理
 ```
 
 ---
 
-## ⚠️ 已知问题
+## 🚀 代理模式工作原理
 
-1. **Worker 未部署** — Cloudflare 账号需要注册 workers.dev 子域名
-2. **GitHub Actions 失败** — 缺少 Secrets 配置
-3. **前端空白问题已解决** — gh-pages 已重置为 main 精确副本
+| 模式 | 行为 | 状态 |
+|------|------|------|
+| **本地直连（默认）** | API Key 存本地，直接请求厂商服务器 | ✅ 可用 |
+| **服务器代理** | 请求走 Cloudflare Worker，Key 隐藏后端 | 🔄 等 Key 配置 |
+
+**切换入口**：「我的」页面 → 代理模式
 
 ---
 
-## 📁 仓库中已有的交接文档
+## 📁 交接文档位置
 
 ```
 .ai-handoff/
   README.md              ← 项目总览
   architecture.md        ← 架构说明
-  conventions.md         ← 代码风格、推送方式
+  conventions.md         ← 代码风格
   roadmap.md             ← 版本历史
-  changelog-v2.md        ← 本次 v6.0 开发日志
+  changelog-v2.md        ← 开发日志
   handoff-v2.md          ← 本文件
-  specs/
-    2026-07-18-upgrade-spec.md
-    2026-07-19-supabase-spec.md
 ```
-
----
-
-## 🔐 密钥（base64 编码）
-
-```
-IyBHaXRIdWIKR0lUSFVCX1RPS0VOOiBnaHBfUEgxOWdmZmdmdHZyTm1jWWxjcWFvT0czQ213MXRZMnNlenlpClJFUE86IFNtYWxsdW5pdmVyc2VoZW5nL0FJCgojIENsb3VkZmxhcmUKQ0ZfQVBJX1RPS0VOOiBjZmF0X2NUTnV6eU9IbWZPczk4WnBPM2wyWGdCbngwa2UxcENJUWlOYmNVRjBhMzEyMDgwMApDRl9BQ0NPVU5UX0lEOiA0M2EzNzlkMTg1MGE5NTM5ODFmMjgzNWE5ZDVlZDY4MwoKIyBTdXBhYmFzZQpTVVBBQkFTRV9VUkw6IGh0dHBzOi8vbXh2eGxnanplYm9rdHVmdW14YnAuc3VwYWJhc2UuY28KU1VQQUJBU0VfQU5PTl9LRVk6IHNiX3B1Ymxpc2hhYmxlX1d6VXpBUUs1Y09Fc243UXdGQjJjQXdfdWJJa0c3UkoKU1VQQUJBU0VfU0VSVklDRV9LRVk6IHNiX3NlY3JldF9GNFdmVnk0VHpYLTBvNFhpb1QtVWp3X2EtSGhzaHFCCg==
-```
-
-解码命令：`echo "上面编码块" | base64 -d`
 
 ---
 
