@@ -12,6 +12,7 @@ const Store = (() => {
     user: null,
     userInfo: null,
     theme: 'system',
+  proxyMode: 'local',
     apiKeys: {},
     chats: [],
     currentChatId: null,
