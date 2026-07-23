@@ -1721,22 +1721,37 @@ const Pages = (() => {
 
   /* ---- 更新日志弹窗（时间线，默认折叠：仅最新版本展开） ---- */
   function renderChangelogModal() {
-    $('#changelogModalBody').innerHTML = '<div class="timeline">' + CHANGELOG.map((c, idx) =>
-      '<div class="tl-item' + (c.major ? ' major' : '') + (idx === 0 ? ' open' : '') + '">' +
-      '<div class="tl-dot"></div>' +
-      '<div class="tl-card">' +
-      '<button class="tl-head tl-toggle" type="button">' +
-      '<span class="tl-ver">v' + esc(c.version) + '</span>' +
-      (c.major ? '<span class="tl-badge">里程碑</span>' : '') +
-      '<span class="tl-summary">' + c.items.length + ' ' + I18n.t('cl.items') + '</span>' +
-      '<span class="tl-date">' + esc(c.date) + '</span>' +
-      '<span class="tl-caret">' + icon('chevronDown', 14) + '</span></button>' +
-      '<ul class="tl-list">' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>' +
-      '</div></div>').join('') + '</div>';
+    const order = window.changelogModalOrder || 'desc';
+    const entries = order === 'desc' ? [...CHANGELOG].reverse() : [...CHANGELOG];
+    const btnLabel = order === 'desc' ? '↓ 新→旧' : '↑ 旧→新';
+    $('#changelogModalBody').innerHTML =
+      '<div style="display:flex;justify-content:flex-end;padding:0 0 8px;">' +
+      '<button id="changelog-modal-order-btn" style="padding:4px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg-soft);font-size:13px;cursor:pointer;color:var(--text);">' + esc(btnLabel) + '</button>' +
+      '</div>' +
+      '<div class="timeline">' + entries.map((c, idx) =>
+        '<div class="tl-item' + (c.major ? ' major' : '') + (idx === 0 ? ' open' : '') + '">' +
+        '<div class="tl-dot"></div>' +
+        '<div class="tl-card">' +
+        '<button class="tl-head tl-toggle" type="button">' +
+        '<span class="tl-ver">v' + esc(c.version) + '</span>' +
+        (c.major ? '<span class="tl-badge">里程碑</span>' : '') +
+        '<span class="tl-summary">' + c.items.length + ' ' + I18n.t('cl.items') + '</span>' +
+        '<span class="tl-date">' + esc(c.date) + '</span>' +
+        '<span class="tl-caret">' + icon('chevronDown', 14) + '</span></button>' +
+        '<ul class="tl-list">' + c.items.map(i => '<li>' + esc(i) + '</li>').join('') + '</ul>' +
+        '</div></div>').join('') + '</div>';
+    const btn = $('#changelog-modal-order-btn');
+    if (btn) {
+      btn.onclick = () => {
+        window.changelogModalOrder = order === 'desc' ? 'asc' : 'desc';
+        renderChangelogModal();
+      };
+    }
   }
 
   function bindChangelogEvents() {
     $('#changelogRow').addEventListener('click', () => {
+      window.changelogModalOrder = 'desc';
       renderChangelogModal();
       $('#changelogModal').classList.add('show');
     });
