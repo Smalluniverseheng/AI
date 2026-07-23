@@ -1,5 +1,16 @@
 const CHANGELOG = [
   {
+    version: '3.4', date: '2026-07-23', major: false, items: [
+      '修复对话功能：恢复 api.js 原始逻辑，聊天恢复正常',
+      '新增代理模式切换：本地直连 vs 服务器代理',
+      '本地直连（默认）：API Key 存本地，直接请求厂商，和原有 v5.9 行为一致',
+      '服务器代理：请求走 Cloudflare Worker，Key 隐藏在后端',
+      '服务器代理失败时自动 fallback 到本地直连，不影响使用',
+      '代理模式设置入口：「我的」页面 → 代理模式'
+    ]
+  },
+
+  {
     version: '1.0', date: '2026-06-10', major: true, items: [
       '首个版本发布：AI Chat Platform',
       '多模型对话、四种对话模式雏形'
