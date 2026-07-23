@@ -155,6 +155,16 @@ const UI = (() => {
     $('#sidebarOverlay').classList.remove('show');
   }
 
+  /* 手表端专用事件绑定 */
+  (function bindWatchEvents() {
+    const watchSearch = $('#sidebarSearchInputWatch');
+    if (watchSearch) watchSearch.addEventListener('input', debounce(e => renderSidebar(e.target.value), 180));
+    const watchNewBtn = $('#sidebarNewBtnWatch');
+    if (watchNewBtn) watchNewBtn.addEventListener('click', () => Chat.new());
+    const scanBtn = $('#sidebarScanBtn');
+    if (scanBtn) scanBtn.addEventListener('click', () => Toast.info('扫一扫功能即将开放'));
+  })();
+
   /* ==================== 模型选择器 ==================== */
   function updateModelSel() {
     const m = getModel(Store.state.currentModelId);
@@ -1273,7 +1283,7 @@ const UI = (() => {
     let tracking = false, decided = false, startX = 0, startY = 0, mode = null; // mode: 'open' | 'close'
     const sb = () => $('#sidebar');
     const ov = () => $('#sidebarOverlay');
-    const mobile = () => window.matchMedia('(max-width: 860px)').matches && !(window.DeviceInfo && DeviceInfo.isWatch());
+    const mobile = () => window.matchMedia('(max-width: 860px)').matches || (window.DeviceInfo && DeviceInfo.isWatch());
     const blocked = () => document.querySelector('.subpage.show') || document.querySelector('.modal-overlay.show');
 
     function cleanup() {
