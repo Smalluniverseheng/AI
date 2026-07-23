@@ -265,13 +265,8 @@ const API = (() => {
 
   /* ---------- 聊天调用 ---------- */
   function chat(opts) {
-    const { modelId, messages, onChunk, onThinking } = opts;
-    const model = getModel(modelId);
-    if (!model) return Promise.reject(new Error('模型不存在: ' + modelId));
-
-    /* ===== v3.4: 代理模式切换 ===== */
+    // ===== v3.4: 代理模式切换 =====
     const proxyMode = (typeof Store !== 'undefined' && Store.state) ? (Store.state.proxyMode || 'local') : 'local';
-
     if (proxyMode === 'server' && CONFIG.BACKEND_URL) {
       // 服务器代理模式
       return fetch(CONFIG.BACKEND_URL + '/api/v1/chat', {
@@ -284,16 +279,14 @@ const API = (() => {
         return res.json().then(j => j.content || j.text || '');
       }).catch(err => {
         console.warn('[Worker] 代理失败，回退到本地直连:', err.message);
-        // fallback: 继续执行下面的本地逻辑
+        // 继续执行下面的本地逻辑（不 return，让代码继续）
       });
-    } else {
-      // 默认走本地直连（原有逻辑）
     }
+    // ===== /代理模式 =====
 
-    // ===== 本地直连模式（默认，和 v5.9 完全一致）=====
-    }
-    /* ===== /代理模式 ===== */
-
+    const { modelId, messages, onChunk, onThinking } = opts;
+    const model = getModel(modelId);
+    if (!model) return Promise.reject(new Error('模型不存在: ' + modelId));
     const cfg = PROVIDERS[model.provider];
     if (!cfg) return Promise.reject(new Error('暂不支持该厂商: ' + model.provider));
     const key = getKeyForModel(model);
