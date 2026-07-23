@@ -1007,11 +1007,11 @@ const Pages = (() => {
   function renderRowDescs() {
     const vs = Store.state.voiceSettings;
     const ttsE = Voice.TTS_ENGINES.find(e => e.id === (vs.ttsEngine || 'browser'));
-    $('#voiceRowDesc').textContent = (ttsE ? (ttsE.provider || '浏览器内置') : '浏览器内置') + ' · ' + (vs.rate || 1) + 'x';
+    const voiceDesc = $('#voiceRowDesc'); if (voiceDesc) voiceDesc.textContent = (ttsE ? (ttsE.provider || '浏览器内置') : '浏览器内置') + ' · ' + (vs.rate || 1) + 'x';
     const asrE = Voice.ASR_ENGINES.find(e => e.id === (vs.asrEngine || 'browser'));
-    $('#asrRowDesc').textContent = asrE ? (asrE.provider || '浏览器内置') : '浏览器内置';
-    $('#themeRowDesc').textContent = I18n.t('theme.' + (Store.state.theme || 'system'));
-    $('#langRowDesc').textContent = I18n.current().name;
+    const asrDesc = $('#asrRowDesc'); if (asrDesc) asrDesc.textContent = asrE ? (asrE.provider || '浏览器内置') : '浏览器内置';
+    const themeDesc = $('#themeRowDesc'); if (themeDesc) themeDesc.textContent = I18n.t('theme.' + (Store.state.theme || 'system'));
+    const langDesc = $('#langRowDesc'); if (langDesc) langDesc.textContent = I18n.current().name;
     const syncDesc = $('#syncRowDesc');
     if (syncDesc) {
       const cu = Store.state.cloudUser;
@@ -1019,6 +1019,11 @@ const Pages = (() => {
       if (!cu) syncDesc.textContent = I18n.t('cld.notCloud');
       else syncDesc.textContent = (cu.isAdmin ? I18n.t('cld.roleAdmin') : I18n.t('cld.roleUser')) + ' · ' +
         (st && st.lastSync ? I18n.t('cld.lastSync') + ' ' + fmtTime(st.lastSync) : I18n.t('cld.never'));
+    }
+    const proxyDesc = $('#proxyRowDesc');
+    if (proxyDesc) {
+      const mode = (Store.state && Store.state.proxyMode) || 'local';
+      proxyDesc.textContent = mode === 'server' ? '服务器代理' : '本地直连';
     }
   }
 
@@ -2162,7 +2167,7 @@ const Pages = (() => {
 
 function renderProxySection() {
   const box = document.getElementById('subProxy');
-  if (!box) return;
+  if (!box) { console.warn('[Proxy] subProxy element not found'); return; }
   const mode = (Store.state && Store.state.proxyMode) || 'local';
   box.innerHTML = 
     '<div class="settings-group-title">代理模式</div>' +
