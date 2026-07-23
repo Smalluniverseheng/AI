@@ -5,7 +5,7 @@
 const API = (() => {
 
   const CONFIG = {
-    BACKEND_URL: 'https://ai-gateway.smalluniverseheng.workers.dev',  // Cloudflare Worker 网关
+    BACKEND_URL: null,   // 例: 'https://your-server.com'  后期接入后端时填写
     TIMEOUT: 60000,
     SSE_WATCHDOG: 30000  // 流式读取熔断：连续该毫秒数未收到任何字节则判定超时
   };
@@ -269,32 +269,25 @@ const API = (() => {
     const model = getModel(modelId);
     if (!model) return Promise.reject(new Error('模型不存在: ' + modelId));
 
-    /* ===== v6.1: Worker 代理分支 ===== */
-    if (CONFIG.BACKEND_URL) {
-      const userKey = (typeof apiKeys !== 'undefined' && apiKeys.get) ? apiKeys.get(model.provider) : '';
+    /* ===== v3.4: 代理模式切换 ===== */
+    const proxyMode = (typeof Store !== 'undefined' && Store.state) ? (Store.state.proxyMode || 'local') : 'local';
+
+    if (proxyMode === 'server' && CONFIG.BACKEND_URL) {
+      // 服务器代理模式
       return fetch(CONFIG.BACKEND_URL + '/api/v1/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          provider: model.provider,
-          model: modelId,
-          messages,
-          temperature: 0.7,
-          stream: typeof onChunk === 'function',
-          apiKey: userKey || undefined
-        })
+        body: JSON.stringify({ provider: model.provider, model: modelId, messages, temperature: 0.7, stream: typeof onChunk === 'function' })
       }).then(res => {
         if (!res.ok) throw new Error('Worker error: ' + res.status);
-        if (typeof onChunk === 'function') {
-          return streamSSE(res, onChunk, onThinking, ac);
-        }
+        if (typeof onChunk === 'function') return streamSSE(res, onChunk, onThinking);
         return res.json().then(j => j.content || j.text || '');
       }).catch(err => {
-        console.warn('[Worker] 失败，回退到直连:', err.message);
-        // fallback 到原有逻辑（继续执行下面的代码）
+        console.warn('[Worker] 代理失败，回退到本地直连:', err.message);
+        // 继续执行下面的本地逻辑
       });
     }
-    /* ===== /Worker 代理 ===== */
+    /* ===== /代理模式 ===== */
 
     const cfg = PROVIDERS[model.provider];
     if (!cfg) return Promise.reject(new Error('暂不支持该厂商: ' + model.provider));
