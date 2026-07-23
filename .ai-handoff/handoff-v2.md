@@ -166,3 +166,41 @@ worker/src/
 ---
 
 **密钥已交，架构已明，待办已列。下一个 AI，请继续。**
+
+
+---
+
+## 经验教训（2026-07-23 手表端侧边栏重构）
+
+### 分支与部署
+- **GitHub Pages 部署分支 ≠ 默认分支**。原仓库 Pages 部署在 `gh-pages`，代码在 `main`。
+- **已整改**：`main` → `production`（正式版/默认分支），`gh-pages` → `preview`（测试版/Pages 部署分支）。
+- **关键教训**：修改代码后必须同时推送到 **Pages 部署分支（preview）** 才能在线上生效！
+- 推送后需等待 1-2 分钟让 Pages 重新构建。
+
+### 手表端开发注意事项
+1. **设备检测**：手表端检测在 `js/device.js` 中，通过 `DeviceInfo.isWatch()` 判断，会在 `<html>` 上设置 `data-device="watch"`。
+2. **CSS 隔离**：所有手表端样式必须用 `html[data-device="watch"]` 前缀，避免影响桌面/移动端。
+3. **侧滑手势**：`ui.js` 中已有 `bindSwipeGesture()`（第 1328 行），**不要重复添加** `initSwipe()`。手表端侧滑需修改 `mobile()` 判断让其包含手表端。
+4. **DOM 结构**：手表端 sidebar 与桌面端共用同一套 DOM（`index.html`），通过 CSS 隐藏/显示不同元素。
+5. **版本号更新**：每次发版必须同时更新：
+   - `js/providers.js` 的 `APP_VERSION`
+   - `sw.js` 的 `VERSION`
+   - `js/changelog.js` 数组顶部追加记录
+   - `index.html` 中所有 `?v=X.Y.Z` 查询串（缓存穿透）
+
+### 已知问题
+- Service Worker 会缓存旧版本，手表端测试时建议换端口或清除缓存。
+- 手表端屏幕极小（~340px），所有按钮最小 36×36px，字号最小 12px。
+- 历史记录项在手表端隐藏 `meta`（时间）节省空间，保留删除按钮。
+
+### 分支规范（2026-07-23 起生效）
+| 分支 | 用途 | 保护级别 |
+|------|------|----------|
+| `production` | 正式版代码，默认分支 | 高 |
+| `preview` | 测试版/Pages 部署分支 | 中 |
+| `v2` | Next.js 重构实验分支 | 低 |
+
+- 日常开发推送到 `production`
+- 需要线上预览时同步到 `preview`
+- 重大重构在 `v2` 进行
