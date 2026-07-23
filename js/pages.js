@@ -2158,3 +2158,31 @@ const Pages = (() => {
 
   return { init, renderModels, renderDiscover, renderProfile, syncThemeCards, openSub, closeSubs, openVoiceStudio, openModelInfo };
 })();
+
+
+function renderProxySection() {
+  const box = document.getElementById('subProxy');
+  if (!box) return;
+  const mode = (Store.state && Store.state.proxyMode) || 'local';
+  box.innerHTML = 
+    '<div class="settings-group-title">代理模式</div>' +
+    '<div class="proxy-option' + (mode === 'local' ? ' active' : '') + '" data-mode="local" style="padding:16px;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:12px;cursor:pointer;background:' + (mode === 'local' ? '#f0fdf4' : '#fff') + ';">' +
+    '<div style="font-weight:600;font-size:15px;margin-bottom:4px;">📱 本地直连</div>' +
+    '<div style="font-size:13px;color:#666;">API Key 保存在本机浏览器中，直接请求厂商服务器。适合个人使用，响应更快。</div>' +
+    '</div>' +
+    '<div class="proxy-option' + (mode === 'server' ? ' active' : '') + '" data-mode="server" style="padding:16px;border:1px solid #e5e7eb;border-radius:12px;cursor:pointer;background:' + (mode === 'server' ? '#eff6ff' : '#fff') + ';">' +
+    '<div style="font-weight:600;font-size:15px;margin-bottom:4px;">☁️ 服务器代理</div>' +
+    '<div style="font-size:13px;color:#666;">API Key 保存在云端 Worker，通过服务器转发请求。适合多设备同步，Key 不暴露前端。</div>' +
+    '</div>' +
+    '<div style="padding:12px 16px;font-size:12px;color:#999;margin-top:8px;">切换后下次对话生效</div>';
+
+  box.querySelectorAll('.proxy-option').forEach(el => {
+    el.addEventListener('click', () => {
+      const newMode = el.dataset.mode;
+      Store.set('proxyMode', newMode);
+      renderProxySection();
+      renderRowDescs();
+      if (typeof showToast === 'function') showToast(newMode === 'server' ? '已切换至服务器代理' : '已切换至本地直连');
+    });
+  });
+}
