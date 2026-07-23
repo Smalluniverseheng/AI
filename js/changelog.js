@@ -7,7 +7,7 @@ const CHANGELOG = [
   },
   {
     version: '1.1', date: '2026-07-10', major: true, items: [
-      '模型下拉动画优化'
+      '首次部署：项目上线 GitHub Pages，支持基础对话功能'
     ]
   },
   {
@@ -208,8 +208,10 @@ const CHANGELOG = [
   },
   {
     version: '3.3', date: '2026-07-23', major: false, items: [
-      '改动点1',
-      '改动点2'
+      '版本号修正：修复跳版本问题（1.0→1.4 缺少 1.1/1.2/1.3），统一为连续编号',
+      '日期修正：1.0=6月10日创立，1.1=7月10日部署，后续按时间顺延',
+      '里程碑标记修正：x.0 版本 + 创立(1.0) + 首次部署(1.1) 标记为 major',
+      '时间轴规范化：数组 chronological 排序，render 时 reverse 显示最新在前'
     ]
   },
   {
@@ -227,7 +229,6 @@ const CHANGELOG = [
 function renderChangelog() {
   const container = document.getElementById('changelog-list');
   if (!container) return;
-  // 倒序显示：最新的在前面
   const reversed = [...CHANGELOG].reverse();
   container.innerHTML = reversed.map(entry => {
     const majorBadge = entry.major ? '<span class="version-badge major">里程碑</span>' : '';
