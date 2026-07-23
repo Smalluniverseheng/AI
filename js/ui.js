@@ -86,7 +86,47 @@ const UI = (() => {
   }
 
   function bindSidebarEvents() {
-    $('#sidebarList').addEventListener('click', e => {
+    /* ---------- 历史记录：点击切换 / 长按菜单 ---------- */
+    const sidebarList = $('#sidebarList');
+    let longPressTimer = null;
+    let longPressTarget = null;
+    let isLongPress = false;
+
+    // 手表端：touch 事件（长按菜单 + 点击切换）
+    sidebarList.addEventListener('touchstart', e => {
+      const item = e.target.closest('.chat-item');
+      if (!item) return;
+      isLongPress = false;
+      longPressTarget = item;
+      longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        if (longPressTarget) longPressTarget.classList.add('long-press');
+        showWatchActionSheet(item.dataset.id);
+      }, 500);
+    }, { passive: true });
+
+    sidebarList.addEventListener('touchmove', () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      if (longPressTarget) { longPressTarget.classList.remove('long-press'); longPressTarget = null; }
+    }, { passive: true });
+
+    sidebarList.addEventListener('touchend', e => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      const item = e.target.closest('.chat-item');
+      if (longPressTarget) { longPressTarget.classList.remove('long-press'); }
+      longPressTarget = null;
+      if (isLongPress) { e.preventDefault(); isLongPress = false; return; }
+      if (item) { Chat.load(item.dataset.id); closeSidebarMobile(); }
+    });
+
+    sidebarList.addEventListener('touchcancel', () => {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+      if (longPressTarget) { longPressTarget.classList.remove('long-press'); longPressTarget = null; }
+    }, { passive: true });
+
+    // 桌面端：保留原有 click 逻辑
+    sidebarList.addEventListener('click', e => {
+      if (window.DeviceInfo && DeviceInfo.isWatch()) return;
       const del = e.target.closest('[data-del]');
       if (del) {
         e.stopPropagation();
@@ -164,6 +204,42 @@ const UI = (() => {
     const scanBtn = $('#sidebarScanBtn');
     if (scanBtn) scanBtn.addEventListener('click', () => Toast.info('扫一扫功能即将开放'));
   })();
+
+  /* ---------- 手表端长按菜单 ---------- */
+  function showWatchActionSheet(chatId) {
+    let sheet = $('#watchActionSheet');
+    if (!sheet) {
+      sheet = document.createElement('div');
+      sheet.id = 'watchActionSheet';
+      sheet.className = 'watch-action-sheet';
+      sheet.innerHTML = '<button class="watch-action-sheet-item" data-act="rename"><span class="icon">' + icon('edit', 20) + '</span>重命名</button>' +
+        '<button class="watch-action-sheet-item" data-act="pin"><span class="icon">' + icon('pin', 20) + '</span>置顶</button>' +
+        '<button class="watch-action-sheet-item danger" data-act="del"><span class="icon">' + icon('trash', 20) + '</span>删除</button>' +
+        '<div class="watch-action-sheet-cancel" data-act="cancel">取消</div>';
+      document.body.appendChild(sheet);
+      sheet.addEventListener('click', e => {
+        const btn = e.target.closest('[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        const id = sheet.dataset.chatId;
+        sheet.classList.remove('show');
+        if (act === 'cancel') return;
+        if (act === 'rename') {
+          const chat = (Store.state.chats || []).find(c => c.id === id);
+          const name = prompt('重命名对话', chat ? chat.title : '');
+          if (name !== null && chat) { chat.title = name.trim() || chat.title; Store.save(); renderSidebar(); }
+        } else if (act === 'pin') {
+          const idx = (Store.state.chats || []).findIndex(c => c.id === id);
+          if (idx > 0) { const c = Store.state.chats.splice(idx, 1)[0]; Store.state.chats.unshift(c); Store.save(); renderSidebar(); Toast.success('已置顶'); }
+          else if (idx === 0) { Toast.info('已经在最顶部'); }
+        } else if (act === 'del') {
+          confirmDialog('删除对话', '删除后无法恢复，确定删除该对话吗？', true).then(ok => { if (ok) Chat.del(id); });
+        }
+      });
+    }
+    sheet.dataset.chatId = chatId;
+    sheet.classList.add('show');
+  }
 
   /* ==================== 模型选择器 ==================== */
   function updateModelSel() {
