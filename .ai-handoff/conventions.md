@@ -32,3 +32,35 @@ git push "https://<TOKEN>@ghfast.top/https://github.com/Smalluniverseheng/AI.git
 ## 安全与隐私
 - API Key、插件 token 全部只存 localStorage，绝不外发（除对应厂商 API 域名）。
 - githubPush 用 Contents API：先 GET 取 sha（404=新建）再 PUT；401/404 给中文错误。
+
+
+## 分支与部署规范（2026-07-23 起生效）
+
+### 分支命名
+| 分支 | 用途 | 说明 |
+|------|------|------|
+| `production` | 正式版 | 默认分支，存放稳定代码 |
+| `preview` | 测试版 | GitHub Pages 部署分支，线上预览 |
+| `v2` | 重构实验 | Next.js 重构专用分支 |
+
+### 推送规则
+1. **日常开发**：推送到 `production`
+2. **线上预览**：将 `production` 的修改同步到 `preview`
+3. **紧急修复**：直接在 `preview` 修改并验证，再合并回 `production`
+
+### 为什么必须同步到 preview？
+GitHub Pages 部署的是 `preview` 分支，不是 `production`。如果只推送到 `production`，线上看到的还是旧代码。
+
+### 同步命令
+```bash
+# 将 production 最新代码同步到 preview
+git checkout preview
+git merge production --no-edit
+git push origin preview
+```
+
+### 网络受限推送（中国大陆）
+```bash
+git push "https://<TOKEN>@ghfast.top/https://github.com/Smalluniverseheng/AI.git" production
+git push "https://<TOKEN>@ghfast.top/https://github.com/Smalluniverseheng/AI.git" preview
+```
