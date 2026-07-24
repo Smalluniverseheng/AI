@@ -476,6 +476,7 @@ input[type="file"].vs-file { font-size: 13px; color: var(--text-2); }
 
 /* ==================== v5.4 模型排行榜 ==================== */
 .rank-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 18px; }
+.rank-section.expanded { min-height: 360px; }
 .rank-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .rank-title { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 700; color: var(--text); }
 .rank-title .icon { color: #F59E0B; }
@@ -923,7 +924,6 @@ button.badge.key-link:hover { background: var(--accent-soft); color: var(--accen
 /* ==================== 排行榜左侧导航 ==================== */
 .rank-layout {
   display: flex;
-  height: 100%;
   min-height: 0;
 }
 .rank-sidebar {
