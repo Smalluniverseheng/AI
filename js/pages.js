@@ -70,38 +70,73 @@ const Pages = (() => {
   function renderRankSection() {
     const expanded = !!Store.state.rankExpanded;
     const tab = Store.state.rankTab || 'overall';
-    const chart = Store.state.rankChart || 'bar';
-    // 头部整张可点击：折叠时仅显示标题栏，展开后显示控制条 + 图表 + 榜单
-    const head = '<div class="rank-head rank-toggle" id="rankToggle" title="' + (expanded ? '点击收起' : '点击展开') + '">' +
-      '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
-      '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期' + (expanded ? '' : '（点击展开）') + '</span>' +
-      (expanded
-        ? '<span class="rank-controls">' +
-          '<span class="seg-btns" id="rankTabs">' +
-            '<button class="seg-btn' + (tab === 'overall' ? ' active' : '') + '" data-ranktab="overall">综合榜</button>' +
-            '<button class="seg-btn' + (tab === 'coding' ? ' active' : '') + '" data-ranktab="coding">代码榜</button></span>' +
-          '<span class="seg-btns" id="rankChartToggle">' +
-            '<button class="seg-btn' + (chart === 'bar' ? ' active' : '') + '" data-rankchart="bar" title="柱状图">' + icon('barChart', 14) + '</button>' +
-            '<button class="seg-btn' + (chart === 'radar' ? ' active' : '') + '" data-rankchart="radar" title="雷达图">' + icon('radar', 14) + '</button></span>' +
-        '</span>'
-        : '') +
-      '<span class="rank-caret">' + icon('chevronDown', 15) + '</span></div>';
-    if (!expanded) return '<div class="rank-section collapsed" id="rankSection">' + head + '</div>';
-    return '<div class="rank-section" id="rankSection">' + head +
-      '<div class="rank-chart" id="rankChart"></div>' +
-      '<div class="rank-list" id="rankList"></div></div>';
+    if (!expanded) {
+      return '<div class="rank-section collapsed" id="rankSection">' +
+        '<div class="rank-head rank-toggle" id="rankToggle" title="点击展开">' +
+        '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
+        '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期（点击展开）</span>' +
+        '<span class="rank-caret">' + icon('chevronDown', 15) + '</span></div></div>';
+    }
+    const tabs = [
+      {key:'overall', label:'综合榜'},
+      {key:'coding', label:'代码榜'},
+      {key:'english', label:'英文榜'},
+      {key:'hard', label:'困难提示'},
+      {key:'chinese', label:'中文榜'},
+      {key:'multiturn', label:'多轮对话'},
+      {key:'creative', label:'创意写作'},
+      {key:'math', label:'数学榜'},
+      {key:'instruct', label:'指令遵循'},
+      {key:'japanese', label:'日语榜'},
+      {key:'korean', label:'韩语榜'},
+    ];
+    const nav = tabs.map(t => '<button class="rank-nav-item' + (tab === t.key ? ' active' : '') + '" data-ranktab="' + t.key + '">' + t.label + '</button>').join('');
+    return '<div class="rank-section expanded" id="rankSection">' +
+      '<div class="rank-layout">' +
+        '<div class="rank-sidebar">' + nav + '</div>' +
+        '<div class="rank-main">' +
+          '<div class="rank-head">' +
+            '<span class="rank-title">' + icon('trophy', 17) + ' 模型排行榜</span>' +
+            '<span class="rank-updated">公开榜单综合 · ' + esc(MODEL_RANK.updated) + ' 期</span>' +
+            '<span class="rank-caret rank-toggle" id="rankToggle" title="点击收起">' + icon('chevronDown', 15) + '</span></div>' +
+          '<div class="rank-chart" id="rankChart"></div>' +
+          '<div class="rank-list" id="rankList"></div></div></div></div>';
   }
 
   function drawRankChart() {
     const tab = Store.state.rankTab || 'overall';
-    const chart = Store.state.rankChart || 'bar';
     const list = MODEL_RANK[tab] || [];
     const chartBox = $('#rankChart'), listBox = $('#rankList');
     if (!chartBox || !listBox) return;
     const inCatalog = id => !!getModel(id);
+    const axes = MODEL_RANK.axes || ['综合','推理','代码','长文本','多模态','速度'];
+    const n = axes.length;
 
-    if (chart === 'bar' || tab === 'coding') {
-      // —— 横向柱状图（代码榜无六维数据，始终用柱状） ——
+    if (tab === 'overall') {
+      const top = list.filter(e => e.dims).slice(0, 5);
+      const C = 150, R = 90, cx = C, cy = 125;
+      const pt = (i, v) => {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / n;
+        return [cx + Math.cos(a) * R * v / 100, cy + Math.sin(a) * R * v / 100];
+      };
+      let svg = '<svg viewBox="0 0 300 250" class="rank-svg radar">';
+      [25, 50, 75, 100].forEach(r => {
+        svg += '<polygon points="' + axes.map((_, i) => pt(i, r).join(',')).join(' ') + '" class="rk-ring"></polygon>';
+      });
+      axes.forEach((ax, i) => {
+        const p = pt(i, 100), lp = pt(i, 115);
+        svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" class="rk-axis"></line>' +
+          '<text x="' + lp[0] + '" y="' + lp[1] + '" class="rk-axlabel" text-anchor="middle" dominant-baseline="middle">' + ax + '</text>';
+      });
+      top.forEach((e, k) => {
+        svg += '<polygon points="' + e.dims.map((v, i) => pt(i, v).join(',')).join(' ') +
+          '" fill="' + RANK_COLORS[k] + '" fill-opacity="0.10" stroke="' + RANK_COLORS[k] + '" stroke-width="1.8"></polygon>';
+      });
+      svg += '</svg>';
+      chartBox.innerHTML = svg +
+        '<div class="rk-legend">' + top.map((e, k) =>
+          '<span class="rk-legend-item"><i style="background:' + RANK_COLORS[k] + '"></i>' + esc(e.name) + '</span>').join('') + '</div>';
+    } else {
       const top = list.slice(0, 10);
       const min = Math.min.apply(null, top.map(e => e.score)) - 12;
       const max = Math.max.apply(null, top.map(e => e.score)) + 4;
@@ -115,41 +150,32 @@ const Pages = (() => {
           '<text x="' + (labelW + barW(e.score) + 7) + '" y="' + (y + 16) + '" class="rk-score">' + e.score + '</text>';
       });
       chartBox.innerHTML = svg + '</svg>';
-    } else {
-      // —— 雷达图（综合榜 Top5 六维对比） ——
-      const top = list.filter(e => e.dims).slice(0, 5);
-      const C = 150, R = 96, cx = C, cy = 128, axes = MODEL_RANK.axes, n = axes.length;
-      const pt = (i, v) => {
-        const a = -Math.PI / 2 + i * 2 * Math.PI / n;
-        return [cx + Math.cos(a) * R * v / 100, cy + Math.sin(a) * R * v / 100];
-      };
-      let svg = '<svg viewBox="0 0 300 260" class="rank-svg radar">';
-      [25, 50, 75, 100].forEach(r => {
-        svg += '<polygon points="' + axes.map((_, i) => pt(i, r).join(',')).join(' ') + '" class="rk-ring"></polygon>';
-      });
-      axes.forEach((ax, i) => {
-        const p = pt(i, 100), lp = pt(i, 118);
-        svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" class="rk-axis"></line>' +
-          '<text x="' + lp[0] + '" y="' + lp[1] + '" class="rk-axlabel" text-anchor="middle" dominant-baseline="middle">' + ax + '</text>';
-      });
-      top.forEach((e, k) => {
-        svg += '<polygon points="' + e.dims.map((v, i) => pt(i, v).join(',')).join(' ') +
-          '" fill="' + RANK_COLORS[k] + '" fill-opacity="0.10" stroke="' + RANK_COLORS[k] + '" stroke-width="1.8"></polygon>';
-      });
-      svg += '</svg>';
-      chartBox.innerHTML = svg +
-        '<div class="rk-legend">' + top.map((e, k) =>
-          '<span class="rk-legend-item"><i style="background:' + RANK_COLORS[k] + '"></i>' + esc(e.name) + '</span>').join('') + '</div>';
     }
 
-    // —— 榜单行（点击进详情） ——
     listBox.innerHTML = list.map((e, i) => {
       const m = inCatalog(e.id);
+      let radarHtml = '';
+      if (e.dims && e.dims.length === 6) {
+        const sz = 48, cx = sz/2, cy = sz/2, R = sz/2 - 4;
+        const pt = (i, v) => {
+          const a = -Math.PI / 2 + i * 2 * Math.PI / 6;
+          return [cx + Math.cos(a) * R * v / 100, cy + Math.sin(a) * R * v / 100];
+        };
+        let svg = '<svg viewBox="0 0 ' + sz + ' ' + sz + '" class="rk-mini-radar">';
+        [50, 100].forEach(r => {
+          svg += '<polygon points="' + [0,1,2,3,4,5].map(i => pt(i, r).join(',')).join(' ') + '" class="rk-mini-ring"></polygon>';
+        });
+        svg += '<polygon points="' + e.dims.map((v, i) => pt(i, v).join(',')).join(' ') +
+          '" fill="var(--accent)" fill-opacity="0.25" stroke="var(--accent)" stroke-width="1"></polygon>';
+        svg += '</svg>';
+        radarHtml = svg;
+      }
       return '<button class="rank-row" data-rankmodel="' + e.id + '"' + (m ? '' : ' disabled') + ' title="' + (m ? '点击查看详情' : '本站暂未收录') + '">' +
         '<span class="rk-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</span>' +
         providerIconHtml(e.provider, 20) +
         '<span class="rk-name">' + esc(e.name) + '</span>' +
         '<span class="rk-provider">' + esc(e.provider) + '</span>' +
+        (radarHtml ? '<span class="rk-radar-wrap">' + radarHtml + '</span>' : '') +
         '<span class="rk-score-badge">' + e.score + '</span></button>';
     }).join('');
   }
