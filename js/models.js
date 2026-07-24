@@ -535,6 +535,9 @@ const MODEL_RANK = {
     {id:'claude-opus-4-6', name:'Anthropic claude-opus-4-6', provider:'Anthropic', score:1482}
   ],
 
+  /* 维度标签（六维雷达图用） */
+  axes: ['综合','推理','代码','长文本','多模态','速度'],
+
   /* 更新日期 */
   updated: '2026-07-24',
 };
