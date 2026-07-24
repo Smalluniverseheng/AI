@@ -1662,6 +1662,103 @@ const Pages = (() => {
     });
   }
 
+  /* ==================== 回收站 ==================== */
+  function renderTrash() {
+    const trash = Store.state.trash || { chats: [], apiKeys: [], items: [], clearedAt: 0 };
+    const chatsList = $('#trashChatsList');
+    if (chatsList) {
+      if (trash.chats && trash.chats.length) {
+        chatsList.innerHTML = trash.chats.map(c =>
+          '<div class="settings-row" style="justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);">' +
+          '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">' + esc(c.title || '未命名对话') + '<span style="font-size:12px;color:var(--text-3);margin-left:8px;">' + fmtDate(c.deletedAt) + '</span></span>' +
+          '<span style="display:flex;gap:8px;flex-shrink:0;">' +
+          '<button class="btn btn-sm" data-trash-restore="chat" data-id="' + c.id + '">恢复</button>' +
+          '<button class="btn btn-sm btn-danger" data-trash-del="chat" data-id="' + c.id + '">删除</button>' +
+          '</span></div>').join('');
+      } else {
+        chatsList.innerHTML = '<div style="padding:16px;color:var(--text-3);font-size:14px;text-align:center;">暂无已删除的对话</div>';
+      }
+    }
+    const keysList = $('#trashKeysList');
+    if (keysList) {
+      if (trash.apiKeys && trash.apiKeys.length) {
+        keysList.innerHTML = trash.apiKeys.map(k =>
+          '<div class="settings-row" style="justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);">' +
+          '<span>' + esc(k.provider || '未知厂商') + '<span style="font-size:12px;color:var(--text-3);margin-left:8px;">' + fmtDate(k.deletedAt) + '</span></span>' +
+          '<span style="display:flex;gap:8px;flex-shrink:0;">' +
+          '<button class="btn btn-sm" data-trash-restore="key" data-id="' + k.id + '">恢复</button>' +
+          '<button class="btn btn-sm btn-danger" data-trash-del="key" data-id="' + k.id + '">删除</button>' +
+          '</span></div>').join('');
+      } else {
+        keysList.innerHTML = '<div style="padding:16px;color:var(--text-3);font-size:14px;text-align:center;">暂无已删除的 Key</div>';
+      }
+    }
+    const emptyBtn = $('#trashEmptyBtn');
+    if (emptyBtn) {
+      const hasAny = (trash.chats && trash.chats.length) || (trash.apiKeys && trash.apiKeys.length);
+      emptyBtn.style.display = hasAny ? 'block' : 'none';
+    }
+  }
+
+  function bindTrashEvents() {
+    const trashRow = document.querySelector('[data-sub="subTrash"]');
+    if (trashRow) trashRow.addEventListener('click', () => renderTrash());
+    const trashBody = $('#subTrashBody');
+    if (trashBody) {
+      trashBody.addEventListener('click', e => {
+        const restoreBtn = e.target.closest('[data-trash-restore]');
+        const delBtn = e.target.closest('[data-trash-del]');
+        const emptyBtn = e.target.closest('#trashEmptyBtn');
+        if (restoreBtn) {
+          const type = restoreBtn.dataset.trashRestore;
+          const id = restoreBtn.dataset.id;
+          const trash = Store.state.trash || { chats: [], apiKeys: [], items: [], clearedAt: 0 };
+          if (type === 'chat') {
+            const idx = trash.chats.findIndex(c => c.id === id);
+            if (idx >= 0) {
+              const chat = trash.chats.splice(idx, 1)[0];
+              delete chat.deletedAt;
+              Store.state.chats.push(chat);
+              Store.save();
+            }
+          } else if (type === 'key') {
+            const idx = trash.apiKeys.findIndex(k => k.id === id);
+            if (idx >= 0) {
+              const key = trash.apiKeys.splice(idx, 1)[0];
+              delete key.deletedAt;
+              Store.state.apiKeys[key.provider] = key.value;
+              Store.save();
+            }
+          }
+          renderTrash();
+          Toast.success('已恢复');
+          if (type === 'chat') UI.renderSidebar();
+          return;
+        }
+        if (delBtn) {
+          const type = delBtn.dataset.trashDel;
+          const id = delBtn.dataset.id;
+          const trash = Store.state.trash || { chats: [], apiKeys: [], items: [], clearedAt: 0 };
+          if (type === 'chat') trash.chats = trash.chats.filter(c => c.id !== id);
+          else if (type === 'key') trash.apiKeys = trash.apiKeys.filter(k => k.id !== id);
+          Store.save();
+          renderTrash();
+          Toast.success('已彻底删除');
+          return;
+        }
+        if (emptyBtn) {
+          confirmDialog('清空回收站', '确定彻底清空回收站？此操作不可恢复。', true).then(ok => {
+            if (!ok) return;
+            Store.state.trash = { chats: [], apiKeys: [], items: [], clearedAt: Date.now() };
+            Store.save();
+            renderTrash();
+            Toast.success('回收站已清空');
+          });
+        }
+      });
+    }
+  }
+
   /* ---- 关于 ---- */
   function renderAboutSection() {
     $$('#aboutVersion, #aboutVersionSub').forEach(el => { el.textContent = 'v' + APP_VERSION; });
@@ -2136,7 +2233,7 @@ const Pages = (() => {
   }
 
   function bindProfileEvents() {
-    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindProfileEditEvents(); bindChangelogEvents();
+    bindKeyEvents(); bindThemeEvents(); bindPluginEvents(); bindDataEvents(); bindTrashEvents(); bindProfileEditEvents(); bindChangelogEvents();
     bindSubpageEvents(); bindVoiceEvents(); bindAsrEvents(); bindLangEvents(); bindHelpEvents(); bindVoiceStudioEvents();
     $('#installRow').addEventListener('click', () => { if (window.AppInstall) AppInstall.prompt(); });
     $('#logoutBtn').addEventListener('click', () => {
